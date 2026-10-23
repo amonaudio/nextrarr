@@ -1,0 +1,40 @@
+// Prisma schema for Extrarr — port of the Flask config.json + localStorage filters
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// Singleton row holding the user's API keys and path mappings.
+/// In the Flask version this was /config/config.json.
+/// Here we use a single row with id = "default" for simplicity.
+model Settings {
+  id             String   @id @default("default")
+  radarrUrl      String   @default("") @map("radarr_url")
+  radarrApiKey   String   @default("") @map("radarr_api_key")
+  sonarrUrl      String   @default("") @map("sonarr_url")
+  sonarrApiKey   String   @default("") @map("sonarr_api_key")
+  fanartApiKey   String   @default("") @map("fanart_api_key")
+  tmdbApiKey     String   @default("") @map("tmdb_api_key")
+  /// JSON-serialized list of {docker: string, local: string}
+  pathMap        String   @default("[]") @map("path_map")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+}
+
+/// Saved custom filters (in the Flask version these lived in browser localStorage).
+/// Persisting on the server makes them shareable across devices/browsers.
+model CustomFilter {
+  id        String   @id @default(cuid())
+  name      String
+  /// JSON-serialized list of {type: "has_theme"|"has_artwork"|"has_trailer", val: "true"|"false"}
+  rules     String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([name])
+}
