@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v0.3.html).
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v0.4.html).
 
 ## [0.3] — 2026-10-23 — Connection errors + path mapping fixes
 
@@ -118,7 +118,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v0.3.h
 - **GitHub Actions CI/CD** — auto-build and push on tag release to both Docker Hub and GitHub Container Registry (ghcr.io)
 - **Atomic writes**: NFO updates and theme.mp3 downloads use tmp file + rename to prevent corruption
 
-### 🐛 Fixed (carried over from v0.3 of the Flask rewrite)
+### 🐛 Fixed (carried over from v0.4 of the Flask rewrite)
 - `scrollToLetter` was broken in v1.2.2 due to `c.dataset_title` typo — now uses `c.dataset.title`
 - `updateFilterDropdown` previously skipped options during `forEach+remove` (indices shifted) — fixed by iterating backwards
 - NFO trailer regex now matches 4 URL formats: `plugin://`, `watch?v=`, `youtu.be/`, `embed/`

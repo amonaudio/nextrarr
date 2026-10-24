@@ -1,4 +1,4 @@
-# 🎬 nEXTrarr 0.3 (Next.js)
+# 🎬 nEXTrarr 0.4 (Next.js)
 
 A web-based companion tool for **Radarr** and **Sonarr** that fills in the
 metadata gaps your media server doesn't handle on its own:
@@ -9,7 +9,7 @@ metadata gaps your media server doesn't handle on its own:
 
 Built for **Unraid** deployments via **Community Applications**, with a Docker image published to Docker Hub and GitHub Container Registry.
 
-**This is the Next.js 16 (v0.3) version** — full TypeScript + React + Prisma rewrite of the original Flask app. Same feature set, same security model, modern UI with shadcn/ui.
+**This is the Next.js 16 (v0.4) version** — full TypeScript + React + Prisma rewrite of the original Flask app. Same feature set, same security model, modern UI with shadcn/ui.
 
 [![Build & Publish](https://github.com/nextrarr/nextrarr/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/nextrarr/nextrarr/actions/workflows/docker-publish.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -27,7 +27,7 @@ Built for **Unraid** deployments via **Community Applications**, with a Docker i
 - **Browse** local files, Fanart.tv results, and TMDB results side-by-side, download/specific
 - **Directory browser** to set path mappings (Docker container path → host path)
 - **Light / dark theme** with persistent preference (next-themes)
-- **Alphabetical navigation** sidebar for fast jumping through large libraries (FIXED in v0.3 — was broken in v1.x due to a typo)
+- **Alphabetical navigation** sidebar for fast jumping through large libraries (FIXED in v0.4 — was broken in v1.x due to a typo)
 - **TTL cache** on `/api/media` to keep the UI snappy on big libraries
 - **Demo mode**: when no API keys are configured, the UI loads 12 mock movies + 4 mock TV shows so you can preview without a real Radarr
 - **Path traversal + SSRF protection**: artwork downloads are restricted to a domain whitelist, all filenames are sanitized

@@ -223,6 +223,11 @@ export function SettingsModal({ open, onOpenChange, onSaved, onBrowse }: Setting
               </div>
             )}
           </div>
+
+          {/* Test path mapping — diagnostic tool */}
+          {data.pathMap.length > 0 && (
+            <PathMappingTester />
+          )}
         </div>
 
         <DialogFooter>
@@ -233,5 +238,82 @@ export function SettingsModal({ open, onOpenChange, onSaved, onBrowse }: Setting
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/**
+ * Sub-component: tests path mapping by taking a sample Radarr path
+ * and showing the resolved host path + validation + disk existence.
+ */
+function PathMappingTester() {
+  const [testPath, setTestPath] = useState('');
+  const [result, setResult] = useState<{ resolved?: string; valid?: boolean; exists?: boolean; message?: string } | null>(null);
+  const [testing, setTesting] = useState(false);
+
+  async function runTest() {
+    if (!testPath.trim()) {
+      setResult({ message: 'Inserisci un path di esempio (es. /movies/The Matrix)' });
+      return;
+    }
+    setTesting(true);
+    setResult(null);
+    try {
+      const res = await fetch(`/api/test-path-mapping?path=${encodeURIComponent(testPath.trim())}`);
+      const data = await res.json();
+      setResult({
+        resolved: data.resolvedLocalPath,
+        valid: data.isValid,
+        exists: data.folderExists,
+        message: data.message,
+      });
+    } catch {
+      setResult({ message: 'Errore di rete durante il test' });
+    } finally {
+      setTesting(false);
+    }
+  }
+
+  return (
+    <div className="space-y-2 p-3 bg-muted/30 rounded border border-border">
+      <div className="flex items-center justify-between">
+        <h4 className="text-xs font-semibold">🔍 Test risoluzione percorso</h4>
+        <Button size="sm" variant="outline" onClick={runTest} disabled={testing}>
+          {testing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plug className="h-3 w-3" />}
+          <span className="ml-1 text-xs">Test</span>
+        </Button>
+      </div>
+      <Input
+        placeholder="/movies/The Matrix"
+        value={testPath}
+        onChange={(e) => setTestPath(e.target.value)}
+        onKeyDown={(e) => { if (e.key === 'Enter') runTest(); }}
+        className="text-xs font-mono"
+      />
+      {result && (
+        <div className="text-xs space-y-1">
+          {result.resolved && (
+            <div className="font-mono break-all">
+              <span className="text-muted-foreground">Risultato: </span>
+              <span className={result.valid ? 'text-green-600' : 'text-red-600'}>{result.resolved}</span>
+            </div>
+          )}
+          {result.valid !== undefined && (
+            <div>
+              <span className="text-muted-foreground">Valido: </span>
+              {result.valid ? '✓ Sì' : '✗ No'}
+            </div>
+          )}
+          {result.exists !== undefined && (
+            <div>
+              <span className="text-muted-foreground">Esiste su disco: </span>
+              {result.exists ? '✓ Sì' : '✗ No (la cartella non è stata trovata)'}
+            </div>
+          )}
+          {result.message && (
+            <div className={result.valid ? 'text-green-600' : 'text-red-600'}>{result.message}</div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }

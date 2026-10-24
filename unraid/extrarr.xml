@@ -54,7 +54,7 @@ For local testing without Docker Hub, build the image on Unraid:
   <ExtraParams>--restart=unless-stopped</ExtraParams>
   <Date>2026-10-23</Date>
 
-  <Config Name="Port" Target="3000" Default="3000" Mode="tcp" Description="Port for the nEXTrarr web UI (container internal: 3000)"/>
+  <Config Name="WebUI" Target="3000" Default="3000" Mode="tcp" Description="Port for the nEXTrarr web UI (container internal: 3000)"/>
   <Config Name="App Data" Target="/config" Default="/mnt/user/appdata/nextrarr" Mode="rw" Description="Persistent settings + SQLite database. Contains API keys — kept chmod 600 by entrypoint."/>
   <Config Name="Media Root" Target="/mnt/user" Default="/mnt/user" Mode="rw" Description="Host media root (Unraid user share). Read-write so the app can save theme.mp3, artwork files, and NFO trailer tags."/>
 
