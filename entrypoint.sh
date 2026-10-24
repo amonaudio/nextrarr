@@ -6,7 +6,7 @@ CONFIG_DIR="/config"
 DB_FILE="${CONFIG_DIR}/extrarr.db"
 DB_JOURNAL="${CONFIG_DIR}/extrarr.db-journal"
 
-echo "[entrypoint] nEXTrarr 0.2 (Next.js) starting..."
+echo "[entrypoint] nEXTrarr 0.3 (Next.js) starting..."
 echo "[entrypoint] Config dir: ${CONFIG_DIR}"
 echo "[entrypoint] Database:   ${DATABASE_URL}"
 

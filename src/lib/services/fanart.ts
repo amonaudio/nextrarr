@@ -71,7 +71,19 @@ export async function fetchArtwork(
       headers: { 'User-Agent': 'Mozilla/5.0' },
       signal: controller.signal,
     });
-    if (!res.ok) throw new Error(`Fanart API HTTP ${res.status}`);
+    if (!res.ok) {
+      if (res.status === 401 || res.status === 403) {
+        throw new Error(`Fanart API key non valida o mancante (HTTP ${res.status}). Verifica la chiave nelle Impostazioni.`);
+      }
+      if (res.status === 404) {
+        throw new Error(`Fanart non ha artwork per ${mediaType} ID ${artId} (HTTP 404). L'ID potrebbe non essere registrato su Fanart.tv.`);
+      }
+      throw new Error(`Fanart API HTTP ${res.status} ${res.statusText}`);
+    }
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.toLowerCase().includes('application/json')) {
+      throw new Error(`Fanart ha restituito HTML invece di JSON (Content-Type: ${contentType}). Probabile URL/API key errati.`);
+    }
     return await res.json() as FanartResponse;
   } finally {
     clearTimeout(timeoutId);

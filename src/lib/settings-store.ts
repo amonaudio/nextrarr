@@ -32,10 +32,13 @@ export async function loadSettings(): Promise<SettingsData> {
   try {
     const parsed = JSON.parse(row.pathMap);
     if (Array.isArray(parsed)) {
-      pathMap = parsed.filter(
-        (m): m is { docker: string; local: string } =>
-          m && typeof m.docker === 'string' && typeof m.local === 'string',
-      );
+      // Defensive: don't drop entries with non-string local — normalize them to ''
+      pathMap = parsed
+        .filter((m): m is Record<string, unknown> => m !== null && typeof m === 'object')
+        .map((m) => ({
+          docker: typeof m.docker === 'string' ? m.docker : '',
+          local: typeof m.local === 'string' ? m.local : '',
+        }));
     }
   } catch {
     // ignore parse error, keep empty
@@ -53,6 +56,15 @@ export async function loadSettings(): Promise<SettingsData> {
 
 export async function saveSettings(data: SettingsData): Promise<void> {
   await ensureSchema();
+  // Defensive: normalize pathMap entries (no dropping, just sanitize)
+  const normalizedPathMap = Array.isArray(data.pathMap)
+    ? data.pathMap
+        .filter((m): m is { docker: unknown; local: unknown } => m !== null && typeof m === 'object')
+        .map((m) => ({
+          docker: typeof m.docker === 'string' ? m.docker : '',
+          local: typeof m.local === 'string' ? m.local : '',
+        }))
+    : [];
   await db.settings.upsert({
     where: { id: 'default' },
     create: {
@@ -63,7 +75,7 @@ export async function saveSettings(data: SettingsData): Promise<void> {
       sonarrApiKey: data.sonarrApiKey,
       fanartApiKey: data.fanartApiKey,
       tmdbApiKey: data.tmdbApiKey,
-      pathMap: JSON.stringify(data.pathMap),
+      pathMap: JSON.stringify(normalizedPathMap),
     },
     update: {
       radarrUrl: data.radarrUrl,
@@ -72,7 +84,7 @@ export async function saveSettings(data: SettingsData): Promise<void> {
       sonarrApiKey: data.sonarrApiKey,
       fanartApiKey: data.fanartApiKey,
       tmdbApiKey: data.tmdbApiKey,
-      pathMap: JSON.stringify(data.pathMap),
+      pathMap: JSON.stringify(normalizedPathMap),
     },
   });
 }

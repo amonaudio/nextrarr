@@ -8,6 +8,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Explicit permissions for the auto-generated GITHUB_TOKEN.
+# By default GitHub restricts the token to read-only — we need:
+# - contents: read  → checkout the code
+# - packages: write  → push the image to GHCR (ghcr.io/<owner>/nextrarr)
 permissions:
   contents: read
   packages: write
@@ -47,6 +51,10 @@ jobs:
           images: |
             ${{ secrets.DOCKERHUB_USERNAME && format('{0}/nextrarr', secrets.DOCKERHUB_USERNAME) || '' }}
             ghcr.io/${{ github.repository }}
+          # Use type=ref,event=tag (NOT type=semver) so any tag works —
+          # semver requires strict MAJOR.MINOR.PATCH (3 parts), which would
+          # reject tags like "v0.2". Using type=ref accepts whatever tag
+          # name was pushed (with optional v prefix stripped).
           tags: |
             type=ref,event=tag
             type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
@@ -62,7 +70,9 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
-          platforms: linux/amd64
+          # Only tag pushes get multi-arch (amd64 + arm64). Branch pushes
+          # and PRs only build amd64 to save CI minutes.
+          platforms: ${{ startsWith(github.ref, 'refs/tags/v') && 'linux/amd64,linux/arm64' || 'linux/amd64' }}
           push: ${{ startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

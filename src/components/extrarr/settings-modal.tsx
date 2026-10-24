@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Folder, Plus, X } from 'lucide-react';
+import { Folder, Plus, X, Plug, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import type { SettingsData } from '@/lib/settings-store';
 
@@ -27,18 +27,53 @@ const EMPTY: SettingsData = {
   pathMap: [],
 };
 
+type TestState = 'idle' | 'testing' | 'ok' | 'error';
+
 export function SettingsModal({ open, onOpenChange, onSaved, onBrowse }: SettingsModalProps) {
   const [data, setData] = useState<SettingsData>(EMPTY);
   const [saving, setSaving] = useState(false);
+  const [radarrTest, setRadarrTest] = useState<TestState>('idle');
+  const [sonarrTest, setSonarrTest] = useState<TestState>('idle');
+  const [testMessage, setTestMessage] = useState<{ radarr?: string; sonarr?: string }>({});
 
   useEffect(() => {
     if (open) {
       fetch('/api/settings').then((r) => r.json()).then((d) => setData(d)).catch(() => {});
+      setRadarrTest('idle');
+      setSonarrTest('idle');
+      setTestMessage({});
     }
   }, [open]);
 
   function patch<K extends keyof SettingsData>(key: K, value: SettingsData[K]) {
     setData((d) => ({ ...d, [key]: value }));
+  }
+
+  async function testConnection(type: 'radarr' | 'sonarr') {
+    const url = type === 'radarr' ? data.radarrUrl : data.sonarrUrl;
+    const key = type === 'radarr' ? data.radarrApiKey : data.sonarrApiKey;
+    if (!url || !key) {
+      toast.error(`URL o API Key di ${type} mancante`);
+      return;
+    }
+    if (type === 'radarr') { setRadarrTest('testing'); setTestMessage((m) => ({ ...m, radarr: undefined })); }
+    else { setSonarrTest('testing'); setTestMessage((m) => ({ ...m, sonarr: undefined })); }
+    try {
+      const res = await fetch(`/api/test-connection/${type}?url=${encodeURIComponent(url)}&key=${encodeURIComponent(key)}`);
+      const result = await res.json();
+      if (result.status === 'success') {
+        if (type === 'radarr') { setRadarrTest('ok'); } else { setSonarrTest('ok'); }
+        toast.success(result.message);
+        setTestMessage((m) => ({ ...m, [type]: result.message }));
+      } else {
+        if (type === 'radarr') { setRadarrTest('error'); } else { setSonarrTest('error'); }
+        toast.error(result.message);
+        setTestMessage((m) => ({ ...m, [type]: result.message }));
+      }
+    } catch (e) {
+      if (type === 'radarr') { setRadarrTest('error'); } else { setSonarrTest('error'); }
+      toast.error('Errore di rete durante il test');
+    }
   }
 
   async function save() {
@@ -73,27 +108,63 @@ export function SettingsModal({ open, onOpenChange, onSaved, onBrowse }: Setting
 
         <div className="space-y-5">
           <div className="space-y-2">
-            <h3 className="text-sm font-semibold border-b border-border pb-1">Radarr (Film)</h3>
+            <div className="flex items-center justify-between border-b border-border pb-1">
+              <h3 className="text-sm font-semibold">Radarr (Film)</h3>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => testConnection('radarr')}
+                disabled={radarrTest === 'testing'}
+                className="ml-auto"
+              >
+                {radarrTest === 'testing' ? <Loader2 className="h-3 w-3 animate-spin" />
+                 : radarrTest === 'ok' ? <CheckCircle2 className="h-3 w-3 text-green-500" />
+                 : radarrTest === 'error' ? <XCircle className="h-3 w-3 text-red-500" />
+                 : <Plug className="h-3 w-3" />}
+                <span className="ml-1 text-xs">Test</span>
+              </Button>
+            </div>
             <div>
               <Label className="text-xs">URL Radarr</Label>
-              <Input value={data.radarrUrl} onChange={(e) => patch('radarrUrl', e.target.value)} placeholder="http://radarr:7878" />
+              <Input value={data.radarrUrl} onChange={(e) => { patch('radarrUrl', e.target.value); setRadarrTest('idle'); }} placeholder="http://radarr:7878" />
             </div>
             <div>
               <Label className="text-xs">API Key Radarr</Label>
-              <Input type="password" value={data.radarrApiKey} onChange={(e) => patch('radarrApiKey', e.target.value)} placeholder="API Key" />
+              <Input type="password" value={data.radarrApiKey} onChange={(e) => { patch('radarrApiKey', e.target.value); setRadarrTest('idle'); }} placeholder="API Key" />
             </div>
+            {testMessage.radarr && (
+              <p className={`text-xs ${radarrTest === 'ok' ? 'text-green-600' : 'text-red-600'}`}>{testMessage.radarr}</p>
+            )}
           </div>
 
           <div className="space-y-2">
-            <h3 className="text-sm font-semibold border-b border-border pb-1">Sonarr (Serie TV)</h3>
+            <div className="flex items-center justify-between border-b border-border pb-1">
+              <h3 className="text-sm font-semibold">Sonarr (Serie TV)</h3>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => testConnection('sonarr')}
+                disabled={sonarrTest === 'testing'}
+                className="ml-auto"
+              >
+                {sonarrTest === 'testing' ? <Loader2 className="h-3 w-3 animate-spin" />
+                 : sonarrTest === 'ok' ? <CheckCircle2 className="h-3 w-3 text-green-500" />
+                 : sonarrTest === 'error' ? <XCircle className="h-3 w-3 text-red-500" />
+                 : <Plug className="h-3 w-3" />}
+                <span className="ml-1 text-xs">Test</span>
+              </Button>
+            </div>
             <div>
               <Label className="text-xs">URL Sonarr</Label>
-              <Input value={data.sonarrUrl} onChange={(e) => patch('sonarrUrl', e.target.value)} placeholder="http://sonarr:8989" />
+              <Input value={data.sonarrUrl} onChange={(e) => { patch('sonarrUrl', e.target.value); setSonarrTest('idle'); }} placeholder="http://sonarr:8989" />
             </div>
             <div>
               <Label className="text-xs">API Key Sonarr</Label>
-              <Input type="password" value={data.sonarrApiKey} onChange={(e) => patch('sonarrApiKey', e.target.value)} placeholder="API Key" />
+              <Input type="password" value={data.sonarrApiKey} onChange={(e) => { patch('sonarrApiKey', e.target.value); setSonarrTest('idle'); }} placeholder="API Key" />
             </div>
+            {testMessage.sonarr && (
+              <p className={`text-xs ${sonarrTest === 'ok' ? 'text-green-600' : 'text-red-600'}`}>{testMessage.sonarr}</p>
+            )}
           </div>
 
           <div className="space-y-2">

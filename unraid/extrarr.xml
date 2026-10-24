@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <Container version="2">
   <Name>nextrarr</Name>
-  <Repository>nextrarr:local</Repository>
-  <Registry>local</Registry>
+  <Repository>nextrarr/nextrarr:latest</Repository>
+  <Registry>https://hub.docker.com/r/nextrarr/nextrarr</Registry>
   <Shell>sh</Shell>
   <Privileged>false</Privileged>
   <Networking>bridge</Networking>
@@ -49,8 +49,8 @@ For local testing without Docker Hub, build the image on Unraid:
   </Overview>
   <Category>MediaTools:MediaServer</Category>
   <WebUI>http://[IP]:[PORT:3000]</WebUI>
-  
-  
+  <TemplateURL>https://raw.githubusercontent.com/nextrarr/nextrarr/main/unraid/extrarr.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/nextrarr/nextrarr/main/unraid/icon.png</Icon>
   <ExtraParams>--restart=unless-stopped</ExtraParams>
   <Date>2026-10-23</Date>
 

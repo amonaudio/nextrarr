@@ -1,5 +1,11 @@
 /**
  * Radarr/Sonarr API client — port of app/services/radarr_sonarr.py
+ *
+ * Includes URL sanitization (strips trailing slashes) and explicit
+ * Content-Type validation so we return a clear error when the configured
+ * URL points to a web page instead of the API (e.g. user typed the
+ * base URL of a reverse proxy, or the API key is wrong and Radarr
+ * redirects to its login HTML page).
  */
 
 export type MediaType = 'radarr' | 'sonarr';
@@ -41,13 +47,55 @@ function buildHeaders(apiKey: string): HeadersInit {
   return { 'X-Api-Key': apiKey };
 }
 
+/**
+ * Strip trailing slashes from a base URL to avoid double slashes when
+ * concatenating with /api/v3/...
+ * Also remove any trailing /api/v3 path if user mistakenly included it.
+ */
+function sanitizeBaseUrl(raw: string): string {
+  let url = raw.trim();
+  // Strip trailing slash(es)
+  url = url.replace(/\/+$/, '');
+  // Strip trailing /api/v3 if user mistakenly included it
+  url = url.replace(/\/api\/v\d+$/i, '');
+  return url;
+}
+
+/**
+ * Fetch a URL and parse JSON, with explicit Content-Type validation.
+ * Throws a clear error if the response is HTML (likely wrong URL or auth).
+ */
 async function fetchJson(url: string, headers: HeadersInit, timeout = 15000): Promise<unknown> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
   try {
     const res = await fetch(url, { headers, signal: controller.signal });
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status} ${res.statusText} from ${url}`);
+      // Try to read the body for additional context (might be JSON error or HTML)
+      let bodyPreview = '';
+      try {
+        bodyPreview = (await res.text()).slice(0, 200);
+      } catch { /* ignore */ }
+      if (res.status === 401 || res.status === 403) {
+        throw new Error(`API key non valida o mancante (HTTP ${res.status}). Verifica la chiave nelle Impostazioni.`);
+      }
+      if (res.status === 404) {
+        throw new Error(`Endpoint non trovato (HTTP 404). L'URL "${url}" non è un endpoint API valido.`);
+      }
+      throw new Error(`HTTP ${res.status} ${res.statusText} da ${url}. Risposta: ${bodyPreview.slice(0, 100)}`);
+    }
+    // Validate Content-Type is JSON, not HTML
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.toLowerCase().includes('application/json')) {
+      // The response is HTML (probably Radarr's web UI homepage because URL is wrong)
+      let bodyPreview = '';
+      try { bodyPreview = (await res.text()).slice(0, 100); } catch { /* ignore */ }
+      throw new Error(
+        `L'URL "${url}" ha restituito HTML invece di JSON (Content-Type: ${contentType || 'vuoto'}). ` +
+        `Probabile causa: URL errato (deve essere la BASE URL senza /api/v3), ` +
+        `oppure stai puntando alla pagina web di login invece che all'API. ` +
+        `Anteprima risposta: ${bodyPreview.slice(0, 60)}...`
+      );
     }
     return await res.json();
   } finally {
@@ -62,7 +110,8 @@ export async function fetchMediaList(
 ): Promise<ArrMedia[]> {
   const urlKey = mediaType === 'radarr' ? 'radarrUrl' : 'sonarrUrl';
   const keyKey = mediaType === 'radarr' ? 'radarrApiKey' : 'sonarrApiKey';
-  const baseUrl = settings[urlKey];
+  const baseUrl = sanitizeBaseUrl(settings[urlKey]);
+  if (!baseUrl) throw new Error(`URL per ${mediaType} mancante`);
   const apiKey = settings[keyKey];
   if (!apiKey) throw new Error(`API Key per ${mediaType} mancante`);
   const apiPath = API_PATH[mediaType];
@@ -78,11 +127,13 @@ export async function fetchSingleMedia(
 ): Promise<ArrMedia> {
   const urlKey = mediaType === 'radarr' ? 'radarrUrl' : 'sonarrUrl';
   const keyKey = mediaType === 'radarr' ? 'radarrApiKey' : 'sonarrApiKey';
+  const baseUrl = sanitizeBaseUrl(settings[urlKey]);
+  if (!baseUrl) throw new Error(`URL per ${mediaType} mancante`);
   const apiKey = settings[keyKey];
   if (!apiKey) throw new Error(`API Key per ${mediaType} mancante`);
   const apiPath = API_PATH[mediaType];
   const data = await fetchJson(
-    `${settings[urlKey]}/api/v3/${apiPath}/${mediaId}`,
+    `${baseUrl}/api/v3/${apiPath}/${mediaId}`,
     buildHeaders(apiKey),
     timeout,
   );
@@ -96,11 +147,12 @@ export async function fetchRootFolders(
 ): Promise<string[]> {
   const urlKey = mediaType === 'radarr' ? 'radarrUrl' : 'sonarrUrl';
   const keyKey = mediaType === 'radarr' ? 'radarrApiKey' : 'sonarrApiKey';
+  const baseUrl = sanitizeBaseUrl(settings[urlKey]);
   const apiKey = settings[keyKey];
-  if (!apiKey) return [];
+  if (!baseUrl || !apiKey) return [];
   try {
     const data = await fetchJson(
-      `${settings[urlKey]}/api/v3/rootFolder`,
+      `${baseUrl}/api/v3/rootFolder`,
       buildHeaders(apiKey),
       timeout,
     );

@@ -2,7 +2,52 @@
 
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v0.2.html).
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v0.3.html).
+
+## [0.3] — 2026-10-23 — Connection errors + path mapping fixes
+
+### 🐛 Fixed
+- **"Unexpected token '<', '<!doctype'... is not valid JSON" when loading media**:
+  the `fetchJson` helper in `src/lib/services/radarr-sonarr.ts` now validates
+  the `Content-Type` header before parsing — if the response is HTML instead
+  of JSON (wrong URL, reverse proxy returning a login page, missing API key),
+  it throws a clear error explaining the cause instead of crashing the JSON
+  parser.
+- **URL sanitization for *arr connections**: `sanitizeBaseUrl()` strips
+  trailing slashes and removes any trailing `/api/v3` path (common mistake
+  when users copy-paste from Radarr UI).
+- **Same Content-Type + status code fix for Fanart.tv** (`src/lib/services/fanart.ts`):
+  distinct errors for 401/403 (invalid key) and 404 (no artwork for that ID).
+- **Same fix for TMDB** (`src/lib/services/tmdb.ts`).
+- **Path mapping entries were being dropped on save/load** if the `local`
+  field was a non-string value (null, undefined, number). The
+  `loadSettings` and `saveSettings` functions in `src/lib/settings-store.ts`
+  now NORMALIZE non-string fields to `''` instead of filtering them out —
+  no more silent data loss.
+
+### ✨ Added
+- **"Test Connection" button** in the Settings modal (next to the Radarr and
+  Sonarr section headers). Clicks call the new `/api/test-connection/[type]`
+  endpoint which pings `${baseUrl}/api/v3/system/status` with the current
+  URL + API key (no need to save first). Returns:
+  - ✓ green check + toast success if the *arr responds with JSON
+  - ✗ red X + detailed error message for each failure mode:
+    - 401/403 → "API key rifiutata"
+    - 404 → "Endpoint non trovato"
+    - HTML response → "URL punta alla pagina web invece dell'API"
+    - ENOTFOUND → "Hostname non risolvibile"
+    - ECONNREFUSED → "Connessione rifiutata"
+    - timeout → "Timeout dopo 10s"
+- **Visual feedback inline**: after Test, the result message is shown in
+  green/red text under the relevant section, with the icon badge on the
+  Test button persisting until the user edits the URL or API key (which
+  resets the test state to "idle").
+
+### 🏗️ Changed
+- Bumped version 0.2 → 0.3 (badge in header, README, CHANGELOG, entrypoint
+  log, Dockerfile header).
+
+---
 
 ## [0.2] — 2026-10-23 — Bug fixes + Unraid CA template polish
 
@@ -73,7 +118,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v0.2.h
 - **GitHub Actions CI/CD** — auto-build and push on tag release to both Docker Hub and GitHub Container Registry (ghcr.io)
 - **Atomic writes**: NFO updates and theme.mp3 downloads use tmp file + rename to prevent corruption
 
-### 🐛 Fixed (carried over from v0.2 of the Flask rewrite)
+### 🐛 Fixed (carried over from v0.3 of the Flask rewrite)
 - `scrollToLetter` was broken in v1.2.2 due to `c.dataset_title` typo — now uses `c.dataset.title`
 - `updateFilterDropdown` previously skipped options during `forEach+remove` (indices shifted) — fixed by iterating backwards
 - NFO trailer regex now matches 4 URL formats: `plugin://`, `watch?v=`, `youtu.be/`, `embed/`

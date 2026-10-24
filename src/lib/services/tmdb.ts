@@ -62,7 +62,19 @@ export async function fetchImages(
       headers: { 'User-Agent': 'Mozilla/5.0' },
       signal: controller.signal,
     });
-    if (!res.ok) throw new Error(`TMDB API HTTP ${res.status}`);
+    if (!res.ok) {
+      if (res.status === 401 || res.status === 403) {
+        throw new Error(`TMDB API key non valida o mancante (HTTP ${res.status}). Verifica la chiave nelle Impostazioni.`);
+      }
+      if (res.status === 404) {
+        throw new Error(`TMDB non ha immagini per ${mediaType} ID ${tmdbId} (HTTP 404). L'ID potrebbe non esistere su TMDB.`);
+      }
+      throw new Error(`TMDB API HTTP ${res.status} ${res.statusText}`);
+    }
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.toLowerCase().includes('application/json')) {
+      throw new Error(`TMDB ha restituito HTML invece di JSON (Content-Type: ${contentType}). Probabile API key errata.`);
+    }
     return await res.json() as TmdbImagesResponse;
   } finally {
     clearTimeout(tid);
