@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>nextrarr</Name>
+  <Repository>amonaudio/nextrarr:latest</Repository>
+  <Registry>https://hub.docker.com/r/amonaudio/nextrarr</Registry>
+  <Shell>sh</Shell>
+  <Privileged>false</Privileged>
+  <Networking>bridge</Networking>
+  <Support>https://github.com/amonaudio/nextrarr/issues</Support>
+  <Project>https://github.com/amonaudio/nextrarr</Project>
+  <Overview>nEXTrarr — Radarr/Sonarr metadata completion tool (themes, trailers, artwork) built with Next.js 16.</Overview>
+  <Category>MediaTools:MediaServer</Category>
+  <WebUI>http://[IP]:[PORT:3000]</WebUI>
+  <TemplateURL>https://raw.githubusercontent.com/amonaudio/nextrarr/main/unraid/extrarr.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/amonaudio/nextrarr/main/unraid/icon.png</Icon>
+  <ExtraParams>--restart=unless-stopped</ExtraParams>
+  <Date>2026-10-24</Date>
+
+  <Config Name="Port: Web Interface" Target="3000" Default="3000" Mode="tcp" Description="Web UI port for nEXTrarr" Type="Port" Display="always" Required="true" Mask="false">3000</Config>
+  <Config Name="Path: App Data" Target="/config" Default="/mnt/user/appdata/nextrarr" Mode="rw" Description="Persistent settings + SQLite database" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/nextrarr</Config>
+  <Config Name="Path: Media Root" Target="/mnt/user" Default="/mnt/user/media/" Mode="rw" Description="Host media root (read-write for theme.mp3 + artwork + NFO)" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/media/</Config>
+  <Config Name="Variable: Allowed Prefixes" Target="EXTRARR_ALLOWED_PREFIXES" Default="/mnt,/data/media" Description="Comma-separated allowed path prefixes" Type="Variable" Display="always" Required="false" Mask="false">/mnt,/data/media</Config>
+  <Config Name="Variable: Log Level" Target="EXTRARR_LOG_LEVEL" Default="INFO" Description="DEBUG, INFO, WARNING, ERROR" Type="Variable" Display="always" Required="false" Mask="false">INFO</Config>
+  <Config Name="Variable: Demo Mode" Target="EXTRARR_DEMO_MODE" Default="" Description="Set to 1 for mock data" Type="Variable" Display="always" Required="false" Mask="false"></Config>
+</Container>

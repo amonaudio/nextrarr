@@ -1,0 +1,34 @@
+# docker-compose.yml — local testing / Docker Hub deploy
+#
+# For Unraid deployment use the Community Applications template (unraid/extrarr.xml).
+# Replace /path/to/your/media with the host path to your media library.
+# On Unraid, mount /mnt/user to give the container access to all shares.
+
+services:
+  extrarr:
+    image: nextrarr/nextrarr:latest   # ← replace with your Docker Hub user/repo
+    container_name: extrarr
+    restart: unless-stopped
+    ports:
+      - "5000:3000"                  # host:container (Unraid: leave at 3000:3000 to match the template)
+    volumes:
+      - ./config:/config             # persistent settings + SQLite DB
+      - /mnt/user:/mnt/user:rw       # Unraid: host media root (RW for theme.mp3 + artwork)
+    environment:
+      # Basic Auth (optional — leave empty to disable)
+      EXTRARR_USERNAME: ""
+      EXTRARR_PASSWORD: ""
+      # Comma-separated list of allowed path prefixes for media access
+      EXTRARR_ALLOWED_PREFIXES: "/mnt,/data/media"
+      # Log level: DEBUG | INFO | WARNING | ERROR
+      EXTRARR_LOG_LEVEL: "INFO"
+      # Set to "1" to force mock data even when API keys are configured (demo)
+      EXTRARR_DEMO_MODE: ""
+    # Override Prisma DATABASE_URL via env (matches Dockerfile default)
+    # DATABASE_URL is set in Dockerfile to file:/config/extrarr.db
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:3000/api/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
