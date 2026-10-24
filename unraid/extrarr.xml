@@ -8,59 +8,18 @@
   <Networking>bridge</Networking>
   <Support>https://github.com/amonaudio/nextrarr/issues</Support>
   <Project>https://github.com/amonaudio/nextrarr</Project>
-  <Overview>
-nEXTrarr 0.2 — scans your Radarr/Sonarr libraries and helps you complete
-missing metadata: theme songs (theme.mp3), trailers (written to .nfo files),
-and extra artwork (clearlogo, clearart, banner, landscape, discart) from
-Fanart.tv and TMDB.
-
-Next.js 16 + TypeScript + React + Prisma SQLite + shadcn/ui.
-
-Features:
-- Full structured NFO editor (Form + Raw XML views)
-- Path traversal + SSRF protection (whitelisted artwork domains)
-- TTL cache on /api/media
-- Theme toggle (dark/light) — persisted
-- Self-healing DB schema (creates tables on first request via @prisma/client)
-- Optional Basic Auth via env vars
-- Multi-arch image (linux/amd64 + linux/arm64)
-
-Setup:
-1. Map /mnt/user to your Unraid media share (read-write).
-2. Map /config to /mnt/user/appdata/nextrarr for persistent settings + DB.
-3. Open WebUI (port 3000) — starts in DEMO mode automatically (12 mock movies).
-4. Click Settings (gear icon) and configure:
-   - Radarr URL + API key
-   - Sonarr URL + API key (optional)
-   - Fanart.tv API key (optional, for artwork)
-   - TMDB API key (optional, for artwork)
-   - Path mapping (e.g. Docker /movies -&gt; Host /mnt/user/Movies)
-     Tip: you can type the host path manually OR use the Sfoglia (Browse) button.
-5. Save. Your real library will load.
-
-For local testing without Docker Hub, build the image on Unraid:
-  cd /mnt/user/appdata/nextrarr
-  docker build -t nextrarr:local .
-  docker run -d --name nextrarr --restart unless-stopped \
-    -p 3000:3000 \
-    -v /mnt/user/appdata/nextrarr:/config \
-    -v /mnt/user:/mnt/user:rw \
-    nextrarr:local
-  </Overview>
+  <Overview>nEXTrarr — Radarr/Sonarr metadata completion tool (themes, trailers, artwork) built with Next.js 16.</Overview>
   <Category>MediaTools:MediaServer</Category>
   <WebUI>http://[IP]:[PORT:3000]</WebUI>
   <TemplateURL>https://raw.githubusercontent.com/amonaudio/nextrarr/main/unraid/extrarr.xml</TemplateURL>
   <Icon>https://raw.githubusercontent.com/amonaudio/nextrarr/main/unraid/icon.png</Icon>
   <ExtraParams>--restart=unless-stopped</ExtraParams>
-  <Date>2026-10-23</Date>
+  <Date>2026-10-24</Date>
 
-  <Config Name="WebUI" Target="3000" Default="3000" Mode="tcp" Description="Port for the nEXTrarr web UI (container internal: 3000)"/>
-  <Config Name="App Data" Target="/config" Default="/mnt/user/appdata/nextrarr" Mode="rw" Description="Persistent settings + SQLite database. Contains API keys — kept chmod 600 by entrypoint."/>
-  <Config Name="Media Root" Target="/mnt/user" Default="/mnt/user" Mode="rw" Description="Host media root (Unraid user share). Read-write so the app can save theme.mp3, artwork files, and NFO trailer tags."/>
-
-  <Config Name="Optional: Username" Target="EXTRARR_USERNAME" Default="" Description="Leave empty to disable Basic Auth. Set together with EXTRARR_PASSWORD to enable HTTP Basic Auth on all endpoints." Mode=""/>
-  <Config Name="Optional: Password" Target="EXTRARR_PASSWORD" Default="" Description="Leave empty to disable Basic Auth." Mode=""/>
-  <Config Name="Allowed Prefixes" Target="EXTRARR_ALLOWED_PREFIXES" Default="/mnt,/data/media" Description="Comma-separated list of allowed path prefixes for media access (defense-in-depth against path traversal). Default allows everything under /mnt and /data/media." Mode=""/>
-  <Config Name="Log Level" Target="EXTRARR_LOG_LEVEL" Default="INFO" Description="DEBUG | INFO | WARNING | ERROR — controls verbosity of the Next.js server + entrypoint logs." Mode=""/>
-  <Config Name="Demo Mode" Target="EXTRARR_DEMO_MODE" Default="" Description="Set to 1 to force mock data (12 movies + 4 TV shows) even when API keys are configured. Useful for UI testing without connecting real Radarr." Mode=""/>
+  <Config Name="Port: Web Interface" Target="3000" Default="3000" Mode="tcp" Description="Web UI port for nEXTrarr" Type="Port" Display="always" Required="true" Mask="false">3000</Config>
+  <Config Name="Path: App Data" Target="/config" Default="/mnt/user/appdata/nextrarr" Mode="rw" Description="Persistent settings + SQLite database" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/nextrarr</Config>
+  <Config Name="Path: Media Root" Target="/mnt/user" Default="/mnt/user" Mode="rw" Description="Host media root (read-write for theme.mp3 + artwork + NFO)" Type="Path" Display="always" Required="true" Mask="false">/mnt/user</Config>
+  <Config Name="Variable: Allowed Prefixes" Target="EXTRARR_ALLOWED_PREFIXES" Default="/mnt,/data/media" Description="Comma-separated allowed path prefixes" Type="Variable" Display="always" Required="false" Mask="false">/mnt,/data/media</Config>
+  <Config Name="Variable: Log Level" Target="EXTRARR_LOG_LEVEL" Default="INFO" Description="DEBUG, INFO, WARNING, ERROR" Type="Variable" Display="always" Required="false" Mask="false">INFO</Config>
+  <Config Name="Variable: Demo Mode" Target="EXTRARR_DEMO_MODE" Default="" Description="Set to 1 for mock data" Type="Variable" Display="always" Required="false" Mask="false"></Config>
 </Container>
