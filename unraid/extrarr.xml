@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <Container version="2">
   <Name>nextrarr</Name>
-  <Repository>nextrarr/nextrarr:latest</Repository>
-  <Registry>https://hub.docker.com/r/nextrarr/nextrarr</Registry>
+  <Repository>amonaudio/nextrarr:latest</Repository>
+  <Registry>https://hub.docker.com/r/amonaudio/nextrarr</Registry>
   <Shell>sh</Shell>
   <Privileged>false</Privileged>
   <Networking>bridge</Networking>
-  <Support>https://github.com/nextrarr/nextrarr/issues</Support>
-  <Project>https://github.com/nextrarr/nextrarr</Project>
+  <Support>https://github.com/amonaudio/nextrarr/issues</Support>
+  <Project>https://github.com/amonaudio/nextrarr</Project>
   <Overview>
 nEXTrarr 0.2 — scans your Radarr/Sonarr libraries and helps you complete
 missing metadata: theme songs (theme.mp3), trailers (written to .nfo files),
@@ -49,8 +49,8 @@ For local testing without Docker Hub, build the image on Unraid:
   </Overview>
   <Category>MediaTools:MediaServer</Category>
   <WebUI>http://[IP]:[PORT:3000]</WebUI>
-  <TemplateURL>https://raw.githubusercontent.com/nextrarr/nextrarr/main/unraid/extrarr.xml</TemplateURL>
-  <Icon>https://raw.githubusercontent.com/nextrarr/nextrarr/main/unraid/icon.png</Icon>
+  <TemplateURL>https://raw.githubusercontent.com/amonaudio/nextrarr/main/unraid/extrarr.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/amonaudio/nextrarr/main/unraid/icon.png</Icon>
   <ExtraParams>--restart=unless-stopped</ExtraParams>
   <Date>2026-10-23</Date>
 
