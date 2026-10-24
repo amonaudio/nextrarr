@@ -13,7 +13,6 @@ import { Header } from '@/components/extrarr/header';
 import { MediaGrid } from '@/components/extrarr/media-grid';
 import { MediaPlayer } from '@/components/extrarr/media-player';
 import { SettingsModal } from '@/components/extrarr/settings-modal';
-import { DirectoryBrowserModal } from '@/components/extrarr/directory-browser-modal';
 import { CustomFilterModal } from '@/components/extrarr/custom-filter-modal';
 import { EditorModal } from '@/components/extrarr/editor-modal';
 import { ArtworkModal } from '@/components/extrarr/artwork-modal';
@@ -37,8 +36,6 @@ export default function Home() {
 
   // Modal state
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [browserOpen, setBrowserOpen] = useState(false);
-  const [browserTargetIndex, setBrowserTargetIndex] = useState<number | null>(null);
   const [customFilterOpen, setCustomFilterOpen] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
   const [artworkOpen, setArtworkOpen] = useState(false);
@@ -255,31 +252,10 @@ export default function Home() {
     setCustomFilterOpen(true);
   }
 
-  // Path mapping browser
-  function onBrowse(index: number) {
-    setBrowserTargetIndex(index);
-    setBrowserOpen(true);
-  }
-
-  async function onBrowserSelect(path: string) {
-    if (browserTargetIndex === null) return;
-    // Read current settings, update the path at index, save
-    try {
-      const r = await fetch('/api/settings');
-      const settings = await r.json();
-      if (Array.isArray(settings.pathMap) && settings.pathMap[browserTargetIndex]) {
-        settings.pathMap[browserTargetIndex].local = path;
-        await fetch('/api/settings', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(settings),
-        });
-        toast.success('Percorso aggiornato');
-      }
-    } catch {
-      toast.error('Errore salvataggio');
-    }
-  }
+  // NOTE: Directory browser is now handled INSIDE SettingsModal (v0.5 fix).
+  // Previously, onBrowserSelect here fetched stale settings from the API
+  // (which didn't have unsaved new rows) → overwrote the user's changes.
+  // Now the browser updates the Settings modal's local React state directly.
 
   // Editor preview (theme/trailer YouTube search results)
   function onEditorPreview(videoId: string, url: string, kind: 'editor_theme' | 'editor_trailer') {
@@ -353,12 +329,6 @@ export default function Home() {
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
         onSaved={() => { loadMedia(); loadRootFolders(); }}
-        onBrowse={onBrowse}
-      />
-      <DirectoryBrowserModal
-        open={browserOpen}
-        onOpenChange={setBrowserOpen}
-        onSelect={onBrowserSelect}
       />
       <CustomFilterModal
         open={customFilterOpen}

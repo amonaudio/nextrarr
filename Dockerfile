@@ -1,5 +1,5 @@
 # ====================================================================
-# nEXTrarr 0.4 — Next.js Docker image for Unraid
+# nEXTrarr 0.5 — Next.js Docker image for Unraid
 # Multi-stage build:
 #   1. deps — install npm/bun deps (handles missing lockfile gracefully)
 #   2. builder — compile Next.js (standalone output)
