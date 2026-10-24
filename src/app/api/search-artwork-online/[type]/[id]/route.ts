@@ -16,11 +16,11 @@ function isValidType(t: string | undefined): t is MediaType {
 }
 
 const MOCK_FANART: BrowseArtworkItem[] = [
-  { ourType: 'clearlogo', ext: 'png', url: 'https://assets.fanart.tv/fanart/movies/603/hdmovielogo/the-matrix-5e3b2c4e9e8c4.png', lang: 'en', likes: '42' },
-  { ourType: 'clearart', ext: 'png', url: 'https://assets.fanart.tv/fanart/movies/603/hdmovieclearart/the-matrix-art-7f3a1b2c4d5e6.png', lang: 'en', likes: '31' },
-  { ourType: 'banner', ext: 'jpg', url: 'https://assets.fanart.tv/fanart/movies/603/moviebanner/the-matrix-banner.jpg', lang: 'en', likes: '18' },
-  { ourType: 'landscape', ext: 'jpg', url: 'https://assets.fanart.tv/fanart/movies/603/moviethumb/the-matrix-thumb.jpg', lang: 'en', likes: '27' },
-  { ourType: 'discart', ext: 'png', url: 'https://assets.fanart.tv/fanart/movies/603/moviedisc/the-matrix-disc.png', lang: 'en', likes: '12' },
+  { our_type: 'clearlogo', ext: 'png', url: 'https://assets.fanart.tv/fanart/movies/603/hdmovielogo/the-matrix-5e3b2c4e9e8c4.png', lang: 'en', likes: '42' },
+  { our_type: 'clearart', ext: 'png', url: 'https://assets.fanart.tv/fanart/movies/603/hdmovieclearart/the-matrix-art-7f3a1b2c4d5e6.png', lang: 'en', likes: '31' },
+  { our_type: 'banner', ext: 'jpg', url: 'https://assets.fanart.tv/fanart/movies/603/moviebanner/the-matrix-banner.jpg', lang: 'en', likes: '18' },
+  { our_type: 'landscape', ext: 'jpg', url: 'https://assets.fanart.tv/fanart/movies/603/moviethumb/the-matrix-thumb.jpg', lang: 'en', likes: '27' },
+  { our_type: 'discart', ext: 'png', url: 'https://assets.fanart.tv/fanart/movies/603/moviedisc/the-matrix-disc.png', lang: 'en', likes: '12' },
 ];
 
 export async function GET(

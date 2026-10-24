@@ -47,6 +47,7 @@ export async function GET(
 
   const settings = await loadSettings();
   const lang = req.nextUrl.searchParams.get('lang') ?? 'en';
+  const customQuery = req.nextUrl.searchParams.get('query') ?? '';
 
   // Find the media (from Radarr/Sonarr, or mock)
   let media: { title: string } | null;
@@ -69,7 +70,7 @@ export async function GET(
     return NextResponse.json(MOCK_RESULTS);
   }
 
-  const query = buildQuery(media, searchType, lang);
+  const query = customQuery || buildQuery(media, searchType, lang);
   try {
     const videos = await ytSearch(query, 10, 30000);
     return NextResponse.json(videos);

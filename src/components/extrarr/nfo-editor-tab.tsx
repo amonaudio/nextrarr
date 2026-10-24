@@ -23,7 +23,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Trash2, Save, Loader2, AlertTriangle } from 'lucide-react';
+import { Plus, Trash2, Save, Loader2, AlertTriangle, Globe } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface NfoEditorTabProps {
@@ -167,9 +167,53 @@ export function NfoEditorTab({ mediaType, mediaId, onChanged }: NfoEditorTabProp
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
+  const [tmdbLoading, setTmdbLoading] = useState<string | null>(null); // 'it' | 'en' | null
   // Active tab: 'form' | 'raw'
   const [tab, setTab] = useState<'form' | 'raw'>('form');
   const formRef = useRef<NfoFields>(fields);
+
+  // Fetch info from TMDB and auto-fill the form
+  async function fetchTmdbInfo(lang: 'it' | 'en') {
+    setTmdbLoading(lang);
+    try {
+      const res = await fetch(`/api/tmdb-info/${mediaType}/${mediaId}?lang=${lang}`);
+      const data = await res.json();
+      if (data.status === 'success') {
+        const newFields: NfoFields = {
+          ...EMPTY_FIELDS,
+          title: data.title || fields.title,
+          originaltitle: data.originaltitle || fields.originaltitle,
+          sorttitle: data.sorttitle || '',
+          year: data.year || fields.year,
+          rating: fields.rating, // Keep existing rating
+          ratingMax: fields.ratingMax,
+          premiered: data.premiered || '',
+          runtime: data.runtime || '',
+          mpaa: data.mpaa || '',
+          studio: data.studio || '',
+          genres: Array.isArray(data.genres) ? data.genres : [],
+          director: data.director || '',
+          writer: data.writer || '',
+          plot: data.plot || '',
+          outline: data.outline || '',
+          tags: Array.isArray(data.tags) ? data.tags : [],
+          trailer: fields.trailer, // Keep existing trailer
+          uniqueids: Array.isArray(data.uniqueids) ? data.uniqueids : [],
+        };
+        setFields(newFields);
+        formRef.current = newFields;
+        setRaw(buildNfoXml(newFields, mediaType));
+        setDirty(true);
+        toast.success(lang === 'it' ? 'Form compilato da TMDB (italiano)' : 'Form filled from TMDB (English)');
+      } else {
+        toast.error(data.message || 'Errore TMDB');
+      }
+    } catch {
+      toast.error('Errore di rete');
+    } finally {
+      setTmdbLoading(null);
+    }
+  }
 
   // Load NFO content on mount
   useEffect(() => {
@@ -280,6 +324,20 @@ export function NfoEditorTab({ mediaType, mediaId, onChanged }: NfoEditorTabProp
         </TabsList>
 
         <TabsContent value="form" className="space-y-3 mt-3 max-h-[60vh] overflow-y-auto pr-2">
+          {/* TMDB auto-fill buttons */}
+          <div className="flex items-center gap-2 p-2 bg-muted/30 rounded border border-border">
+            <Globe className="h-4 w-4 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">Compila da TMDB:</span>
+            <Button size="sm" variant="outline" onClick={() => fetchTmdbInfo('it')} disabled={tmdbLoading !== null}>
+              {tmdbLoading === 'it' ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+              <span className="ml-1 text-xs">🇮🇹 IT</span>
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => fetchTmdbInfo('en')} disabled={tmdbLoading !== null}>
+              {tmdbLoading === 'en' ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+              <span className="ml-1 text-xs">🇬🇧 ENG</span>
+            </Button>
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="text-xs">Title</Label>

@@ -56,7 +56,7 @@ export function Header({ onOpenSettings, onOpenCustomFilters, onGlobalSearch, ro
       <div className="flex items-center gap-2">
         <span className="text-2xl">🎬</span>
         <h1 className="text-xl font-bold text-primary">nEXTrarr</h1>
-        <Badge variant="outline" className="text-xs ml-1">v0.5</Badge>
+        <Badge variant="outline" className="text-xs ml-1">v0.6.2</Badge>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">

@@ -1,6 +1,6 @@
 /**
  * GET /api/audio-media/[type]/[id] — stream the theme.mp3 file.
- * In demo mode returns a 404 (no real file to stream).
+ * In demo mode returns a 5-second silent WAV (seekable).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -13,6 +13,29 @@ import { resolveLocalPath, validateLocalPath } from '@/lib/paths';
 import { shouldUseMock, getMockSingleMedia } from '@/lib/mock-data';
 
 export const dynamic = 'force-dynamic';
+
+/** Generate a proper silent WAV file (seekable in all browsers). */
+function generateSilentWav(durationSec: number = 5): Buffer {
+  const sampleRate = 44100;
+  const bitsPerSample = 16;
+  const numChannels = 1;
+  const dataSize = durationSec * sampleRate * (bitsPerSample / 8) * numChannels;
+  const buffer = Buffer.alloc(44 + dataSize);
+  buffer.write('RIFF', 0);
+  buffer.writeUInt32LE(36 + dataSize, 4);
+  buffer.write('WAVE', 8);
+  buffer.write('fmt ', 12);
+  buffer.writeUInt32LE(16, 16);
+  buffer.writeUInt16LE(1, 20);
+  buffer.writeUInt16LE(numChannels, 22);
+  buffer.writeUInt32LE(sampleRate, 24);
+  buffer.writeUInt32LE(sampleRate * numChannels * (bitsPerSample / 8), 28);
+  buffer.writeUInt16LE(numChannels * (bitsPerSample / 8), 32);
+  buffer.writeUInt16LE(bitsPerSample, 34);
+  buffer.write('data', 36);
+  buffer.writeUInt32LE(dataSize, 40);
+  return buffer;
+}
 
 function isValidType(t: string | undefined): t is MediaType {
   return t === 'radarr' || t === 'sonarr';
@@ -33,25 +56,12 @@ export async function GET(
 
   const settings = await loadSettings();
   if (shouldUseMock(type, settings)) {
-    // In demo mode there's no real file to stream — return a tiny silent MP3
-    // so the <audio> element can still load without throwing a network error.
-    const silentMp3 = Buffer.from(
-      'SUQzBAAAAAAAI1RTUwT/////9FAGFkbmc4UCQQ/' +
-      '////////////////////////////////////////////////////////////////' +
-      '///////////////////////////////////////////////////////////////' +
-      '/////////////8AAAAATEFNRTMuMTAwAwAAAAAAAAAAAAAAAAAAAAAAAA' +
-      'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' +
-      'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' +
-      'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' +
-      'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' +
-      'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' +
-      'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
-      'base64',
-    );
-    return new NextResponse(silentMp3 as unknown as BodyInit, {
+    const silentWav = generateSilentWav(5);
+    return new NextResponse(silentWav as unknown as BodyInit, {
       status: 200,
       headers: {
-        'Content-Type': 'audio/mpeg',
+        'Content-Type': 'audio/wav',
+        'Content-Length': String(silentWav.length),
         'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
       },
     });
@@ -72,16 +82,16 @@ export async function GET(
     return NextResponse.json({ error: error! }, { status: 400 });
   }
 
-  const themePath = path.join(localPath, 'theme.mp3');
+  const themePath = path.join(localPath, "theme.mp3");
   if (!existsSync(themePath)) {
-    return NextResponse.json({ error: 'File not found' }, { status: 404 });
+    return NextResponse.json({ error: "File not found" }, { status: 404 });
   }
   const buf = await readFile(themePath);
   return new NextResponse(buf as unknown as BodyInit, {
     status: 200,
     headers: {
-      'Content-Type': 'audio/mpeg',
-      'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+      "Content-Type": "audio/mpeg",
+      "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
     },
   });
 }

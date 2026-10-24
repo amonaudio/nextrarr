@@ -8,7 +8,7 @@
 import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Loader2, Download } from 'lucide-react';
+import { Loader2, Download, X } from 'lucide-react';
 import { toast } from 'sonner';
 import type { ArtworkItem, MediaItem } from '@/lib/types';
 
@@ -27,6 +27,7 @@ export function ArtworkModal({ open, onOpenChange, media, mediaType, onChanged }
   const [fanartError, setFanartError] = useState<string | null>(null);
   const [tmdbError, setTmdbError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open || !media) return;
@@ -94,7 +95,7 @@ export function ArtworkModal({ open, onOpenChange, media, mediaType, onChanged }
               {localFiles.map((f) => (
                 <div key={f} className="bg-card border border-border rounded p-1 flex flex-col items-center gap-1">
                   { }
-                  <img src={`/api/artwork-image/${mediaType}/${media.id}/${encodeURIComponent(f)}`} alt={f} className="w-full h-20 object-contain bg-black rounded" loading="lazy" />
+                  <img src={`/api/artwork-image/${mediaType}/${media.id}/${encodeURIComponent(f)}`} alt={f} className="w-full h-20 object-contain bg-black rounded cursor-pointer" loading="lazy" onClick={() => setZoomedImage(`/api/artwork-image/${mediaType}/${media.id}/${encodeURIComponent(f)}`)} />
                   <div className="text-[10px] text-center break-all">{f}</div>
                 </div>
               ))}
@@ -115,7 +116,7 @@ export function ArtworkModal({ open, onOpenChange, media, mediaType, onChanged }
               {fanartItems.map((a) => (
                 <div key={a.url} className="bg-card border border-border rounded p-1 flex flex-col items-center gap-1">
                   { }
-                  <img src={a.url} alt={a.our_type} className="w-full h-20 object-contain bg-black rounded" loading="lazy" />
+                  <img src={a.url} alt={a.our_type} className="w-full h-20 object-contain bg-black rounded cursor-pointer" loading="lazy" onClick={() => setZoomedImage(a.url)} />
                   <div className="text-[10px] text-center">
                     Tipo: {a.our_type}<br />Lingua: {a.lang} | Likes: {a.likes}
                   </div>
@@ -142,7 +143,7 @@ export function ArtworkModal({ open, onOpenChange, media, mediaType, onChanged }
               {tmdbItems.map((a) => (
                 <div key={a.url} className="bg-card border border-border rounded p-1 flex flex-col items-center gap-1">
                   { }
-                  <img src={a.url} alt={a.our_type} className="w-full h-20 object-contain bg-black rounded" loading="lazy" />
+                  <img src={a.url} alt={a.our_type} className="w-full h-20 object-contain bg-black rounded cursor-pointer" loading="lazy" onClick={() => setZoomedImage(a.url)} />
                   <div className="text-[10px] text-center">
                     Tipo: {a.our_type}<br />Lingua: {a.lang} | Voto: {a.likes}
                   </div>
@@ -156,6 +157,27 @@ export function ArtworkModal({ open, onOpenChange, media, mediaType, onChanged }
           )}
         </section>
       </DialogContent>
+
+      {/* Image zoom overlay — click to open fullscreen within modal */}
+      {zoomedImage && (
+        <div
+          className="fixed inset-0 z-[110] flex items-center justify-center bg-black/90 p-4"
+          onClick={() => setZoomedImage(null)}
+        >
+          <button
+            className="absolute top-4 right-4 text-white text-3xl z-10"
+            onClick={() => setZoomedImage(null)}
+            aria-label="Chiudi zoom"
+          >
+            <X />
+          </button>
+          <img
+            src={zoomedImage}
+            alt="Artwork zoom"
+            className="max-w-full max-h-full object-contain"
+          />
+        </div>
+      )}
     </Dialog>
   );
 }

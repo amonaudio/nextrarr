@@ -235,24 +235,27 @@ export function SettingsModal({ open, onOpenChange, onSaved }: SettingsModalProp
                 <div className="space-y-2">
                   {data.pathMap.map((m, i) => (
                     <div key={i} className="flex gap-2 items-center p-2 bg-background border border-border rounded">
-                      <span className="text-xs font-bold text-primary w-12 text-center">..arr</span>
-                      <Input
-                        placeholder="/movies"
-                        value={m.docker}
-                        onChange={(e) => updatePathMapEntry(i, 'docker', e.target.value)}
-                      />
-                      <span className="opacity-40">→</span>
-                      <span className="text-xs font-bold text-primary w-12 text-center">host</span>
-                      <Input
-                        placeholder="/mnt/user/Movies"
-                        value={m.local}
-                        onChange={(e) => updatePathMapEntry(i, 'local', e.target.value)}
-                        className="flex-1"
-                      />
-                      <Button size="sm" variant="outline" onClick={() => openBrowser(i)} title="Sfoglia">
+                      <span className="text-xs font-bold text-primary w-10 text-center shrink-0">..arr</span>
+                      <div className="flex-1 min-w-0">
+                        <Input
+                          placeholder="/movies"
+                          value={m.docker}
+                          onChange={(e) => updatePathMapEntry(i, 'docker', e.target.value)}
+                        />
+                      </div>
+                      <span className="opacity-40 shrink-0">→</span>
+                      <span className="text-xs font-bold text-primary w-10 text-center shrink-0">host</span>
+                      <div className="flex-1 min-w-0">
+                        <Input
+                          placeholder="/mnt/user/Movies"
+                          value={m.local}
+                          onChange={(e) => updatePathMapEntry(i, 'local', e.target.value)}
+                        />
+                      </div>
+                      <Button size="sm" variant="outline" onClick={() => openBrowser(i)} title="Sfoglia" className="shrink-0">
                         <Folder className="h-3 w-3" />
                       </Button>
-                      <Button size="sm" variant="destructive" onClick={() => removePathMapEntry(i)} title="Rimuovi">
+                      <Button size="sm" variant="destructive" onClick={() => removePathMapEntry(i)} title="Rimuovi" className="shrink-0">
                         <X className="h-3 w-3" />
                       </Button>
                     </div>

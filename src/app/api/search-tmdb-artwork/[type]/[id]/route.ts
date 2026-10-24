@@ -15,12 +15,12 @@ function isValidType(t: string | undefined): t is MediaType {
 }
 
 const MOCK_TMDB: BrowseArtworkItem[] = [
-  { ourType: 'clearlogo', ext: 'png', url: 'https://image.tmdb.org/t/p/original/abc123_logo.png', lang: 'en', likes: '8.5' },
-  { ourType: 'clearlogo', ext: 'png', url: 'https://image.tmdb.org/t/p/original/def456_logo_it.png', lang: 'it', likes: '7.2' },
-  { ourType: 'landscape', ext: 'jpg', url: 'https://image.tmdb.org/t/p/original/xyz789_backdrop.jpg', lang: '', likes: '9.1' },
-  { ourType: 'landscape', ext: 'jpg', url: 'https://image.tmdb.org/t/p/original/ghi012_backdrop2.jpg', lang: '', likes: '6.4' },
-  { ourType: 'poster', ext: 'jpg', url: 'https://image.tmdb.org/t/p/original/poster1.jpg', lang: 'en', likes: '8.8' },
-  { ourType: 'poster', ext: 'jpg', url: 'https://image.tmdb.org/t/p/original/poster_it.jpg', lang: 'it', likes: '7.9' },
+  { our_type: 'clearlogo', ext: 'png', url: 'https://image.tmdb.org/t/p/original/abc123_logo.png', lang: 'en', likes: '8.5' },
+  { our_type: 'clearlogo', ext: 'png', url: 'https://image.tmdb.org/t/p/original/def456_logo_it.png', lang: 'it', likes: '7.2' },
+  { our_type: 'landscape', ext: 'jpg', url: 'https://image.tmdb.org/t/p/original/xyz789_backdrop.jpg', lang: '', likes: '9.1' },
+  { our_type: 'landscape', ext: 'jpg', url: 'https://image.tmdb.org/t/p/original/ghi012_backdrop2.jpg', lang: '', likes: '6.4' },
+  { our_type: 'poster', ext: 'jpg', url: 'https://image.tmdb.org/t/p/original/poster1.jpg', lang: 'en', likes: '8.8' },
+  { our_type: 'poster', ext: 'jpg', url: 'https://image.tmdb.org/t/p/original/poster_it.jpg', lang: 'it', likes: '7.9' },
 ];
 
 export async function GET(

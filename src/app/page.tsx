@@ -262,37 +262,43 @@ export default function Home() {
     setVideoId(videoId);
     setVideoUrl(url);
     if (kind === 'editor_theme') {
-      setVideoAction({ kind: 'editor_theme', onUse: async (u) => {
-        // Reuse editor's download logic by POSTing directly
-        if (!currentMediaId) return;
+      setVideoAction({ kind: 'editor_theme', onUse: async (u: string) => {
+        // Use getState() to get the latest currentMediaId (avoids stale closure)
+        const store = useExtrarrStore.getState();
+        const id = store.currentMediaId;
+        const mt = store.mediaType;
+        if (!id) { toast.error('Nessun media selezionato'); setVideoOpen(false); return; }
         try {
-          const res = await fetch(`/api/download-media/${mediaType}/${currentMediaId}`, {
+          const res = await fetch(`/api/download-media/${mt}/${id}`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ url: u }),
           });
           const data = await res.json();
           if (data.status === 'success') {
-            patchMedia(currentMediaId, { has_theme: true });
+            store.patchMedia(id, { has_theme: true });
             toast.success(data.message);
             setEditorOpen(false);
-          } else toast.error(data.message);
+          } else { toast.error(data.message); }
         } catch { toast.error('Errore di rete'); }
         setVideoOpen(false);
       } });
     } else {
-      setVideoAction({ kind: 'editor_trailer', onUse: async (u) => {
-        if (!currentMediaId) return;
+      setVideoAction({ kind: 'editor_trailer', onUse: async (u: string) => {
+        const store = useExtrarrStore.getState();
+        const id = store.currentMediaId;
+        const mt = store.mediaType;
+        if (!id) { toast.error('Nessun media selezionato'); setVideoOpen(false); return; }
         try {
-          const res = await fetch(`/api/set-trailer/${mediaType}/${currentMediaId}`, {
+          const res = await fetch(`/api/set-trailer/${mt}/${id}`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ url: u }),
           });
           const data = await res.json();
           if (data.status === 'success') {
-            patchMedia(currentMediaId, { has_trailer: true });
+            store.patchMedia(id, { has_trailer: true });
             toast.success(data.message);
             setEditorOpen(false);
-          } else toast.error(data.message);
+          } else { toast.error(data.message); }
         } catch { toast.error('Errore di rete'); }
         setVideoOpen(false);
       } });

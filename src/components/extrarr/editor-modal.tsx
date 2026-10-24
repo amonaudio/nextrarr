@@ -33,6 +33,8 @@ export function EditorModal({ open, onOpenChange, media, mediaType, onPreviewRes
   const [searching, setSearching] = useState<null | 'theme' | 'trailer'>(null);
   const [results, setResults] = useState<YouTubeSearchResult[]>([]);
   const [busy, setBusy] = useState(false);
+  const [customThemeSearch, setCustomThemeSearch] = useState('');
+  const [customTrailerSearch, setCustomTrailerSearch] = useState('');
 
   useEffect(() => {
     if (open) {
@@ -48,11 +50,14 @@ export function EditorModal({ open, onOpenChange, media, mediaType, onPreviewRes
   const themeStatus = media.has_theme ? '✅ Presente' : '❌ Mancante';
   const trailerStatus = media.has_trailer ? '✅ Presente' : '❌ Mancante';
 
-  async function doSearch(type: 'theme' | 'trailer') {
+  async function doSearch(type: 'theme' | 'trailer', customQuery?: string) {
     setSearching(type);
     setResults([]);
     try {
-      const res = await fetch(`/api/search-media/${mediaType}/${media!.id}/${type}`);
+      const url = customQuery && customQuery.trim()
+        ? `/api/search-media/${mediaType}/${media!.id}/${type}?query=${encodeURIComponent(customQuery.trim())}`
+        : `/api/search-media/${mediaType}/${media!.id}/${type}`;
+      const res = await fetch(url);
       const data = await res.json();
       if (Array.isArray(data)) setResults(data);
       else if (data.status === 'error') toast.error(data.message);
@@ -113,7 +118,17 @@ export function EditorModal({ open, onOpenChange, media, mediaType, onPreviewRes
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        className="max-w-2xl max-h-[90vh] overflow-y-auto"
+        onPointerDownOutside={(e) => {
+          const target = (e as unknown as { detail?: { originalEvent?: { target?: HTMLElement } } }).detail?.originalEvent?.target;
+          if (target?.closest?.('[data-videomodal]')) { e.preventDefault(); }
+        }}
+        onInteractOutside={(e) => {
+          const target = (e as unknown as { detail?: { originalEvent?: { target?: HTMLElement } } }).detail?.originalEvent?.target;
+          if (target?.closest?.('[data-videomodal]')) { e.preventDefault(); }
+        }}
+      >
         <DialogHeader>
           <DialogTitle>Editor: {media.title}</DialogTitle>
         </DialogHeader>
@@ -134,6 +149,17 @@ export function EditorModal({ open, onOpenChange, media, mediaType, onPreviewRes
               {searching === 'theme' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
               <span className="ml-2">Cerca Tema su YouTube</span>
             </Button>
+            <div className="flex gap-2">
+              <Input
+                placeholder="Ricerca personalizzata (es. Hans Zimmer Interstellar OST)"
+                value={customThemeSearch}
+                onChange={(e) => setCustomThemeSearch(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') doSearch('theme', customThemeSearch); }}
+              />
+              <Button onClick={() => doSearch('theme', customThemeSearch)} disabled={searching === 'theme'} title="Cerca con testo personalizzato">
+                <Search className="h-4 w-4" />
+              </Button>
+            </div>
             <div className="flex gap-2">
               <Input placeholder="Incolla link YouTube tema" value={themeUrl} onChange={(e) => setThemeUrl(e.target.value)} />
               <Button onClick={() => downloadTheme(themeUrl)} disabled={busy}><Download className="h-4 w-4" /></Button>
@@ -173,6 +199,17 @@ export function EditorModal({ open, onOpenChange, media, mediaType, onPreviewRes
               {searching === 'trailer' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
               <span className="ml-2">Cerca Trailer su YouTube</span>
             </Button>
+            <div className="flex gap-2">
+              <Input
+                placeholder="Ricerca personalizzata (es. Interstellar trailer ufficiale italiano)"
+                value={customTrailerSearch}
+                onChange={(e) => setCustomTrailerSearch(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') doSearch('trailer', customTrailerSearch); }}
+              />
+              <Button onClick={() => doSearch('trailer', customTrailerSearch)} disabled={searching === 'trailer'} title="Cerca con testo personalizzato">
+                <Search className="h-4 w-4" />
+              </Button>
+            </div>
             <div className="flex gap-2">
               <Input placeholder="Incolla link YouTube trailer" value={trailerUrl} onChange={(e) => setTrailerUrl(e.target.value)} />
               <Button onClick={() => saveTrailer(trailerUrl)} disabled={busy}><Save className="h-4 w-4" /></Button>
