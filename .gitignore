@@ -51,6 +51,8 @@ prompt
 
 server.log
 # Project-specific runtime artifacts
+/extrarr.db
+/extrarr.db-journal
 /db/*.db
 /db/*.db-journal
 /config/
