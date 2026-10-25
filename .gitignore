@@ -60,6 +60,15 @@ server.log
 /upload/
 /skills/
 
+# [0.7.13] Release zip artifacts — should NOT be committed to the repo.
+# These are build deliverables shipped via the workspace download dir,
+# not source files. Keeping them in git would bloat the repo with binary
+# blobs and create confusing diffs whenever a new release is cut.
+*.zip
+*.zip.b64
+!public/**/*.zip
+!unraid/**/*.zip
+
 # Prisma generated client (regenerated on install)
 /node_modules/.prisma/
 

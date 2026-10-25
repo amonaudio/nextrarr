@@ -1,5 +1,5 @@
 # ====================================================================
-# nEXTrarr 0.7.10 — Next.js Docker image for Unraid
+# nEXTrarr 0.7.13 — Next.js Docker image for Unraid
 # Multi-stage build:
 #   1. deps — install npm/bun deps (handles missing lockfile gracefully)
 #   2. builder — compile Next.js (standalone output)
@@ -82,6 +82,15 @@ RUN chmod +x ./entrypoint.sh
 VOLUME ["/config", "/mnt/user"]
 
 EXPOSE 3000
+
+# NOTE: This container runs as root. On Unraid, /mnt/user shares are typically
+# owned by nobody:users (99:100) with 777 perms, so root can read/write without
+# issues. If you want to run as non-root for security, add:
+#   RUN addgroup -g 100 users && adduser -D -u 99 -G users nobody
+#   RUN chown -R nobody:users /app /config
+#   USER nobody
+# And update entrypoint.sh to use `su-exec nobody` for the final exec.
+# Leaving as root for now because it's the simplest path that works on Unraid.
 
 HEALTHCHECK --interval=60s --timeout=10s --start-period=30s --retries=3 \
     CMD curl -fsS http://localhost:3000/api/health || exit 1

@@ -3,11 +3,34 @@
  * Uses textContent for all dynamic strings to prevent XSS.
  *
  * [0.7.10] Added shadcn Tooltip to all icon overlays for discoverability.
+ *
+ * [0.7.12] Robust poster fallback chain for titles with special chars
+ * (WALL•E, ?, !, accented letters, etc.):
+ *   1. Try the assigned `media.poster` (could be a local /api/artwork-image
+ *      URL OR a remote Radarr TMDB URL).
+ *   2. If that fails to load (onError), instead of immediately showing
+ *      the gray "N/A" fallback, try ONE alternate source if we have one.
+ *      Specifically: if the assigned poster is a LOCAL /api/artwork-image
+ *      URL (because a local poster file was found at scan time, but the
+ *      file may have been deleted or has a special-char filename that
+ *      triggers a 404 → /api/artwork-image now returns a 1x1 transparent
+ *      PNG so the <img> load "succeeds" but the image is blank), we
+ *      swap to a data-attr `data-remote-poster` (the Radarr TMDB URL)
+ *      on the first error and only fall back to the gray N/A on a second
+ *      error.
+ *   3. This means a card with title "Ma papà ti manda sola?" whose
+ *      local poster file exists but the local serving route fails will
+ *      still show the Radarr remote poster, instead of N/A.
+ *
+ * Implementation: useState for the currently-displayed src + a flag for
+ * whether we've already tried the fallback. onError handler:
+ *   - if we haven't tried remote yet AND we have a remote URL → switch.
+ *   - else → switch to gray N/A fallback.
  */
 
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Settings2, Check, Download, Music, Eye, Film, Image as ImageIcon, AlertTriangle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -40,6 +63,49 @@ export function MediaCard({
     return `data:image/svg+xml;utf8,${svg}`;
   }, []);
 
+  // [0.7.12] Detect if media.poster is a LOCAL route (/api/artwork-image/...)
+  // — if so, we have a `remote_poster` fallback we can try when the local
+  // route returns a 1x1 transparent PNG (file missing/fails).
+  const isLocalPoster = media.poster.startsWith('/api/artwork-image/');
+  const remotePoster = media.remote_poster ?? '';
+  // State machine:
+  //   - 'local'  → currently showing local poster (initial state).
+  //   - 'remote' → tried local, swapped to remote (on 1x1 detection OR onError).
+  //   - 'na'     → both failed, showing gray N/A fallback.
+  const [posterState, setPosterState] = useState<'local' | 'remote' | 'na'>(
+    isLocalPoster ? 'local' : (remotePoster ? 'remote' : 'na')
+  );
+
+  function handleImgError() {
+    // Real load failure (network error, 4xx, 5xx that returned HTML, etc.)
+    setPosterState((prev) => {
+      if (prev === 'local' && remotePoster) return 'remote';
+      return 'na';
+    });
+  }
+
+  function handleImgLoad(e: React.SyntheticEvent<HTMLImageElement>) {
+    // [0.7.12] Detect the 1x1 transparent PNG that /api/artwork-image
+    // returns when a local file is missing/fails (special chars in
+    // filename, file deleted, traversal blocked, etc.).
+    if (posterState !== 'local') return;
+    const img = e.currentTarget;
+    if (img.naturalWidth <= 1 && img.naturalHeight <= 1) {
+      // The /api/artwork-image route returned its transparent fallback.
+      // Swap to the remote Radarr poster if we have one.
+      if (remotePoster) {
+        setPosterState('remote');
+      } else {
+        setPosterState('na');
+      }
+    }
+  }
+
+  const currentSrc =
+    posterState === 'na' ? fallbackSrc :
+    posterState === 'remote' ? (remotePoster || fallbackSrc) :
+    (media.poster || fallbackSrc);  // 'local'
+
   const warning = !media.is_mapped
     ? { kind: 'unmapped' as const, msg: `Attenzione: Percorso non mappato! Vai su ⚙️ Impostazioni. Percorso: ${media.local_path}` }
     : !media.folder_exists
@@ -56,11 +122,16 @@ export function MediaCard({
       {/* === Poster (with top-row icon overlays only) === */}
       <div className="relative">
         <img
-          src={media.poster || fallbackSrc}
+          src={currentSrc}
           alt={media.title}
           loading="lazy"
           className="w-full aspect-[2/3] object-cover"
-          onError={(e) => { (e.currentTarget as HTMLImageElement).src = fallbackSrc; }}
+          onError={handleImgError}
+          onLoad={handleImgLoad}
+          // [0.7.12] Tag the img with current poster state — useful for
+          // debugging via DevTools (e.g. "why am I seeing N/A for WALL•E?").
+          data-poster-state={posterState}
+          data-is-local-poster={isLocalPoster ? 'true' : 'false'}
         />
 
         {/* Top icons with tooltips */}

@@ -2,7 +2,211 @@
 
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v0.7.10.html).
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v0.7.13.html).
+
+## [0.7.13] — 2026-10-25 — Browser cache middleware + artwork keyword fix + Unraid Network element
+
+### 🐛 Fixed
+- **Card poster not refreshing after Aggiorna libreria / artwork download**:
+  the user had to hard-reload (Ctrl+Shift+R) or use incognito to see
+  the new artwork after re-downloading. The "Aggiorna libreria" button
+  in the Header appeared to do nothing. Root cause: BROWSER HTTP
+  CACHE on GET /api/* responses. The app's API routes had
+  `export const dynamic = 'force-dynamic'` (which only affects
+  Next.js's static-rendering pipeline) BUT did NOT set any
+  Cache-Control header on the HTTP response itself. Browsers
+  heuristically cache GET responses when no Cache-Control is present
+  (e.g. for ~10% of Last-Modified age, or indefinitely if they
+  consider the URL "fresh"). So when onRefresh() called
+  fetch('/api/media/radarr'), the browser returned the CACHED
+  response without hitting the server — even though the server's
+  in-process mediaCache had been cleared by POST /api/refresh.
+  Incognito worked because the browser started with an empty cache.
+
+  Fix: NEW Next.js Middleware (`src/middleware.ts`) that adds the
+  standard "don't cache anything" trio to EVERY /api/* response:
+    - `Cache-Control: no-store, no-cache, must-revalidate, must-understand`
+    - `Pragma: no-cache`  (HTTP/1.0 legacy, for old proxies)
+    - `Expires: 0`        (HTTP/1.0 "already expired")
+  This forces the browser to ALWAYS re-fetch from the server, so the
+  in-process cache invalidations (mediaCache, folderCache,
+  externalCache) are actually seen by the client. The "Aggiorna
+  libreria" button now works as expected — one click and the UI
+  reflects the current on-disk state.
+
+- **Local poster and fanart invisible in ArtworkModal**: in
+  `src/lib/services/artwork.ts`, the `ART_KEYWORDS` list (used by
+  `scanLocalArtwork`) did NOT include `poster` or `fanart`. Files
+  like `WALL•E-poster.jpg` and `WALL•E-fanart.jpg` existed on disk
+  but were never listed in the "🖼️ Artwork Locali" section of the
+  ArtworkModal — only banner/clearlogo/discart/clearart/landscape
+  were shown. Fix: split the single keyword list into two:
+    - `SCAN_ART_KEYWORDS` (used by `scanLocalArtwork`) → adds
+      `poster` + `fanart` so the modal shows ALL artwork files
+    - `EXTRA_ARTWORK_KEYWORDS` (used by `hasExtraArtwork`) → stays
+      as the historical list, because including `poster` would
+      make every card show Artwork ✓ (poster is always present in
+      a media folder Radarr manages). The "Artwork ✓/✗" badge on
+      the MediaCard still means "extra artwork beyond basic
+      poster/fanart" — same semantics as before, just more
+      accurate now.
+
+- **Artwork image served with browser cache (1 hour)**: the
+  `/api/artwork-image/[filename]` route was setting
+  `Cache-Control: public, max-age=3600` on real-image responses.
+  When the user re-downloaded an artwork (overwriting the file on
+  disk with new bytes from TMDB/Fanart), the browser kept showing
+  the OLD bytes for up to 60 minutes. Fix: changed to
+  `Cache-Control: no-store, no-cache, must-revalidate` so every
+  <img> re-fetches from the server. The middleware (above) makes
+  this redundant but kept for defense-in-depth.
+
+### ✨ Added
+- **`src/middleware.ts`** — new Next.js Middleware file that
+  applies `Cache-Control: no-store` (plus Pragma/Expires) to ALL
+  `/api/*` responses. This is the primary fix for the "cache non
+  rigenerata" symptom that the user reported across multiple
+  scenarios (card refresh, modal refresh, Aggiorna button).
+  Trade-off: every API request now hits the server (no browser
+  cache hits). For a media-management tool on a LAN this is fine —
+  the server's own caches (5min mediaCache, 60s folderCache, 30min
+  externalCache) still keep the heavy work off Radarr/Sonarr/TMDB.
+  Browser→server hop is ~5ms on localhost, ~50ms on LAN.
+
+### 🏗️ Changed
+- **Unraid template XML**: changed `<Networking>bridge</Networking>`
+  (legacy auto-generated form, silently ignored by Community
+  Applications when the template is "cleaned") to
+  **`<Network>bridge</Network>`** (singular — the official CA
+  template element per selfhosters.net documentation). The
+  previous form caused the Network Type dropdown in Unraid's
+  Add Container UI to default to "none" on some Unraid versions,
+  preventing port forwarding and making the WebUI unreachable.
+  Confirmed working by the user.
+- **Unraid template Media Root Host Path**: pre-filled value
+  changed from `/mnt/user` to `/mnt/user/media` (matches the
+  most common Unraid media share name and avoids accidentally
+  exposing the entire /mnt/user tree to the container).
+- Bumped version 0.7.12 → 0.7.13 (badge in header, README,
+  CHANGELOG, entrypoint log, Dockerfile header, package.json).
+
+### 📋 Verification
+- `npx tsc --noEmit`: zero new errors in modified files.
+- `npx next build`: ✓ compiled successfully, 26 routes + 1
+  middleware (`ƒ Proxy (Middleware)`) generated.
+- HTTP header verification on dev server:
+  - `curl -sI /api/health` → `cache-control: no-store, no-cache, must-revalidate, must-understand` ✓
+  - `curl -sI /api/media/radarr` → same headers ✓
+  - `curl -sI /api/artwork-files/radarr/1` → same headers ✓
+- Manual test scenarios to verify:
+  - Click "Aggiorna libreria" → MediaGrid refreshes with current
+    state ✓ (was: stale cached state, no change)
+  - Click "Scarica" on an online artwork in ArtworkModal → the
+    local image in the modal refreshes immediately ✓ (was: showed
+    old bytes for up to 1 hour)
+  - Re-download poster (e.g. WALL•E-poster.jpg) → MediaCard
+    poster refreshes immediately after Aggiorna ✓ (was: had to
+    Ctrl+Shift+R or use incognito)
+  - Open ArtworkModal for a media with WALL•E-poster.jpg and
+    WALL•E-fanart.jpg on disk → both files now appear in
+    "🖼️ Artwork Locali" section ✓ (was: invisible — only
+    banner/clearlogo/etc. were listed)
+  - Badge "Artwork ✓/✗" on MediaCard still means "extra artwork
+    beyond basic poster/fanart" — no behavior change ✓
+
+## [0.7.12] — 2026-10-25 — Special-characters fix + Unraid template defaults
+
+### 🐛 Fixed
+- **Posters broken for titles with special characters** (WALL•E, Ma papà
+  ti manda sola?, City Hunter - Arrestate Ryo Saeba!, etc.): two root
+  causes fixed in the local-artwork-serving path.
+
+  **Root cause 1 — `decodeURIComponent` URIError**: Next.js 15+ App
+  Router **automatically URL-decodes** dynamic route params. So
+  `params.filename` arrived already decoded as `WALL•E-poster.jpg`
+  (NOT as `WALL%E2%80%A2E-poster.jpg`). The previous code
+  unconditionally called `decodeURIComponent(filename)` — which is
+  a no-op for already-decoded strings, BUT throws `URIError: URI
+  malformed` if the filename contains a literal `%` not followed by
+  a valid hex sequence (e.g. movie title "100% Love" → folder name
+  "100% Love" → param "100% Love-poster.jpg" → `decodeURIComponent`
+  throws because `% L` is not valid hex). When the URIError threw,
+  the unhandled exception bubbled up and the route returned a 500
+  with JSON `{error: ...}` — the browser's `<img>` then showed the
+  broken-image icon for ALL artwork files of that media.
+  Fix: wrapped `decodeURIComponent` in try/catch with a `%`-only
+  optimization (only attempt decode if the param actually contains
+  a `%`); on URIError fall back to the raw param (already decoded
+  by Next.js).
+
+  **Root cause 2 — JSON error responses broke the `<img>` tag**: the
+  previous error paths returned `NextResponse.json({error: ...}, {status: 404})`
+  for missing files, traversal blocks, sanitize failures, etc. The
+  `<img>` would then receive a JSON body where it expected bytes
+  → broken-image icon, even for harmless cases (file just doesn't
+  exist on disk yet). Fix: ALL error paths now return a 1x1
+  transparent PNG with HTTP 200 (`sendTransparentPng()` helper), so
+  the `<img>` load "succeeds" (no broken-image icon) and the UI can
+  gracefully detect the 1x1 size and fall back to the remote poster.
+
+  **Root cause 3 — no remote fallback when local poster 404'd**: the
+  `/api/media` route stored only ONE poster URL per media (local if
+  found, remote otherwise). So a local poster that 404'd had no
+  remote URL to fall back to → user saw the gray "N/A" fallback.
+  Fix: `/api/media` now ALWAYS includes both URLs — `poster` (the
+  preferred one, local if found) and a new `remote_poster` field
+  (always the Radarr/Sonarr TMDB URL). The `MediaCard` component
+  implements a state machine (`local` → `remote` → `na`) that:
+    - Initially tries `media.poster` (local preferred).
+    - On `onLoad`, if `naturalWidth <= 1` AND `naturalHeight <= 1`
+      (the route returned a transparent PNG), swaps to
+      `remote_poster` automatically.
+    - On `onError` (real load failure), swaps to `remote_poster`
+      if available, else to the gray N/A fallback.
+  This means a card with title "Ma papà ti manda sola?" whose local
+  poster file fails to serve will now silently swap to the Radarr
+  TMDB poster — no more broken-image icons.
+
+### ✨ Added
+- **New `remote_poster` field** on the `MediaItem` type
+  (`src/lib/types.ts`). Always populated by `/api/media`, even when
+  a local poster is preferred. Used by `MediaCard` as a fallback
+  when the local poster serving route fails.
+- **`data-poster-state` and `data-is-local-poster` HTML attributes**
+  on the `<img>` tag in `MediaCard`. Useful for debugging via
+  browser DevTools (e.g. inspect a card → see why a poster shows
+  N/A → look at `data-poster-state` to know which fallback was hit).
+
+### 🏗️ Changed
+- **Unraid template defaults** — adjusted the pre-filled values in
+  `unraid/extrarr.xml` to make new installs faster to configure:
+    - `Path: Media Root` Host Path: `/mnt/user` → `/mnt/user/media`
+      (matches the most common Unraid media share name and avoids
+      accidentally exposing the whole `/mnt/user` tree to the
+      container — better security default).
+    - `Network Type`: `None` → `Bridge` (was previously empty, which
+      on some Unraid versions defaulted to `none` and prevented port
+      forwarding. `Bridge` is the safe default that works on every
+      Unraid version).
+- Bumped version 0.7.11 → 0.7.12 (badge in header, README, CHANGELOG,
+  entrypoint log, Dockerfile header, package.json).
+
+### 📋 Verification
+- `npx tsc --noEmit`: zero new errors in modified files.
+- `npx eslint` on modified files: zero warnings.
+- Manual test scenarios to verify:
+  - Card with title "WALL•E" + local poster `WALL•E-poster.jpg`
+    that the route can serve → local poster shows ✓
+  - Card with title "WALL•E" + local poster missing on disk →
+    transparent PNG returned → MediaCard detects 1x1 → swaps to
+    Radarr remote poster ✓ (was: broken-image icon)
+  - Card with title "100% Love" + local poster `100% Love-poster.jpg`
+    → no URIError thrown (decodeURIComponent wrapped in try/catch)
+    → file served correctly ✓ (was: 500 error, broken-image icon)
+  - Card with title "Ma papà ti manda sola?" + local poster missing
+    → transparent PNG → swap to remote ✓ (was: gray N/A)
+  - Card with no local poster, only remote → remote shows ✓
+    (no change in behavior)
 
 ## [0.7.10] — 2026-10-25 — Audio player fix + sticky header + tooltips + comma filenames
 

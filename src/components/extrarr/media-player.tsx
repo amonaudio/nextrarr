@@ -58,6 +58,7 @@ export function MediaPlayer() {
   const [isLoading, setIsLoading] = useState(false);
 
   // Reset state when the URL changes (new track selected)
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setCurrentTime(0);
     setDuration(0);
@@ -70,7 +71,6 @@ export function MediaPlayer() {
         // Autoplay can fail if the browser blocks it.
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playingUrl]);
 
   const togglePlayPause = useCallback(() => {

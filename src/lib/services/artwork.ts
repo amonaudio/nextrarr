@@ -1,5 +1,27 @@
 /**
  * Artwork file management — port of app/services/artwork.py
+ *
+ * [0.7.12-test] Two separate keyword lists:
+ *
+ *   SCAN_ART_KEYWORDS — used by scanLocalArtwork() to enumerate which
+ *     files to show in the ArtworkModal "🖼️ Artwork Locali" grid.
+ *     Includes ALL artwork kinds the app recognizes: the historical
+ *     "extra" set (clearlogo/clearart/banner/landscape/discart/keyart/
+ *     logo) PLUS poster and fanart, which were previously missing →
+ *     files like "WALL•E-poster.jpg" and "WALL•E-fanart.jpg" were
+ *     invisible in the modal even though they existed on disk.
+ *
+ *   EXTRA_ARTWORK_KEYWORDS — used by hasExtraArtwork() to compute the
+ *     "Artwork ✓/✗" badge on the MediaCard. Stays as the historical
+ *     list ONLY, because:
+ *       - poster is almost always present in a media folder (it's the
+ *         main poster Radarr already downloads); if we included it,
+ *         every card would show Artwork ✓ even when no EXTRA artwork
+ *         has been downloaded, defeating the purpose of the flag.
+ *       - fanart (background) is also commonly shipped by Radarr and
+ *         would inflate the same counter.
+ *     So the badge reflects "extra artwork beyond the basic
+ *     poster/fanart" — a more useful signal.
  */
 
 import fs from 'node:fs/promises';
@@ -7,7 +29,13 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { validateArtworkUrl, sanitizeFilename } from '../security';
 
-const ART_KEYWORDS = ['clearlogo', 'clearart', 'banner', 'landscape', 'discart', 'keyart', 'logo'];
+const SCAN_ART_KEYWORDS = [
+  'clearlogo', 'clearart', 'banner', 'landscape', 'discart', 'keyart', 'logo',
+  'poster', 'fanart',
+];
+const EXTRA_ARTWORK_KEYWORDS = [
+  'clearlogo', 'clearart', 'banner', 'landscape', 'discart', 'keyart', 'logo',
+];
 const ART_EXTENSIONS = ['.jpg', '.png', '.jpeg'];
 
 export async function scanLocalArtwork(localPath: string): Promise<string[]> {
@@ -17,7 +45,10 @@ export async function scanLocalArtwork(localPath: string): Promise<string[]> {
     for (const f of files) {
       const fl = f.toLowerCase();
       if (!ART_EXTENSIONS.some((ext) => fl.endsWith(ext))) continue;
-      if (ART_KEYWORDS.some((kw) => fl.includes(kw))) {
+      // [0.7.12-test] Use SCAN_ART_KEYWORDS (includes poster + fanart)
+      // so the ArtworkModal shows ALL artwork files, not just the
+      // "extra" set. The hasExtraArtwork flag uses a separate list.
+      if (SCAN_ART_KEYWORDS.some((kw) => fl.includes(kw))) {
         images.push(f);
       }
     }
@@ -37,7 +68,7 @@ export async function hasExtraArtwork(localPath: string): Promise<boolean> {
     for (const f of files) {
       const fl = f.toLowerCase();
       if (ART_EXTENSIONS.some((ext) => fl.endsWith(ext)) &&
-          ART_KEYWORDS.some((kw) => fl.includes(kw))) {
+          EXTRA_ARTWORK_KEYWORDS.some((kw) => fl.includes(kw))) {
         return true;
       }
     }

@@ -8,7 +8,7 @@
 
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,7 @@ import { EditorModal } from '@/components/extrarr/editor-modal';
 import { ArtworkModal } from '@/components/extrarr/artwork-modal';
 import { VideoModal, type VideoModalAction } from '@/components/extrarr/video-modal';
 import { useExtrarrStore } from '@/store/extrarr-store';
+import { apiFetch, ApiError } from '@/lib/api-client';
 import { toast } from 'sonner';
 import type { CustomFilter, MediaItem } from '@/lib/types';
 
@@ -67,9 +68,8 @@ export default function Home() {
     setLoadingMedia(true);
     setMediaError(null);
     try {
-      const res = await fetch(`/api/media/${mediaType}`);
-      const data = await res.json();
-      if (data.error) {
+      const data = await apiFetch<MediaItem[] | { error: string }>(`/api/media/${mediaType}`);
+      if (data && typeof data === 'object' && 'error' in data) {
         setMediaError(data.error);
         setMediaList([]);
       } else {
@@ -84,11 +84,10 @@ export default function Home() {
 
   const loadRootFolders = useCallback(async () => {
     try {
-      const res = await fetch(`/api/root-folders/${mediaType}`);
-      const data = await res.json();
+      const data = await apiFetch<string[]>(`/api/root-folders/${mediaType}`);
       if (Array.isArray(data)) setRootFolders(data);
     } catch {
-      // ignore
+      // ignore — root folders are non-critical
     }
   }, [mediaType]);
 
@@ -97,43 +96,54 @@ export default function Home() {
 
   // === Action handlers (passed to children) ===
 
+  // [Miglioramento 2] Loading state: disable button + show spinner during async ops
+  const loadingIds = useRef<Set<number>>(new Set());
+  const [, forceRerender] = useState(0);
+
+  function setLoading(id: number, loading: boolean) {
+    if (loading) loadingIds.current.add(id);
+    else loadingIds.current.delete(id);
+    forceRerender(n => n + 1);
+  }
+
   async function onQuickDownload(id: number, btn: HTMLButtonElement | null) {
-    if (btn) { (btn as unknown as HTMLElement).style.opacity = '0.5'; }
+    if (btn) { btn.disabled = true; }
+    setLoading(id, true);
     try {
-      const res = await fetch(`/api/download-media/${mediaType}/${id}`, {
+      const data = await apiFetch<{ status: string; message: string }>(`/api/download-media/${mediaType}/${id}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
       });
-      const data = await res.json();
       if (data.status === 'success') {
         patchMedia(id, { has_theme: true });
         toast.success(data.message);
       } else {
         toast.error(data.message);
       }
-    } catch {
-      toast.error('Errore di rete');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Errore di rete');
     } finally {
-      if (btn) { (btn as unknown as HTMLElement).style.opacity = '1'; }
+      if (btn) { btn.disabled = false; }
+      setLoading(id, false);
     }
   }
 
   async function onDownloadArtwork(id: number, btn: HTMLButtonElement | null) {
-    if (btn) { (btn as unknown as HTMLElement).style.opacity = '0.5'; }
+    if (btn) { btn.disabled = true; }
+    setLoading(id, true);
     try {
-      const res = await fetch(`/api/download-artwork/${mediaType}/${id}`, { method: 'POST' });
-      const data = await res.json();
+      const data = await apiFetch<{ status: string; message: string }>(`/api/download-artwork/${mediaType}/${id}`, { method: 'POST' });
       if (data.status === 'success') {
         patchMedia(id, { has_artwork: true });
         toast.success(data.message);
       } else {
         toast.error(data.message);
       }
-    } catch {
-      toast.error('Errore di rete');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Errore di rete');
     } finally {
-      if (btn) { (btn as unknown as HTMLElement).style.opacity = '1'; }
+      if (btn) { btn.disabled = false; }
+      setLoading(id, false);
     }
   }
 
@@ -144,8 +154,7 @@ export default function Home() {
 
   async function onPlayTrailer(id: number, title: string) {
     try {
-      const res = await fetch(`/api/get-trailer/${mediaType}/${id}`);
-      const data = await res.json();
+      const data = await apiFetch<{ status: string; video_id?: string; message?: string }>(`/api/get-trailer/${mediaType}/${id}`);
       if (data.status === 'success' && data.video_id) {
         setVideoId(data.video_id);
         setVideoUrl(`https://www.youtube.com/watch?v=${data.video_id}`);
@@ -195,12 +204,10 @@ export default function Home() {
     setSearchResults([]);
     setSearchCustomUrl('');
     try {
-      const res = await fetch('/api/search-youtube', {
+      const data = await apiFetch<{ title: string; url: string; video_id: string }[] | { status: string; message: string }>('/api/search-youtube', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: q }),
       });
-      const data = await res.json();
       if (Array.isArray(data)) {
         setSearchResults(data);
       } else if (data.status === 'error') {
@@ -215,21 +222,34 @@ export default function Home() {
   function previewSearchResult(videoId: string, url: string) {
     setVideoId(videoId);
     setVideoUrl(url);
-    setVideoAction({ kind: 'global', mediaChoices: mediaList.map((m) => ({ id: m.id, title: m.title, year: m.year })), onTheme: async (id, u) => { await assignAndDownload(id, u); }, onTrailer: async (id, u) => { await assignAndSetTrailer(id, u); } });
+    // [FIX Bug 2] Use getState() for mediaList — avoids stale closure when
+    // the media list changes while the VideoModal is open (e.g. after a
+    // download that patches has_theme on a media item).
+    const store = useExtrarrStore.getState();
+    setVideoAction({
+      kind: 'global',
+      mediaChoices: store.mediaList.map((m) => ({ id: m.id, title: m.title, year: m.year })),
+      onTheme: async (id, u) => { await assignAndDownload(id, u); },
+      onTrailer: async (id, u) => { await assignAndSetTrailer(id, u); },
+    });
     setVideoOpen(true);
   }
 
-  async function assignAndDownload(id: number, url: string) {
+  // [FIX Bug 1] Use getState() for mediaType + patchMedia — avoids stale
+  // closure when the user switches Radarr→Sonarr while the VideoModal is
+  // open. The callback was created at render time with the old mediaType,
+  // so the API call would go to the wrong endpoint.
+  async function assignAndDownload(id: number, url: string): Promise<void> {
+    const store = useExtrarrStore.getState();
+    const mt = store.mediaType;
     setVideoOpen(false);
     try {
-      const res = await fetch(`/api/download-media/${mediaType}/${id}`, {
+      const data = await apiFetch<{ status: string; message: string }>(`/api/download-media/${mt}/${id}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url }),
       });
-      const data = await res.json();
       if (data.status === 'success') {
-        patchMedia(id, { has_theme: true });
+        store.patchMedia(id, { has_theme: true });
         toast.success(data.message);
       } else {
         toast.error(data.message);
@@ -239,17 +259,17 @@ export default function Home() {
     }
   }
 
-  async function assignAndSetTrailer(id: number, url: string) {
+  async function assignAndSetTrailer(id: number, url: string): Promise<void> {
+    const store = useExtrarrStore.getState();
+    const mt = store.mediaType;
     setVideoOpen(false);
     try {
-      const res = await fetch(`/api/set-trailer/${mediaType}/${id}`, {
+      const data = await apiFetch<{ status: string; message: string }>(`/api/set-trailer/${mt}/${id}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url }),
       });
-      const data = await res.json();
       if (data.status === 'success') {
-        patchMedia(id, { has_trailer: true });
+        store.patchMedia(id, { has_trailer: true });
         toast.success(data.message);
       } else {
         toast.error(data.message);
@@ -292,17 +312,16 @@ export default function Home() {
         const mt = store.mediaType;
         if (!id) { toast.error('Nessun media selezionato'); setVideoOpen(false); return; }
         try {
-          const res = await fetch(`/api/download-media/${mt}/${id}`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
+          const data = await apiFetch<{ status: string; message: string }>(`/api/download-media/${mt}/${id}`, {
+            method: 'POST',
             body: JSON.stringify({ url: u }),
           });
-          const data = await res.json();
           if (data.status === 'success') {
             store.patchMedia(id, { has_theme: true });
             toast.success(data.message);
             setEditorOpen(false);
           } else { toast.error(data.message); }
-        } catch { toast.error('Errore di rete'); }
+        } catch (e) { toast.error(e instanceof Error ? e.message : 'Errore di rete'); }
         setVideoOpen(false);
       } });
     } else {
@@ -312,17 +331,16 @@ export default function Home() {
         const mt = store.mediaType;
         if (!id) { toast.error('Nessun media selezionato'); setVideoOpen(false); return; }
         try {
-          const res = await fetch(`/api/set-trailer/${mt}/${id}`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
+          const data = await apiFetch<{ status: string; message: string }>(`/api/set-trailer/${mt}/${id}`, {
+            method: 'POST',
             body: JSON.stringify({ url: u }),
           });
-          const data = await res.json();
           if (data.status === 'success') {
             store.patchMedia(id, { has_trailer: true });
             toast.success(data.message);
             setEditorOpen(false);
           } else { toast.error(data.message); }
-        } catch { toast.error('Errore di rete'); }
+        } catch (e) { toast.error(e instanceof Error ? e.message : 'Errore di rete'); }
         setVideoOpen(false);
       } });
     }
@@ -364,7 +382,7 @@ export default function Home() {
         open={customFilterOpen}
         onOpenChange={setCustomFilterOpen}
         onApply={onApplyCustomFilter}
-        onChanged={() => {}}
+        onChanged={() => { /* no-op: filter state is in Zustand store, not parent */ }}
       />
       <EditorModal
         open={editorOpen}

@@ -21,34 +21,33 @@ const ARTWORK_URL_WHITELIST = new Set([
 //
 // [0.7.8] CRITICAL FIX: the previous regex `/^[\w\-.() ]+$/` used the
 // JavaScript `\w` character class, which is **ASCII-only** by default.
-// It did NOT match:
-//   - Apostrophes → broke filenames like "L'Avventura-clearlogo.png"
-//   - Accented letters (à, è, ì, ò, ù, é, ç, ñ, ü, etc.) → broke "Café Society-..."
-//   - Dieresis (ü, ö, ä) → broke "Über-cool-movie-banner.jpg"
-//   - Most non-Latin scripts (Cyrillic, Greek, CJK, etc.)
 //
-// [0.7.10] Added comma `,` to allowed characters — many movie/series titles
-// contain commas (e.g. "Hello, Dolly!", "No Country for Old Men, The") and
-// the folder name flows into the artwork filename. Without this, the comma
-// was stripped → "Hello Dolly!-clearlogo.png" → 404.
+// [0.7.11] CRITICAL FIX: switched from allowlist to BLOCKLIST approach.
+// The allowlist regex `[\p{L}\p{N}\-_.(), ']+` still missed punctuation
+// that's NOT a Unicode letter:
+//   - `•` (U+2022 BULLET) → category Po, not L → stripped → "WALLE" instead of "WALL•E"
+//   - `?` (U+003F) → category Po, not L → stripped → "sola" instead of "sola?"
+//   - `!` (U+0021) → category Po, not L → stripped → "Saeba" instead of "Saeba!"
+//   - `:` `;` `@` `&` `#` `+` `~` etc. → all stripped
 //
-// The fix uses the Unicode-aware pattern `[\p{L}\p{N}]` (any Unicode letter
-// or digit, requires the `u` flag — supported in Node 18+, all modern browsers).
-// Apostrophe and comma added explicitly (punctuation, not letters).
-//
-// We still reject path separators (/ and \) and the null byte — those are
-// the only characters that could enable path traversal. The `..` check
-// above catches the traversal-as-substring case.
-const FILENAME_RE = /^[\p{L}\p{N}\-_.(), ']+$/u;
+// The blocklist approach only rejects characters that are actually dangerous:
+//   - `..` (path traversal — checked separately)
+//   - `/` and `\` (path separators — checked separately)
+//   - `\0` (null byte — checked separately)
+//   - Control characters (U+0000 to U+001F, U+007F)
+// Everything else (including •, ?, !, à, ü, 日本語, 🎬, etc.) is allowed.
+const CONTROL_CHARS_RE = /[\x00-\x1F\x7F]/;
 
 /**
  * Sanitize a filename: returns a safe basename or null if input is suspicious.
- * Defense-in-depth: rejects any input containing ".." anywhere, normalizes
- * backslashes to forward slashes, enforces charset.
+ * Defense-in-depth: rejects any input containing ".." anywhere, rejects path
+ * separators, null bytes, and control characters. All other characters
+ * (including Unicode punctuation like •, ?, !, accented letters, CJK, etc.)
+ * are allowed.
  *
- * [0.7.8] Now Unicode-aware: supports apostrophes ("L'Avventura"), accented
- * letters ("Café", "Über"), dieresis, and any other Unicode letter/digit.
- * Path separators and null bytes are still rejected.
+ * [0.7.11] Switched from allowlist to blocklist — the allowlist was always
+ * one step behind reality (new punctuation → new 404s). The blocklist is
+ * simpler and handles ALL valid filenames without missing edge cases.
  */
 export function sanitizeFilename(name: unknown, maxLength = 200): string | null {
   if (typeof name !== 'string' || name.length === 0) return null;
@@ -56,27 +55,24 @@ export function sanitizeFilename(name: unknown, maxLength = 200): string | null 
   if (name.includes('..')) return null;
   // Reject null bytes (would allow truncation attacks in some FS APIs)
   if (name.includes('\0')) return null;
-  // Reject path separators explicitly — even if Unicode-aware, we don't
-  // want any / or \ in a basename (defense in depth)
+  // Reject path separators explicitly — even if we take basename, we don't
+  // want any / or \ in the final result (defense in depth)
   if (name.includes('/') || name.includes('\\')) {
-    // Try to take basename only
+    // Try to take basename only (in case the input is a path)
     const normalized = name.replace(/\\/g, '/');
     const parts = normalized.split('/');
     const last = parts[parts.length - 1]?.trim();
     if (!last) return null;
     return sanitizeFilename(last, maxLength);
   }
+  // Reject control characters (U+0000-U+001F, U+007F DEL)
+  if (CONTROL_CHARS_RE.test(name)) {
+    const cleaned = name.replace(CONTROL_CHARS_RE, '');
+    if (!cleaned || cleaned.includes('..')) return null;
+    name = cleaned;
+  }
   let clean = name.trim();
   if (clean.length === 0) return null;
-  if (!FILENAME_RE.test(clean)) {
-    // Try to sanitize by removing problematic chars (path separators,
-    // null bytes, control chars, shell metacharacters) but KEEP Unicode
-    // letters, digits, apostrophes, dashes, dots, parens, spaces.
-    // [0.7.8] Previously this stripped ALL non-ASCII → broke foreign titles.
-    const stripped = clean.replace(/[^\p{L}\p{N}\-_.(), ']/gu, '');
-    if (!stripped || stripped.includes('..')) return null;
-    clean = stripped;
-  }
   if (clean.length > maxLength) clean = clean.slice(0, maxLength);
   return clean;
 }

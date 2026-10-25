@@ -9,6 +9,14 @@ export interface MediaItem {
   title: string;
   year: number | string;
   poster: string;
+  /**
+   * [0.7.12] Remote poster URL from Radarr/Sonarr (TMDB image URL).
+   * Used as fallback when the local poster file fails to load (e.g.
+   * a poster file with special characters in the filename like
+   * "WALL•E-poster.jpg" that 404s on the /api/artwork-image route).
+   * Empty string when no remote poster is available from Radarr.
+   */
+  remote_poster?: string;
   has_theme: boolean;
   has_artwork: boolean;
   has_trailer: boolean;

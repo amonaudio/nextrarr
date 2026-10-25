@@ -206,6 +206,14 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ typ
       title: m.title || 'Sconosciuto',
       year: getYear(m, type),
       poster,
+      // [0.7.12] Always include the remote Radarr poster as a fallback.
+      // Used by MediaCard when the local poster route returns a 1x1
+      // transparent PNG (file missing or has special chars in the
+      // filename that the route can't serve). Previously the remote URL
+      // was only stored when no local poster existed — so a local poster
+      // that 404'd would show a gray "N/A" instead of falling back to
+      // the Radarr TMDB image. Now we always have both URLs available.
+      remote_poster: getPosterUrl(m),
       has_theme: hasTheme,
       has_artwork: hasArt,
       has_trailer: hasTrailer,
