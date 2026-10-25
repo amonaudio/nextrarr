@@ -144,11 +144,10 @@ echo "💾 Committo..."
 git commit --allow-empty -m "Release ${TAG}
 
 Changes in ${VERSION}:
-- Media info badges on cards (resolution + codec + audio channels)
-- ArtworkModal redesigned (max-w-6xl + 3-col + h-48 + drag&drop)
-- New 'Carica da PC' button to upload custom artwork from browser
-- New /api/upload-artwork route with 7-layer server-side validation
-- For Sonarr series: badges hidden (no mediaInfo in /api/v3/series)
+- ArtworkModal width fix: max-w-6xl → full viewport width (100vw)
+- Inside each section: grid-cols-2 → grid-cols-1 (each thumb takes full section width)
+- Thumbnail height: h-48 (200px) → h-64 (256px)
+- Thumbnails now ~3.5x wider than v0.8.0 — user can actually see artwork detail
 
 See CHANGELOG.md for the full list of changes."
 echo "✅ Commit creato."

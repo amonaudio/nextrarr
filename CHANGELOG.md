@@ -2,7 +2,64 @@
 
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v0.8.0.html).
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.8.1] — 2026-10-25 — ArtworkModal width fix
+
+### 🐛 Fixed
+- **ArtworkModal too narrow after v0.8.0 redesign**: the v0.8.0 redesign
+  moved from a single-column stacked layout to a 3-column side-by-side
+  layout. The user reported that thumbnails became NARROWER than the
+  previous v0.7.13 layout — they were correct. Math:
+    - v0.7.13: `max-w-3xl` (768px) / 1 section / grid-auto-fill `minmax(120px,1fr)`
+      → thumbnails ~120-180px wide
+    - v0.8.0: `max-w-6xl` (1152px) / 3 sections / `grid-cols-2` inside
+      each section → each section ~370px → each thumbnail ~170px
+  The 3-column layout was good (no scrolling), but the `grid-cols-2`
+  inside each section made thumbnails too small again.
+
+  Fix (3 changes):
+    1. `max-w-6xl` (1152px) → **`w-[100vw] max-w-[100vw]
+       sm:max-w-[100vw]`**. The modal now uses the full viewport width;
+       the explicit `sm:` override is required because the base
+       `DialogContent` applies `sm:max-w-lg` (512px).
+    2. Inside each section: `grid-cols-2 gap-2` → **`grid-cols-1 gap-3`**
+       (1 thumbnail per row, full section width).
+    3. Thumbnail height: `h-48` (200px) → **`h-64`** (256px), so the
+       taller single-column cards do not make the modal excessively
+       long.
+
+  Result: on a 1920px monitor each of the 3 sections is roughly 600px
+  wide and each thumbnail fills that width, ~3.5x wider than v0.8.0
+  (~600 vs ~170). The user request "almeno 3 volte la larghezza
+  attuale" is satisfied.
+
+  Trade-off: with `grid-cols-1` the user sees fewer thumbnails per
+  screen (3 per row instead of 6) and needs to scroll more for long
+  lists. But each thumbnail is now actually visible without clicking
+  to zoom — which is what the user wanted.
+
+### 🏗️ Changed
+- Bumped version 0.8.0 → 0.8.1 (badge in header, README, CHANGELOG,
+  entrypoint log, Dockerfile header, package.json).
+
+### 📋 Verification
+- `tsc --noEmit`: no new errors in the modified files. Two pre-existing
+  errors remain in `src/lib/security.ts` and `src/lib/settings-store.ts`.
+- Docker image build: delegated to GitHub Actions (the local workspace
+  runs Node 18, while Next.js 16 requires Node >= 20.9).
+- `eslint`: only the pre-existing `react-hooks/set-state-in-effect`
+  reports; no new lint issues in the modified files.
+- Manual test scenarios to verify:
+  - Open ArtworkModal on a 1920 monitor → modal width = viewport width
+    (was ~1152px in v0.8.0, ~768px in v0.7.13)
+  - Each thumbnail fills its ~600px section ✓ (was ~170px in v0.8.0)
+  - Thumbnail height 256px ✓ (was 200px in v0.8.0)
+  - 3 columns side-by-side still work ✓ (no scrolling between sections)
+  - Drag&drop still works (no regression) ✓
+  - "Carica da PC" button still works ✓
+  - Existing functionality preserved: zoom modal, "Scarica" button,
+    "Aggiorna libreria" refreshes ✓
 
 ## [0.8.0] — 2026-10-25 — Media info badges + Artwork upload + modal redesign
 

@@ -17,6 +17,11 @@
  *   - NEW: "Carica da PC" button + drag&drop handler. Lets the user
  *     upload a custom artwork file from their browser, which gets
  *     saved to the media folder with a sanitized filename.
+ *
+ * [0.8.1] LAYOUT — modale a tutta larghezza (100vw), thumbnail su 1 colonna
+ *   per sezione con altezza h-64 (256px), scroll unico per tutta la modale.
+ *   Attenzione: il DialogContent di base applica sm:max-w-lg (512px), quindi
+ *   la larghezza va sovrascritta anche sul breakpoint sm.
  */
 
 'use client';
@@ -203,8 +208,11 @@ export function ArtworkModal({ open, onOpenChange, media, mediaType, onChanged }
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           className={cn(
-            // [0.8.0] max-w-3xl → max-w-6xl (uses more of the screen)
-            'max-w-6xl max-h-[95vh] overflow-y-auto',
+            // Larghezza pari a tutta la viewport. `sm:max-w-[100vw]` è
+            // necessario perché DialogContent di base applica
+            // `sm:max-w-lg` (512px), che altrimenti vincerebbe sui
+            // breakpoint desktop. Lo scroll è unico per tutta la modale.
+            'w-[100vw] max-w-[100vw] sm:max-w-[100vw] max-h-[95vh] overflow-y-auto',
             // Visual feedback when the user is dragging a file over the modal
             dragActive && 'ring-2 ring-primary ring-offset-2 ring-offset-background',
           )}
@@ -225,10 +233,9 @@ export function ArtworkModal({ open, onOpenChange, media, mediaType, onChanged }
             </DialogDescription>
           </DialogHeader>
 
-          {/* [0.8.0] 3-column grid on desktop (lg+), stacked on smaller screens.
-              Each section scrolls independently if content is too long, so
-              the modal stays within max-h-[95vh] on laptops with smaller
-              screens. */}
+          {/* 3 colonne su desktop (lg+), impilate su schermi piccoli.
+              Ogni sezione mostra le thumbnail su 1 colonna. Lo scroll è
+              unico per tutta la modale (max-h-[95vh] sul DialogContent). */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
             {/* === Colonna 1: Artwork Locali === */}
@@ -277,14 +284,16 @@ export function ArtworkModal({ open, onOpenChange, media, mediaType, onChanged }
                   </span>
                 </p>
               ) : (
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 gap-3">
                   {localFiles.map((f) => (
                     <div key={f} className="bg-card border border-border rounded p-1 flex flex-col items-center gap-1">
-                      {/* [0.8.0] h-20 (80px) → h-48 (200px) for actual visibility */}
+                      {/* [0.8.1] h-96 (384px) → h-64 (256px): con una
+                          thumbnail per riga a tutta larghezza l'altezza
+                          precedente rendeva la modale troppo alta. */}
                       <img
                         src={`/api/artwork-image/${mediaType}/${media.id}/${encodeURIComponent(f)}`}
                         alt={f}
-                        className="w-full h-48 object-contain bg-black rounded cursor-pointer hover:opacity-80 transition-opacity"
+                        className="w-full h-64 object-contain bg-black rounded cursor-pointer hover:opacity-80 transition-opacity"
                         loading="lazy"
                         onClick={() => setZoomedImage(`/api/artwork-image/${mediaType}/${media.id}/${encodeURIComponent(f)}`)}
                       />
@@ -315,13 +324,13 @@ export function ArtworkModal({ open, onOpenChange, media, mediaType, onChanged }
                   Nessuna immagine trovata su Fanart.tv.
                 </p>
               ) : (
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 gap-3">
                   {fanartItems.map((a) => (
                     <div key={a.url} className="bg-card border border-border rounded p-1 flex flex-col items-center gap-1">
                       <img
                         src={a.url}
                         alt={a.our_type}
-                        className="w-full h-48 object-contain bg-black rounded cursor-pointer hover:opacity-80 transition-opacity"
+                        className="w-full h-64 object-contain bg-black rounded cursor-pointer hover:opacity-80 transition-opacity"
                         loading="lazy"
                         onClick={() => setZoomedImage(a.url)}
                       />
@@ -353,13 +362,13 @@ export function ArtworkModal({ open, onOpenChange, media, mediaType, onChanged }
                   Nessuna immagine trovata su TMDB.
                 </p>
               ) : (
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 gap-3">
                   {tmdbItems.map((a) => (
                     <div key={a.url} className="bg-card border border-border rounded p-1 flex flex-col items-center gap-1">
                       <img
                         src={a.url}
                         alt={a.our_type}
-                        className="w-full h-48 object-contain bg-black rounded cursor-pointer hover:opacity-80 transition-opacity"
+                        className="w-full h-64 object-contain bg-black rounded cursor-pointer hover:opacity-80 transition-opacity"
                         loading="lazy"
                         onClick={() => setZoomedImage(a.url)}
                       />

@@ -7,7 +7,7 @@ submitting changes.
 ## Development setup
 
 ```bash
-git clone https://github.com/nextrarr/nextrarr.git
+git clone https://github.com/amonaudio/nextrarr.git
 cd extrarr
 bun install          # or: npm install
 bun run db:push      # create SQLite tables

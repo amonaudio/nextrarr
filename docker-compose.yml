@@ -6,7 +6,7 @@
 
 services:
   extrarr:
-    image: nextrarr/nextrarr:latest   # ← replace with your Docker Hub user/repo
+    image: amonaudio/nextrarr:latest   # ← replace with your Docker Hub user/repo
     container_name: extrarr
     restart: unless-stopped
     ports:
