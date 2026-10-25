@@ -69,3 +69,7 @@ tool-results/
 .zscripts/
 upload/
 skills/
+
+# Local database (contains API keys / runtime settings)
+extrarr.db
+extrarr.db-journal
