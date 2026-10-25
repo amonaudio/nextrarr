@@ -35,6 +35,12 @@ import { Settings2, Check, Download, Music, Eye, Film, Image as ImageIcon, Alert
 import { Card } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+// [0.8.0] Badge styling helpers (resolution/codec/audio channels).
+import {
+  resolutionBadgeClasses,
+  videoCodecBadgeClasses,
+  audioChannelsBadgeClasses,
+} from '@/lib/media-info';
 import type { MediaItem } from '@/lib/types';
 
 interface MediaCardProps {
@@ -183,6 +189,48 @@ export function MediaCard({
               </Tooltip>
             </div>
           </>
+        )}
+
+        {/* [0.8.0] Media info badges — bottom-left of the poster.
+            Three colored pills: resolution (4K/FHD/HD/SD), video codec
+            (H264/HEVC/Xvid/...), audio channels (5.1/2.0/7.1). Hidden
+            entirely when all three are null (e.g. Sonarr series —
+            statistics endpoint doesn't include per-file info, so we
+            don't show "—" placeholders because the modal layout would
+            look noisy). User can still see the title/year + status icons. */}
+        {(media.resolution || media.video_codec || media.audio_channels) && (
+          <div className="absolute bottom-1 left-1 flex flex-wrap gap-1">
+            {media.resolution && (
+              <span
+                className={cn(
+                  'text-[10px] font-bold px-1.5 py-0.5 rounded',
+                  resolutionBadgeClasses(media.resolution),
+                )}
+              >
+                {media.resolution}
+              </span>
+            )}
+            {media.video_codec && (
+              <span
+                className={cn(
+                  'text-[10px] font-bold px-1.5 py-0.5 rounded',
+                  videoCodecBadgeClasses(media.video_codec),
+                )}
+              >
+                {media.video_codec}
+              </span>
+            )}
+            {media.audio_channels && (
+              <span
+                className={cn(
+                  'text-[10px] font-bold px-1.5 py-0.5 rounded',
+                  audioChannelsBadgeClasses(media.audio_channels),
+                )}
+              >
+                {media.audio_channels}
+              </span>
+            )}
+          </div>
         )}
       </div>
 

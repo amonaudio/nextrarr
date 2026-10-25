@@ -21,6 +21,66 @@ export interface ArrImage {
   remoteUrl: string;
 }
 
+/**
+ * [0.8.0] Media info from Radarr/Sonarr's MediaInfo probe (via ffprobe).
+ * Only the fields we use for UI badges are typed — the API returns
+ * many more (resolution name, audio bitrate, subtitles, runtimes, etc.)
+ * but we don't need them and don't want to bloat the JSON over the wire.
+ */
+export interface ArrMediaInfo {
+  videoCodec?: string | null;
+  audioCodec?: string | null;
+  audioChannels?: number | null;
+  width?: number | null;
+  height?: number | null;
+  duration?: string | null;
+}
+
+/**
+ * [0.8.0] Quality object — what Radarr/Sonarr stores about the release
+ * quality of a movie/episode file. We only use `resolution` (number)
+ * and optionally `source` for future badges (BluRay / WEBDL / HDTV).
+ */
+export interface ArrQualityQuality {
+  id?: number;
+  name?: string;       // e.g. "HD-1080p", "UltraHD-2160p"
+  source?: string;     // e.g. "BluRay", "WEBDL", "HDTV", "DVD"
+  resolution?: number; // e.g. 1080, 2160, 720, 480
+}
+
+export interface ArrQuality {
+  quality?: ArrQualityQuality;
+  revision?: unknown;
+  // other fields ignored
+}
+
+/**
+ * [0.8.0] Movie file (Radarr only — Sonarr exposes EpisodeFile via a
+ * separate endpoint, NOT in the series list). Contains the quality
+ * and mediaInfo we use for the resolution/codec badges.
+ */
+export interface ArrMovieFile {
+  id?: number;
+  relativePath?: string;
+  path?: string;
+  size?: number;
+  dateAdded?: string;
+  quality?: ArrQuality;
+  mediaInfo?: ArrMediaInfo | null;
+}
+
+/**
+ * [0.8.0] Statistics for Sonarr series — count of episode files,
+ * size on disk, % complete. Does NOT include mediaInfo (would require
+ * a separate /api/v3/episodeFile?seriesId=X call per series).
+ */
+export interface ArrSeriesStatistics {
+  episodeFileCount?: number;
+  episodeFileCountTotal?: number;
+  sizeOnDisk?: number;
+  percentOfEpisodes?: number;
+}
+
 export interface ArrMedia {
   id: number;
   title: string;
@@ -31,6 +91,12 @@ export interface ArrMedia {
   firstAired?: string;
   tmdbId?: number | null;
   tvdbId?: number | null;
+  /** [0.8.0] Radarr only — present when the movie has a downloaded file. */
+  movieFile?: ArrMovieFile | null;
+  /** [0.8.0] Sonarr only — aggregate stats (no mediaInfo). */
+  statistics?: ArrSeriesStatistics;
+  /** [0.8.0] Both — flag indicating a file exists on disk. */
+  hasFile?: boolean;
 }
 
 export interface Settings {

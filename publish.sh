@@ -144,11 +144,11 @@ echo "💾 Committo..."
 git commit --allow-empty -m "Release ${TAG}
 
 Changes in ${VERSION}:
-- Browser cache middleware (Cache-Control: no-store on all /api/* routes)
-- Artwork keyword fix (scanLocalArtwork now includes poster + fanart)
-- Artwork-image route no-store (defense-in-depth)
-- Unraid template: <Network>bridge</Network> (singular form, was silently ignored)
-- Unraid template: Media Root pre-filled to /mnt/user/media
+- Media info badges on cards (resolution + codec + audio channels)
+- ArtworkModal redesigned (max-w-6xl + 3-col + h-48 + drag&drop)
+- New 'Carica da PC' button to upload custom artwork from browser
+- New /api/upload-artwork route with 7-layer server-side validation
+- For Sonarr series: badges hidden (no mediaInfo in /api/v3/series)
 
 See CHANGELOG.md for the full list of changes."
 echo "✅ Commit creato."

@@ -27,6 +27,8 @@ import { mediaCache } from '@/lib/cache';
 // within 60s (e.g. /api/media + /api/artwork-files for the same media).
 import { folderCache } from '@/lib/folder-cache';
 import { shouldUseMock, getMockMediaList } from '@/lib/mock-data';
+// [0.8.0] Media info mapping helpers (resolution/codec/audio → short labels).
+import { resolutionLabel, videoCodecLabel, audioChannelsLabel } from '@/lib/media-info';
 import type { MediaItem } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -109,6 +111,30 @@ function synthesizeFlags(id: number): { theme: boolean; art: boolean; trailer: b
   }
 }
 
+/**
+ * [0.8.0] In demo mode, synthesize media info badges deterministically
+ * based on the media ID so the UI shows a realistic mix of resolutions
+ * and codecs. Maps the same id%4 cycle to a 4K-HEVC / FHD-H264 / HD-H264 /
+ * SD-Xvid combo — gives a nice visual variety on the demo grid.
+ *
+ * NOTE: audio channels always synthesized as "5.1" (the most common
+ * surround setup) for cards #0 and #2, "2.0" (stereo) for the others.
+ */
+function synthesizeMediaInfo(id: number): {
+  resolution: string | null;
+  video_codec: string | null;
+  audio_channels: string | null;
+} {
+  const mod = id % 4;
+  switch (mod) {
+    case 0: return { resolution: '4K',  video_codec: 'HEVC', audio_channels: '5.1' };
+    case 1: return { resolution: 'FHD', video_codec: 'H264', audio_channels: '5.1' };
+    case 2: return { resolution: 'HD',  video_codec: 'H264', audio_channels: '2.0' };
+    case 3: return { resolution: 'SD',  video_codec: 'Xvid', audio_channels: '2.0' };
+    default: return { resolution: null, video_codec: null, audio_channels: null };
+  }
+}
+
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ type: string }> }) {
   const { type } = await params;
   if (!isValidType(type)) {
@@ -125,6 +151,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ typ
     const mockList = getMockMediaList(type);
     const items: MediaItem[] = mockList.map((m) => {
       const flags = synthesizeFlags(m.id);
+      // [0.8.0] Mock media info badges — deterministic per id%4.
+      const mi = synthesizeMediaInfo(m.id);
       return {
         id: m.id,
         title: m.title,
@@ -140,6 +168,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ typ
         root_folder: m.path,
         local_path: m.path,
         date_added: m.added ?? '',
+        // [0.8.0] Media info badges (mock).
+        resolution: mi.resolution,
+        video_codec: mi.video_codec,
+        audio_channels: mi.audio_channels,
       };
     });
     items.sort((a, b) => a.title.localeCompare(b.title));
@@ -201,6 +233,14 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ typ
     const localPoster = folderExists ? getLocalPosterUrl(type, m.id, localPath) : null;
     const poster = localPoster ?? getPosterUrl(m);
 
+    // [0.8.0] Extract media info badges (resolution / codec / audio channels)
+    // from the ArrMedia. For Radarr movies: present in movieFile.mediaInfo.
+    // For Sonarr series: statistics endpoint doesn't include per-file info,
+    // so all three badges will be null (UI shows "—" placeholder).
+    const resolution = resolutionLabel(m.movieFile?.quality?.quality?.resolution ?? null);
+    const videoCodec = videoCodecLabel(m.movieFile?.mediaInfo?.videoCodec ?? null);
+    const audioChannels = audioChannelsLabel(m.movieFile?.mediaInfo?.audioChannels ?? null);
+
     items.push({
       id: m.id,
       title: m.title || 'Sconosciuto',
@@ -222,6 +262,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ typ
       root_folder: radarrPath,
       local_path: localPath,
       date_added: m.added ?? '',
+      // [0.8.0] Media info badges (null for Sonarr — see comment above).
+      resolution,
+      video_codec: videoCodec,
+      audio_channels: audioChannels,
     });
   }
 

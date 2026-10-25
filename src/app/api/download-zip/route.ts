@@ -16,8 +16,8 @@ import path from 'node:path';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-const ZIP_PATH = '/home/z/my-project/download/nextrarr-0.7.12.zip';
-const ZIP_FILENAME = 'nextrarr-0.7.12.zip';
+const ZIP_PATH = '/home/z/my-project/download/nextrarr-0.7.13.zip';
+const ZIP_FILENAME = 'nextrarr-0.7.13.zip';
 
 export async function GET(_req: NextRequest) {
   try {

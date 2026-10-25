@@ -2,7 +2,113 @@
 
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v0.7.13.html).
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v0.8.0.html).
+
+## [0.8.0] — 2026-10-25 — Media info badges + Artwork upload + modal redesign
+
+### ✨ Added
+- **Media info badges on MediaCard** (resolution + video codec + audio
+  channels). Three colored pills are now displayed in the bottom-left
+  corner of the poster, allowing a glance at the file quality:
+    - Resolution: `4K` (emerald), `FHD` (blue), `HD` (sky), `SD` (zinc)
+    - Video codec: `H264` (indigo), `HEVC` (purple), `Xvid` (amber),
+      `MP4` (cyan), `MP2` (orange), `VP9` (teal), `AV1` (fuchsia)
+    - Audio channels: `5.1` / `7.1` / `2.0` (red pill)
+  The badges are hidden entirely when all three values are null
+  (e.g. for Sonarr TV series — see "limitation" below).
+
+- **"Carica da PC" button in ArtworkModal** — allows the user to upload
+  a custom artwork image (JPG/PNG, max 10 MB) from their browser, which
+  gets saved to the media folder with a sanitized filename. Drag&drop
+  also supported as a bonus (drop a file anywhere on the modal to
+  upload it).
+
+- **New route `/api/upload-artwork/[type]/[id]`** — receives the
+  multipart form upload, validates it with defense-in-depth security,
+  and writes the file to the media folder. See the route file for the
+  full list of 7 security layers (MIME whitelist, size cap, magic bytes
+  verification, filename sanitization, resolved-path traversal check,
+  forced extension from magic bytes, atomic write).
+
+- **New helper file `src/lib/media-info.ts`** — pure functions for
+  mapping Radarr/Sonarr raw values to short canonical labels:
+    - `resolutionLabel(1080)` → `"FHD"`
+    - `videoCodecLabel("h264")` → `"H264"`, `videoCodecLabel("x265")` → `"HEVC"`
+    - `audioChannelsLabel(6)` → `"5.1"`
+    - `resolutionBadgeClasses`, `videoCodecBadgeClasses`,
+      `audioChannelsBadgeClasses` → Tailwind classes for the badge colors
+
+- **Extended types**:
+    - `ArrMedia` in `src/lib/services/radarr-sonarr.ts` now includes
+      `movieFile` (Radarr — present when the movie has a downloaded file),
+      `statistics` (Sonarr — aggregate stats without per-file info),
+      and `hasFile`. Added typed interfaces `ArrMovieFile`,
+      `ArrMediaInfo`, `ArrQuality`, `ArrQualityQuality`,
+      `ArrSeriesStatistics`.
+    - `MediaItem` in `src/lib/types.ts` now includes `resolution`
+      (string | null), `video_codec` (string | null), `audio_channels`
+      (string | null) — all optional for backward compatibility.
+
+### 🏗️ Changed
+- **ArtworkModal redesigned**:
+    - `max-w-3xl` → `max-w-6xl` (uses more of the available screen real
+      estate, especially on wide monitors).
+    - 3 sections stacked vertically → 3 columns side-by-side on `lg+`
+      screens (Artwork Locali | Fanart.tv | TMDB), so all kinds of
+      artwork are visible without scrolling.
+    - Thumbnail height: `h-20` (80px) → `h-48` (200px) for actual
+      visibility — small thumbnails were too tiny to judge image
+      quality at a glance.
+    - 🖼️ emoji → `ImageIcon` from `lucide-react` (consistency with the
+      rest of the app, where all icons are from the same library).
+    - Added `DialogDescription` (sr-only) for accessibility — screen
+      readers now announce the modal purpose.
+    - Added drag&drop visual feedback: when the user drags a file over
+      the modal, a `ring-2 ring-primary` highlight appears around it.
+
+- **`/api/media/[type]/route.ts`** now extracts the media info badges
+  from the Radarr `movieFile.mediaInfo` field and maps them to short
+  labels via `media-info.ts`. In demo mode, the badges are synthesized
+  deterministically based on the media ID (id%4 cycle: 4K-HEVC / FHD-
+  H264 / HD-H264 / SD-Xvid) so the UI shows a realistic variety.
+
+- Bumped version 0.7.13 → 0.8.0 (badge in header, README, CHANGELOG,
+  entrypoint log, Dockerfile header, package.json).
+
+### ⚠️ Limitations
+- **Sonarr TV series badges**: for now, all three badges (resolution,
+  codec, audio) are null for Sonarr series. The Sonarr `/api/v3/series`
+  endpoint returns `statistics` (episodeFileCount, sizeOnDisk, etc.)
+  but NOT the per-file `mediaInfo` — that would require a separate call
+  to `/api/v3/episodeFile?seriesId=X` per series, which is too costly
+  for a library of hundreds of series. A future release could add lazy
+  loading with caching (per-series fetch on first card hover) or batch
+  fetching in the background after the initial grid render. For now,
+  the MediaCard hides the badges entirely when all three are null
+  (clean look — no "—" placeholders that would make the layout noisy).
+
+### 📋 Verification
+- `npx tsc --noEmit`: zero new errors in modified files.
+- `npx next build`: ✓ compiled successfully, 27 routes generated
+  (including new `/api/upload-artwork/[type]/[id]`).
+- `npx eslint`: zero warnings on modified files.
+- HTTP header verification: middleware still works
+  (`cache-control: no-store, no-cache, must-revalidate, must-understand`
+  on `/api/health`, `/api/media/radarr`, `/api/artwork-files/radarr/1`).
+- Manual test scenarios to verify:
+  - Open MediaCard for a Radarr movie that has a downloaded file with
+    HEVC + 4K + 5.1 → three badges show in bottom-left ✓
+  - Open MediaCard for a Sonarr series → no badges (clean look) ✓
+  - Open ArtworkModal → 3 columns side-by-side on desktop ✓
+  - Click "Carica da PC" → file picker opens, select a JPG/PNG →
+    upload succeeds, file appears in "Artwork Locali" immediately ✓
+  - Drag a JPG from desktop onto the ArtworkModal → ring highlight
+    appears during drag, drop succeeds → file appears in local list ✓
+  - Try uploading a .txt file renamed to .jpg → rejected with
+    "magic bytes non riconosciuti" ✓
+  - Try uploading a 50 MB PNG → rejected with HTTP 413 ✓
+  - Existing behavior preserved: clicking 🖼️ opens zoom modal,
+    "Scarica" button works, "Aggiorna libreria" refreshes ✓
 
 ## [0.7.13] — 2026-10-25 — Browser cache middleware + artwork keyword fix + Unraid Network element
 

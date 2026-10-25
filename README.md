@@ -1,4 +1,4 @@
-# 🎬 nEXTrarr 0.7.13 (Next.js)
+# 🎬 nEXTrarr 0.8.0 (Next.js)
 
 A web-based companion tool for **Radarr** and **Sonarr** that fills in the
 metadata gaps your media server doesn't handle on its own:
@@ -9,11 +9,11 @@ metadata gaps your media server doesn't handle on its own:
 
 Built for **Unraid** deployments via **Community Applications**, with a Docker image published to Docker Hub and GitHub Container Registry.
 
-**This is the Next.js 16 (v0.7.13) version** — full TypeScript + React + Prisma rewrite of the original Flask app. Same feature set, same security model, modern UI with shadcn/ui.
+**This is the Next.js 16 (v0.8.0) version** — full TypeScript + React + Prisma rewrite of the original Flask app. Same feature set, same security model, modern UI with shadcn/ui.
 
 [![Build & Publish](https://github.com/nextrarr/nextrarr/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/nextrarr/nextrarr/actions/workflows/docker-publish.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.7.13-orange)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.8.0-orange)](CHANGELOG.md)
 
 ---
 
