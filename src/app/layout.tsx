@@ -20,8 +20,9 @@ export const metadata: Metadata = {
   keywords: ["nEXTrarr", "Radarr", "Sonarr", "Kodi", "Jellyfin", "theme", "trailer", "artwork"],
   authors: [{ name: "nEXTrarr Contributors" }],
   icons: {
-    icon: "/favicon.png",
+    icon: [{ url: "/favicon.png", type: "image/png", sizes: "256x256" }],
     shortcut: "/favicon.png",
+    apple: "/favicon.png",
   },
 };
 

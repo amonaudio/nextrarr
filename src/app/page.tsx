@@ -37,6 +37,8 @@ export default function Home() {
   } = useExtrarrStore();
 
   const [rootFolders, setRootFolders] = useState<string[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
 
   // Modal state
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -91,8 +93,28 @@ export default function Home() {
     }
   }, [mediaType]);
 
-  useEffect(() => { loadRootFolders(); }, [loadRootFolders]);
-  useEffect(() => { loadMedia(); }, [loadMedia]);
+  // [0.8.2] Restore persisted filters (mediaType, sort, root folder, main
+  // filter, search, active custom filter) once on mount. skipHydration in
+  // the store keeps SSR safe. We gate the data effects on `hydrated` so a
+  // persisted mediaType (e.g. sonarr) cannot race an initial radarr fetch
+  // and overwrite the grid with the wrong library.
+  useEffect(() => {
+    let active = true;
+    Promise.resolve(useExtrarrStore.persist.rehydrate())
+      .then(() => {
+        if (active) setHydrated(true);
+      })
+      .catch(() => {
+        // Corrupted/blocked localStorage: continue with defaults.
+        if (active) setHydrated(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => { if (hydrated) loadRootFolders(); }, [hydrated, loadRootFolders]);
+  useEffect(() => { if (hydrated) loadMedia(); }, [hydrated, loadMedia]);
 
   // === Action handlers (passed to children) ===
 
@@ -187,13 +209,20 @@ export default function Home() {
   // Wired to the previously-dead Refresh button in the Header. Used after
   // changing path mappings or downloading artwork outside nEXTrarr.
   async function onRefresh() {
+    if (refreshing) return;
+    setRefreshing(true);
     try {
-      await fetch('/api/refresh', { method: 'POST' });
+      const res = await fetch('/api/refresh', { method: 'POST', cache: 'no-store' });
+      if (!res.ok) {
+        toast.warning('Cache server non aggiornata, ricarico comunque la libreria');
+      }
+      await Promise.all([loadMedia(), loadRootFolders()]);
+      toast.success('Libreria e cache aggiornate');
     } catch {
-      // ignore — proceed with client-side reload anyway
+      toast.error('Errore di rete durante l\u2019aggiornamento');
+    } finally {
+      setRefreshing(false);
     }
-    await Promise.all([loadMedia(), loadRootFolders()]);
-    toast.success('Libreria aggiornata');
   }
 
   // Global YouTube search
@@ -354,6 +383,7 @@ export default function Home() {
         onOpenCustomFilters={onOpenCustomFilters}
         onGlobalSearch={onGlobalSearch}
         onRefresh={onRefresh}
+        refreshing={refreshing}
         rootFolders={rootFolders}
       />
 

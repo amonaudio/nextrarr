@@ -35,7 +35,10 @@ export async function apiFetch<T = unknown>(path: string, options?: RequestInit)
 
   let res: Response;
   try {
-    res = await fetch(path, { ...options, headers });
+    // [0.8.2] Default to no-store so a refreshed media/artwork list can
+    // never be served from the browser HTTP cache. Callers can still
+    // override by passing their own `cache` option.
+    res = await fetch(path, { cache: 'no-store', ...options, headers });
   } catch (e) {
     throw new ApiError('Errore di rete: ' + (e instanceof Error ? e.message : ''), 0);
   }

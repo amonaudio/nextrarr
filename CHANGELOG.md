@@ -4,6 +4,80 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.2] — 2026-10-25 — Artwork modal redesign, delete artwork, cache & filters
+
+### ✨ Added
+- **Delete local artwork from the ArtworkModal** (chosen style 2): each
+  local artwork now has a compact action row under the image with
+  "Ingrandisci" and a red "Elimina" button. Delete asks for confirmation
+  in an `AlertDialog` and then calls the new
+  `DELETE /api/artwork-files/[type]/[id]?filename=...` endpoint.
+  Server-side validation:
+    - type/id validation and filename sanitization (no paths/traversal);
+    - only artwork extensions (`.jpg/.jpeg/.png`) matching the artwork
+      keyword whitelist can be deleted (theme.mp3, .nfo, subtitles etc.
+      are rejected);
+    - resolved path must stay inside the media folder;
+    - `mediaCache` + `folderCache` are invalidated immediately.
+  In demo mode the deleted mock file is hidden per process so the UI flow
+  can be tested without touching the disk.
+- **Persistent filters**: `mediaType`, `sortField`, `sortDir`,
+  `rootFolderFilter`, `mainFilter`, `localSearch` and
+  `activeCustomFilter` are now saved to `localStorage` (Zustand
+  `persist`). A browser refresh keeps the same view. Transient state
+  (media list, loading/errors, selection, player) is deliberately not
+  persisted and is re-fetched.
+- **Refresh feedback**: the header "Aggiorna" button is disabled and
+  shows a spinner + "Aggiornamento..." while the library and caches are
+  being refreshed.
+
+### 🏗️ Changed
+- **ArtworkModal — Modale 1**: fixed 95vh modal with three bordered
+  panels; on desktop each panel scrolls independently (`min-h-0` +
+  `overflow-y-auto`) with a fixed header, while on mobile the columns
+  stack and the whole modal scrolls. Lists remain single-column with
+  large thumbnails.
+- **Info badges — Badge B1**: resolution/codec/audio badges moved from
+  an overlay on the poster to a strip directly below the poster, before
+  the title/footer. The strip is not rendered when all values are null.
+- **Unified icon**: the canonical `public/logo.svg` is now used for the
+  header (replaces the 🎬 emoji), the favicon (`public/favicon.png`) and
+  the Unraid/Docker icon (`unraid/icon.png`). Both PNGs are generated at
+  256×256 by `scripts/generate-icons.mjs` (sharp).
+- Bumped version 0.8.1 → 0.8.2 (badge in header, README, CHANGELOG,
+  entrypoint log, Dockerfile header, package.json).
+
+### 🐛 Fixed
+- **Replaced artwork not refreshing until a full page reload**:
+    - `/api/media/[type]` now appends the local poster file mtime to the
+      `/api/artwork-image/...` URL (`?v=<mtime>`), so a same-name
+      replacement changes the `<img src>` immediately.
+    - ArtworkModal local `<img>` URLs include `?v=<timestamp>` bumped
+      after upload/download/delete.
+    - `MediaCard` resets its poster fallback state when the assigned
+      poster URL changes.
+    - `/api/media/[type]`, `/api/artwork-files/[type]/[id]` and the
+      client `apiFetch` wrapper now use explicit `no-store` /
+      `Cache-Control: no-store`, and the modal's raw fetches pass
+      `cache: 'no-store'`.
+- The header refresh action now reports errors instead of silently
+  continuing.
+
+### 📋 Verification
+- `scripts/generate-icons.mjs` run successfully; `public/favicon.png`
+  and `unraid/icon.png` are byte-identical 256×256 PNGs.
+- Typecheck/lint and Docker image build delegated to GitHub Actions
+  because the local workspace runs Node 18 while Next.js 16 requires
+  Node >= 20.9.
+- Manual test scenarios:
+  - open the artwork modal, replace a poster, close → the card updates
+    immediately; reopen the modal → the new bytes are shown;
+  - delete a local artwork → item disappears, poster falls back if it
+    was the poster, and a page refresh keeps it deleted;
+  - set filters/sort/search, refresh the browser → the same view is
+    restored;
+  - header/favicon/Unraid icon all show the same brand mark.
+
 ## [0.8.1] — 2026-10-25 — ArtworkModal width fix
 
 ### 🐛 Fixed

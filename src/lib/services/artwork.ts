@@ -38,17 +38,29 @@ const EXTRA_ARTWORK_KEYWORDS = [
 ];
 const ART_EXTENSIONS = ['.jpg', '.png', '.jpeg'];
 
+/**
+ * [0.8.2] True when a filename is one of the artwork files we manage in
+ * the ArtworkModal (same rules as scanLocalArtwork). Used by the DELETE
+ * route so a malicious/buggy request cannot delete theme.mp3, .nfo files
+ * or arbitrary files inside the media folder.
+ */
+export function isArtworkFilename(filename: string): boolean {
+  const fl = filename.toLowerCase();
+  return (
+    ART_EXTENSIONS.some((ext) => fl.endsWith(ext)) &&
+    SCAN_ART_KEYWORDS.some((kw) => fl.includes(kw))
+  );
+}
+
 export async function scanLocalArtwork(localPath: string): Promise<string[]> {
   const images: string[] = [];
   try {
     const files = await fs.readdir(localPath);
     for (const f of files) {
-      const fl = f.toLowerCase();
-      if (!ART_EXTENSIONS.some((ext) => fl.endsWith(ext))) continue;
       // [0.7.12-test] Use SCAN_ART_KEYWORDS (includes poster + fanart)
       // so the ArtworkModal shows ALL artwork files, not just the
       // "extra" set. The hasExtraArtwork flag uses a separate list.
-      if (SCAN_ART_KEYWORDS.some((kw) => fl.includes(kw))) {
+      if (isArtworkFilename(f)) {
         images.push(f);
       }
     }

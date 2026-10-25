@@ -78,15 +78,24 @@ export function MediaCard({
   //   - 'local'  → currently showing local poster (initial state).
   //   - 'remote' → tried local, swapped to remote (on 1x1 detection OR onError).
   //   - 'na'     → both failed, showing gray N/A fallback.
-  const [posterState, setPosterState] = useState<'local' | 'remote' | 'na'>(
-    isLocalPoster ? 'local' : (remotePoster ? 'remote' : 'na')
-  );
+  const defaultPosterState: 'local' | 'remote' | 'na' =
+    isLocalPoster ? 'local' : (remotePoster ? 'remote' : 'na');
+  // [0.8.2] Key the fallback state by the assigned poster URL. After
+  // replacing/deleting artwork, /api/media returns a new ?v=<mtime> URL;
+  // the key changes, so stale 'remote'/'na' fallback state is ignored and
+  // the card tries the freshly written local poster immediately — without
+  // a setState-in-effect reset.
+  const posterIdentity = `${media.poster}\u0000${remotePoster}`;
+  const [posterFailure, setPosterFailure] = useState<{ key: string; state: 'remote' | 'na' } | null>(null);
+  const posterState =
+    posterFailure?.key === posterIdentity ? posterFailure.state : defaultPosterState;
 
   function handleImgError() {
     // Real load failure (network error, 4xx, 5xx that returned HTML, etc.)
-    setPosterState((prev) => {
-      if (prev === 'local' && remotePoster) return 'remote';
-      return 'na';
+    const current = posterFailure?.key === posterIdentity ? posterFailure.state : defaultPosterState;
+    setPosterFailure({
+      key: posterIdentity,
+      state: current === 'local' && remotePoster ? 'remote' : 'na',
     });
   }
 
@@ -99,11 +108,7 @@ export function MediaCard({
     if (img.naturalWidth <= 1 && img.naturalHeight <= 1) {
       // The /api/artwork-image route returned its transparent fallback.
       // Swap to the remote Radarr poster if we have one.
-      if (remotePoster) {
-        setPosterState('remote');
-      } else {
-        setPosterState('na');
-      }
+      setPosterFailure({ key: posterIdentity, state: remotePoster ? 'remote' : 'na' });
     }
   }
 
@@ -191,48 +196,48 @@ export function MediaCard({
           </>
         )}
 
-        {/* [0.8.0] Media info badges — bottom-left of the poster.
-            Three colored pills: resolution (4K/FHD/HD/SD), video codec
-            (H264/HEVC/Xvid/...), audio channels (5.1/2.0/7.1). Hidden
-            entirely when all three are null (e.g. Sonarr series —
-            statistics endpoint doesn't include per-file info, so we
-            don't show "—" placeholders because the modal layout would
-            look noisy). User can still see the title/year + status icons. */}
-        {(media.resolution || media.video_codec || media.audio_channels) && (
-          <div className="absolute bottom-1 left-1 flex flex-wrap gap-1">
-            {media.resolution && (
-              <span
-                className={cn(
-                  'text-[10px] font-bold px-1.5 py-0.5 rounded',
-                  resolutionBadgeClasses(media.resolution),
-                )}
-              >
-                {media.resolution}
-              </span>
-            )}
-            {media.video_codec && (
-              <span
-                className={cn(
-                  'text-[10px] font-bold px-1.5 py-0.5 rounded',
-                  videoCodecBadgeClasses(media.video_codec),
-                )}
-              >
-                {media.video_codec}
-              </span>
-            )}
-            {media.audio_channels && (
-              <span
-                className={cn(
-                  'text-[10px] font-bold px-1.5 py-0.5 rounded',
-                  audioChannelsBadgeClasses(media.audio_channels),
-                )}
-              >
-                {media.audio_channels}
-              </span>
-            )}
-          </div>
-        )}
       </div>
+
+      {/* [0.8.2] Badge B1 — strip directly below the poster (outside the
+          image), before title/footer. Three colored pills: resolution
+          (4K/FHD/HD/SD), video codec (H264/HEVC/Xvid/...), audio channels
+          (5.1/2.0/7.1). Hidden entirely when all three are null (e.g.
+          Sonarr series — statistics endpoint doesn't include per-file
+          info), so the card layout has no empty strip. */}
+      {(media.resolution || media.video_codec || media.audio_channels) && (
+        <div className="flex flex-wrap gap-1 px-2 py-1.5 bg-muted/40 border-b border-border">
+          {media.resolution && (
+            <span
+              className={cn(
+                'text-[10px] font-bold px-1.5 py-0.5 rounded',
+                resolutionBadgeClasses(media.resolution),
+              )}
+            >
+              {media.resolution}
+            </span>
+          )}
+          {media.video_codec && (
+            <span
+              className={cn(
+                'text-[10px] font-bold px-1.5 py-0.5 rounded',
+                videoCodecBadgeClasses(media.video_codec),
+              )}
+            >
+              {media.video_codec}
+            </span>
+          )}
+          {media.audio_channels && (
+            <span
+              className={cn(
+                'text-[10px] font-bold px-1.5 py-0.5 rounded',
+                audioChannelsBadgeClasses(media.audio_channels),
+              )}
+            >
+              {media.audio_channels}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* === Footer: title/year + action icons (NO overlap) === */}
       <div className="p-2 flex flex-col gap-1 bg-card">

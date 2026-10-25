@@ -10,7 +10,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { existsSync, statSync } from 'node:fs';
 import path from 'node:path';
 
 import { loadSettings } from '@/lib/settings-store';
@@ -38,6 +38,10 @@ function isValidType(t: string | undefined): t is MediaType {
 }
 
 const ART_KEYWORDS = ['clearlogo', 'clearart', 'banner', 'landscape', 'discart', 'keyart', 'logo'];
+
+// [0.8.2] Never let the browser reuse a stale media list after an artwork
+// replacement/delete or after the "Aggiorna" button cleared the server caches.
+const NO_STORE = { 'Cache-Control': 'no-store, no-cache, must-revalidate' };
 
 async function hasTrailerInNfo(nfoPath: string): Promise<boolean> {
   try {
@@ -82,7 +86,18 @@ function getLocalPosterUrl(
       // The /api/artwork-image/[type]/[id]/[filename] route will sanitize the
       // filename, validate it stays under localPath, and serve the bytes.
       // encodeURIComponent handles spaces and special chars in folder names.
-      return `/api/artwork-image/${mediaType}/${mediaId}/${encodeURIComponent(filename)}`;
+      //
+      // [0.8.2] Append the file mtime as a cache-busting version. When the
+      // user replaces a poster from the ArtworkModal, the URL changes even
+      // though the filename is the same → React updates <img src> and the
+      // browser re-fetches the new bytes immediately. Without this, the
+      // browser keeps displaying the decoded old image until a full reload.
+      try {
+        const mtime = Math.floor(statSync(fullPath).mtimeMs);
+        return `/api/artwork-image/${mediaType}/${mediaId}/${encodeURIComponent(filename)}?v=${mtime}`;
+      } catch {
+        return `/api/artwork-image/${mediaType}/${mediaId}/${encodeURIComponent(filename)}`;
+      }
     }
   }
   return null;
@@ -144,7 +159,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ typ
   const settings = await loadSettings();
   const cacheKey = `media:${type}`;
   const cached = mediaCache.get<MediaItem[]>(cacheKey);
-  if (cached) return NextResponse.json(cached);
+  if (cached) return NextResponse.json(cached, { headers: NO_STORE });
 
   // Demo mode short-circuit
   if (shouldUseMock(type, settings)) {
@@ -176,7 +191,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ typ
     });
     items.sort((a, b) => a.title.localeCompare(b.title));
     mediaCache.set(cacheKey, items);
-    return NextResponse.json(items);
+    return NextResponse.json(items, { headers: NO_STORE });
   }
 
   // Real mode
@@ -271,5 +286,5 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ typ
 
   items.sort((a, b) => (a.title || '').toLowerCase().localeCompare((b.title || '').toLowerCase()));
   mediaCache.set(cacheKey, items);
-  return NextResponse.json(items);
+  return NextResponse.json(items, { headers: NO_STORE });
 }

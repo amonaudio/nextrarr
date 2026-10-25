@@ -4,6 +4,7 @@
  */
 
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import type { MediaType, SortField, SortDir, CustomFilter, MediaItem } from '@/lib/types';
 
 interface ExtrarrState {
@@ -43,7 +44,7 @@ interface ExtrarrState {
   patchMedia: (id: number, patch: Partial<MediaItem>) => void;
 }
 
-export const useExtrarrStore = create<ExtrarrState>((set) => ({
+export const useExtrarrStore = create<ExtrarrState>()(persist((set) => ({
   mediaType: 'radarr',
   mediaList: [],
   loadingMedia: false,
@@ -73,4 +74,23 @@ export const useExtrarrStore = create<ExtrarrState>((set) => ({
   patchMedia: (id, patch) => set((s) => ({
     mediaList: s.mediaList.map((m) => (m.id === id ? { ...m, ...patch } : m)),
   })),
+}), {
+  name: 'nextrarr-ui',
+  version: 1,
+  storage: createJSONStorage(() => localStorage),
+  // [0.8.2] Keep the UI filters across a browser refresh (and navigation).
+  // Transient data (media list, loading/error, current selection, player)
+  // is intentionally NOT persisted: it is re-fetched from Radarr/Sonarr.
+  // skipHydration avoids touching localStorage during SSR; page.tsx calls
+  // rehydrate() once on mount.
+  skipHydration: true,
+  partialize: (s) => ({
+    mediaType: s.mediaType,
+    sortField: s.sortField,
+    sortDir: s.sortDir,
+    rootFolderFilter: s.rootFolderFilter,
+    mainFilter: s.mainFilter,
+    localSearch: s.localSearch,
+    activeCustomFilter: s.activeCustomFilter,
+  }),
 }));

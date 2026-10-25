@@ -36,10 +36,11 @@ interface HeaderProps {
   onOpenCustomFilters: () => void;
   onGlobalSearch: (q: string) => void;
   onRefresh: () => void;
+  refreshing?: boolean;
   rootFolders: string[];
 }
 
-export function Header({ onOpenSettings, onOpenCustomFilters, onGlobalSearch, onRefresh, rootFolders }: HeaderProps) {
+export function Header({ onOpenSettings, onOpenCustomFilters, onGlobalSearch, onRefresh, refreshing = false, rootFolders }: HeaderProps) {
   const {
     mediaType, setMediaType,
     sortField, setSortField, sortDir, toggleSortDir,
@@ -91,9 +92,9 @@ export function Header({ onOpenSettings, onOpenCustomFilters, onGlobalSearch, on
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
       <div className="px-4 sm:px-6 lg:px-10 py-3 flex flex-wrap items-end justify-between gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-2xl">🎬</span>
+          <img src="/logo.svg" alt="nEXTrarr" className="h-8 w-8 shrink-0" />
           <h1 className="text-xl font-bold text-primary">nEXTrarr</h1>
-          <Badge variant="outline" className="text-xs ml-1">v0.8.1</Badge>
+          <Badge variant="outline" className="text-xs ml-1">v0.8.2</Badge>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -142,10 +143,11 @@ export function Header({ onOpenSettings, onOpenCustomFilters, onGlobalSearch, on
                 size="sm"
                 variant="outline"
                 onClick={onRefresh}
+                disabled={refreshing}
                 className="gap-1.5"
               >
-                <RefreshCw className="h-4 w-4" />
-                <span className="hidden lg:inline">Aggiorna</span>
+                <RefreshCw className={refreshing ? 'h-4 w-4 animate-spin' : 'h-4 w-4'} />
+                <span className="hidden lg:inline">{refreshing ? 'Aggiornamento...' : 'Aggiorna'}</span>
               </Button>
             </TooltipTrigger>
             <TooltipContent>Aggiorna libreria (ricarica da Radarr/Sonarr e pulisce le cache)</TooltipContent>

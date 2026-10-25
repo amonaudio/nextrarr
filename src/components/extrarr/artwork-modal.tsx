@@ -22,14 +22,43 @@
  *   per sezione con altezza h-64 (256px), scroll unico per tutta la modale.
  *   Attenzione: il DialogContent di base applica sm:max-w-lg (512px), quindi
  *   la larghezza va sovrascritta anche sul breakpoint sm.
+ *
+ * [0.8.2] MODALE 1 — tre pannelli bordati con scroll indipendente:
+ *   - DialogContent alto 95vh, header fisso, corpo a 3 colonne min-h-0
+ *   - ogni colonna ha header sticky e lista con overflow-y-auto proprio
+ *   - su mobile le colonne si impilano e la modale scorre normalmente
+ *   - azioni locali sotto l'immagine (stile eliminazione 2): zoom + Elimina
+ *   - Elimina apre un AlertDialog di conferma e chiama la nuova DELETE API
+ *   - le img locali hanno ?v=<timestamp> per forzare il re-fetch dopo
+ *     upload/sostituzione/eliminazione (cache-busting lato client)
  */
 
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { Loader2, Download, Upload, Image as ImageIcon, Globe, Film, X } from 'lucide-react';
+import {
+  Loader2,
+  Download,
+  Upload,
+  Image as ImageIcon,
+  Globe,
+  Film,
+  X,
+  Trash2,
+  Maximize2,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import type { ArtworkItem, MediaItem } from '@/lib/types';
@@ -50,6 +79,11 @@ export function ArtworkModal({ open, onOpenChange, media, mediaType, onChanged }
   const [tmdbError, setTmdbError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  // [0.8.2] Bumped after every local-list mutation. Local <img> URLs include
+  // it as ?v=… so the browser cannot keep showing the previous bytes when a
+  // file was overwritten (same filename) or deleted and re-uploaded.
+  const [localVersion, setLocalVersion] = useState(0);
   // [0.8.0] Drag&drop visual feedback — when the user drags a file over
   // the modal, highlight the modal with a primary-color ring so they
   // know they can drop. Set/unset on dragenter/dragleave.
@@ -62,14 +96,18 @@ export function ArtworkModal({ open, onOpenChange, media, mediaType, onChanged }
     setTmdbItems(null);
     setFanartError(null);
     setTmdbError(null);
+    setDeleteTarget(null);
+    setLocalVersion(Date.now());
 
     (async () => {
       const [loc, fan, tmdb] = await Promise.all([
-        fetch(`/api/artwork-files/${mediaType}/${media.id}`).then((r) => r.json()).catch(() => []),
-        fetch(`/api/search-artwork-online/${mediaType}/${media.id}`)
+        fetch(`/api/artwork-files/${mediaType}/${media.id}`, { cache: 'no-store' })
+          .then((r) => r.json())
+          .catch(() => []),
+        fetch(`/api/search-artwork-online/${mediaType}/${media.id}`, { cache: 'no-store' })
           .then((r) => r.json())
           .catch((e) => ({ status: 'error', message: e.message })),
-        fetch(`/api/search-tmdb-artwork/${mediaType}/${media.id}`)
+        fetch(`/api/search-tmdb-artwork/${mediaType}/${media.id}`, { cache: 'no-store' })
           .then((r) => r.json())
           .catch((e) => ({ status: 'error', message: e.message })),
       ]);
@@ -81,21 +119,26 @@ export function ArtworkModal({ open, onOpenChange, media, mediaType, onChanged }
     })();
   }, [open, media, mediaType]);
 
-  // Refresh the local files list — called after a successful download
-  // or upload so the new file appears immediately in the modal.
+  // Refresh the local files list — called after a successful download,
+  // upload or delete so the new file appears/disappears immediately.
   const refreshLocalFiles = useCallback(async () => {
     if (!media) return;
     try {
-      const fresh = await fetch(`/api/artwork-files/${mediaType}/${media.id}`).then((r) => r.json());
+      const fresh = await fetch(`/api/artwork-files/${mediaType}/${media.id}`, { cache: 'no-store' }).then((r) => r.json());
       if (Array.isArray(fresh)) {
         setLocalFiles(fresh);
       }
+      setLocalVersion(Date.now());
     } catch {
       // ignore — list will refresh on next modal open
     }
   }, [media, mediaType]);
 
   if (!media) return null;
+
+  function localUrl(filename: string): string {
+    return `/api/artwork-image/${mediaType}/${media!.id}/${encodeURIComponent(filename)}?v=${localVersion}`;
+  }
 
   async function downloadOne(item: ArtworkItem) {
     setBusy(item.url);
@@ -165,6 +208,36 @@ export function ArtworkModal({ open, onOpenChange, media, mediaType, onChanged }
     }
   }
 
+  // [0.8.2] Delete a local artwork file after AlertDialog confirmation.
+  async function deleteOne(filename: string) {
+    const deleteId = 'delete-' + filename;
+    setBusy(deleteId);
+    try {
+      const res = await fetch(
+        `/api/artwork-files/${mediaType}/${media!.id}?filename=${encodeURIComponent(filename)}`,
+        { method: 'DELETE', cache: 'no-store' },
+      );
+      const data = await res.json();
+      if (data.status === 'success') {
+        // Optimistic removal so the item disappears even before the
+        // refresh round-trip completes.
+        setLocalFiles((prev) => prev.filter((f) => f !== filename));
+        if (zoomedImage?.includes(encodeURIComponent(filename))) setZoomedImage(null);
+        setLocalVersion(Date.now());
+        toast.success(data.message);
+        onChanged();
+        await refreshLocalFiles();
+      } else {
+        toast.error(data.message);
+      }
+    } catch (e) {
+      toast.error('Errore di rete: ' + (e instanceof Error ? e.message : ''));
+    } finally {
+      setBusy(null);
+      setDeleteTarget(null);
+    }
+  }
+
   // Drag&drop handlers (attached to DialogContent). preventDefault on
   // dragover is REQUIRED to allow the drop event to fire (per the HTML5
   // drag&drop spec). Without it, the browser would treat the drop as a
@@ -191,6 +264,8 @@ export function ArtworkModal({ open, onOpenChange, media, mediaType, onChanged }
     }
   }
 
+  const deleting = busy?.startsWith('delete-') ?? false;
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -208,20 +283,20 @@ export function ArtworkModal({ open, onOpenChange, media, mediaType, onChanged }
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           className={cn(
-            // Larghezza pari a tutta la viewport. `sm:max-w-[100vw]` è
-            // necessario perché DialogContent di base applica
-            // `sm:max-w-lg` (512px), che altrimenti vincerebbe sui
-            // breakpoint desktop. Lo scroll è unico per tutta la modale.
-            'w-[100vw] max-w-[100vw] sm:max-w-[100vw] max-h-[95vh] overflow-y-auto',
-            // Visual feedback when the user is dragging a file over the modal
+            // [0.8.2] Modale 1: altezza fissa 95vh, header in alto e corpo
+            // che riempie lo spazio rimanente. Su desktop il contenuto non
+            // scrolla (scrollano le singole liste); su mobile scrolla la
+            // modale intera e le liste hanno un max-height.
+            'w-[100vw] max-w-[100vw] sm:max-w-[100vw] h-[95vh] max-h-[95vh] overflow-y-auto lg:overflow-hidden',
+            'grid-rows-[auto_minmax(0,1fr)] gap-3 p-4 sm:p-6',
             dragActive && 'ring-2 ring-primary ring-offset-2 ring-offset-background',
           )}
         >
-          <DialogHeader>
+          <DialogHeader className="pr-8">
             <DialogTitle className="flex items-center gap-2">
               <ImageIcon className="h-5 w-5 text-primary" />
               Gestione Artwork
-              <span className="text-sm text-muted-foreground font-normal">
+              <span className="text-sm text-muted-foreground font-normal truncate">
                 {media.title}
                 {typeof media.year === 'number' && media.year !== 0 ? ` (${media.year})` : ''}
               </span>
@@ -233,23 +308,24 @@ export function ArtworkModal({ open, onOpenChange, media, mediaType, onChanged }
             </DialogDescription>
           </DialogHeader>
 
-          {/* 3 colonne su desktop (lg+), impilate su schermi piccoli.
-              Ogni sezione mostra le thumbnail su 1 colonna. Lo scroll è
-              unico per tutta la modale (max-h-[95vh] sul DialogContent). */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Tre pannelli indipendenti. lg:min-h-0 + overflow-hidden sul
+              contenitore permette alle liste interne di avere il proprio
+              scroll senza far crescere la modale oltre il 95vh. */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 lg:min-h-0 lg:overflow-hidden">
 
             {/* === Colonna 1: Artwork Locali === */}
-            <section className="space-y-2">
-              <div className="flex items-center justify-between gap-2 pb-2 border-b border-border">
+            <section className="flex flex-col min-h-0 overflow-hidden rounded-lg border border-border bg-card/40">
+              <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-border bg-muted/30 shrink-0">
                 <h3 className="text-sm font-semibold text-primary flex items-center gap-1.5">
                   <ImageIcon className="h-4 w-4" />
                   Artwork Locali
+                  <span className="text-xs font-normal text-muted-foreground">({localFiles.length})</span>
                 </h3>
                 {/* [0.8.0] Pulsante "Carica da PC" — usa <label> con un <input type="file">
                     nascosto (via sr-only), così il pulsante è uno stile standard Button
                     ma attiva comunque il file picker nativo del browser.
                     Accettiamo solo image/jpeg e image/png per matchare il server-side. */}
-                <label className="cursor-pointer">
+                <label className="cursor-pointer shrink-0">
                   <span className="inline-flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold px-2 py-1 rounded transition-colors">
                     {busy?.startsWith('upload-') ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -275,114 +351,156 @@ export function ArtworkModal({ open, onOpenChange, media, mediaType, onChanged }
                   />
                 </label>
               </div>
-              {localFiles.length === 0 ? (
-                <p className="text-xs text-muted-foreground py-8 text-center">
-                  Nessuna immagine locale trovata.
-                  <br />
-                  <span className="text-[10px] opacity-70">
-                    Usa il pulsante &quot;Carica da PC&quot; o scarica da Fanart/TMDB.
-                  </span>
-                </p>
-              ) : (
-                <div className="grid grid-cols-1 gap-3">
-                  {localFiles.map((f) => (
-                    <div key={f} className="bg-card border border-border rounded p-1 flex flex-col items-center gap-1">
-                      {/* [0.8.1] h-96 (384px) → h-64 (256px): con una
-                          thumbnail per riga a tutta larghezza l'altezza
-                          precedente rendeva la modale troppo alta. */}
+
+              <div className="overflow-y-auto p-2 space-y-2 max-h-[48vh] lg:max-h-none lg:flex-1 lg:min-h-0">
+                {localFiles.length === 0 ? (
+                  <p className="text-xs text-muted-foreground py-10 text-center">
+                    Nessuna immagine locale trovata.
+                    <br />
+                    <span className="text-[10px] opacity-70">
+                      Usa il pulsante &quot;Carica da PC&quot; o scarica da Fanart/TMDB.
+                    </span>
+                  </p>
+                ) : (
+                  localFiles.map((f) => (
+                    <div key={f} className="rounded-md border border-border bg-background overflow-hidden">
+                      {/* Stile eliminazione 2: immagine + riga azioni sotto. */}
                       <img
-                        src={`/api/artwork-image/${mediaType}/${media.id}/${encodeURIComponent(f)}`}
+                        src={localUrl(f)}
                         alt={f}
-                        className="w-full h-64 object-contain bg-black rounded cursor-pointer hover:opacity-80 transition-opacity"
+                        className="w-full h-48 object-contain bg-black cursor-zoom-in hover:opacity-90 transition-opacity"
                         loading="lazy"
-                        onClick={() => setZoomedImage(`/api/artwork-image/${mediaType}/${media.id}/${encodeURIComponent(f)}`)}
+                        onClick={() => setZoomedImage(localUrl(f))}
                       />
-                      <div className="text-[10px] text-center break-all">{f}</div>
+                      <div className="flex items-center justify-between gap-2 px-2 py-1.5 border-t border-border">
+                        <span className="text-[11px] truncate min-w-0" title={f}>{f}</span>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Button
+                            size="icon"
+                            variant="outline"
+                            className="h-7 w-7"
+                            title="Ingrandisci"
+                            aria-label={`Ingrandisci ${f}`}
+                            onClick={() => setZoomedImage(localUrl(f))}
+                          >
+                            <Maximize2 className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            className="h-7 px-2"
+                            onClick={() => setDeleteTarget(f)}
+                            disabled={deleting}
+                            title="Elimina artwork"
+                          >
+                            {busy === 'delete-' + f ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-3.5 w-3.5" />
+                            )}
+                            <span className="text-xs">Elimina</span>
+                          </Button>
+                        </div>
+                      </div>
                     </div>
-                  ))}
-                </div>
-              )}
-              {/* Drag&drop hint — visible only when localFiles is empty (so the
-                  user knows they can drop) but always available. */}
-              <p className="text-[10px] text-muted-foreground text-center pt-2 border-t border-border">
+                  ))
+                )}
+              </div>
+
+              {/* Drag&drop hint — always visible so the user knows they can drop. */}
+              <p className="text-[10px] text-muted-foreground text-center px-2 py-1.5 border-t border-border shrink-0">
                 <span className="opacity-70">💡 Trascina qui un&apos;immagine per caricarla</span>
               </p>
             </section>
 
             {/* === Colonna 2: Artwork Online (Fanart.tv) === */}
-            <section className="space-y-2">
-              <h3 className="text-sm font-semibold text-primary flex items-center gap-1.5 pb-2 border-b border-border">
-                <Globe className="h-4 w-4" />
-                Online (Fanart.tv)
-              </h3>
-              {fanartError ? (
-                <p className="text-xs text-destructive py-4">{fanartError}</p>
-              ) : !fanartItems ? (
-                <p className="text-xs text-muted-foreground py-8 text-center">Caricamento...</p>
-              ) : fanartItems.length === 0 ? (
-                <p className="text-xs text-muted-foreground py-8 text-center">
-                  Nessuna immagine trovata su Fanart.tv.
-                </p>
-              ) : (
-                <div className="grid grid-cols-1 gap-3">
-                  {fanartItems.map((a) => (
-                    <div key={a.url} className="bg-card border border-border rounded p-1 flex flex-col items-center gap-1">
+            <section className="flex flex-col min-h-0 overflow-hidden rounded-lg border border-border bg-card/40">
+              <div className="flex items-center gap-2 px-3 py-2 border-b border-border bg-muted/30 shrink-0">
+                <h3 className="text-sm font-semibold text-primary flex items-center gap-1.5">
+                  <Globe className="h-4 w-4" />
+                  Online (Fanart.tv)
+                  <span className="text-xs font-normal text-muted-foreground">
+                    ({fanartItems?.length ?? 0})
+                  </span>
+                </h3>
+              </div>
+              <div className="overflow-y-auto p-2 space-y-2 max-h-[48vh] lg:max-h-none lg:flex-1 lg:min-h-0">
+                {fanartError ? (
+                  <p className="text-xs text-destructive py-4 px-2">{fanartError}</p>
+                ) : !fanartItems ? (
+                  <p className="text-xs text-muted-foreground py-10 text-center">Caricamento...</p>
+                ) : fanartItems.length === 0 ? (
+                  <p className="text-xs text-muted-foreground py-10 text-center">
+                    Nessuna immagine trovata su Fanart.tv.
+                  </p>
+                ) : (
+                  fanartItems.map((a) => (
+                    <div key={a.url} className="rounded-md border border-border bg-background overflow-hidden">
                       <img
                         src={a.url}
                         alt={a.our_type}
-                        className="w-full h-64 object-contain bg-black rounded cursor-pointer hover:opacity-80 transition-opacity"
+                        className="w-full h-48 object-contain bg-black cursor-zoom-in hover:opacity-90 transition-opacity"
                         loading="lazy"
                         onClick={() => setZoomedImage(a.url)}
                       />
-                      <div className="text-[10px] text-center">
-                        Tipo: {a.our_type}<br />Lingua: {a.lang} | Likes: {a.likes}
+                      <div className="px-2 py-1.5 border-t border-border space-y-1.5">
+                        <div className="text-[10px] text-center text-muted-foreground">
+                          Tipo: {a.our_type} · Lingua: {a.lang} · Likes: {a.likes}
+                        </div>
+                        <Button size="sm" className="w-full h-7" onClick={() => downloadOne(a)} disabled={busy === a.url}>
+                          {busy === a.url ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3" />}
+                          <span className="ml-1 text-xs">Scarica</span>
+                        </Button>
                       </div>
-                      <Button size="sm" className="w-full" onClick={() => downloadOne(a)} disabled={busy === a.url}>
-                        {busy === a.url ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3" />}
-                        <span className="ml-1 text-xs">Scarica</span>
-                      </Button>
                     </div>
-                  ))}
-                </div>
-              )}
+                  ))
+                )}
+              </div>
             </section>
 
             {/* === Colonna 3: Artwork Online (TMDB) === */}
-            <section className="space-y-2">
-              <h3 className="text-sm font-semibold text-primary flex items-center gap-1.5 pb-2 border-b border-border">
-                <Film className="h-4 w-4" />
-                Online (TMDB)
-              </h3>
-              {tmdbError ? (
-                <p className="text-xs text-destructive py-4">{tmdbError}</p>
-              ) : !tmdbItems ? (
-                <p className="text-xs text-muted-foreground py-8 text-center">Caricamento...</p>
-              ) : tmdbItems.length === 0 ? (
-                <p className="text-xs text-muted-foreground py-8 text-center">
-                  Nessuna immagine trovata su TMDB.
-                </p>
-              ) : (
-                <div className="grid grid-cols-1 gap-3">
-                  {tmdbItems.map((a) => (
-                    <div key={a.url} className="bg-card border border-border rounded p-1 flex flex-col items-center gap-1">
+            <section className="flex flex-col min-h-0 overflow-hidden rounded-lg border border-border bg-card/40">
+              <div className="flex items-center gap-2 px-3 py-2 border-b border-border bg-muted/30 shrink-0">
+                <h3 className="text-sm font-semibold text-primary flex items-center gap-1.5">
+                  <Film className="h-4 w-4" />
+                  Online (TMDB)
+                  <span className="text-xs font-normal text-muted-foreground">
+                    ({tmdbItems?.length ?? 0})
+                  </span>
+                </h3>
+              </div>
+              <div className="overflow-y-auto p-2 space-y-2 max-h-[48vh] lg:max-h-none lg:flex-1 lg:min-h-0">
+                {tmdbError ? (
+                  <p className="text-xs text-destructive py-4 px-2">{tmdbError}</p>
+                ) : !tmdbItems ? (
+                  <p className="text-xs text-muted-foreground py-10 text-center">Caricamento...</p>
+                ) : tmdbItems.length === 0 ? (
+                  <p className="text-xs text-muted-foreground py-10 text-center">
+                    Nessuna immagine trovata su TMDB.
+                  </p>
+                ) : (
+                  tmdbItems.map((a) => (
+                    <div key={a.url} className="rounded-md border border-border bg-background overflow-hidden">
                       <img
                         src={a.url}
                         alt={a.our_type}
-                        className="w-full h-64 object-contain bg-black rounded cursor-pointer hover:opacity-80 transition-opacity"
+                        className="w-full h-48 object-contain bg-black cursor-zoom-in hover:opacity-90 transition-opacity"
                         loading="lazy"
                         onClick={() => setZoomedImage(a.url)}
                       />
-                      <div className="text-[10px] text-center">
-                        Tipo: {a.our_type}<br />Lingua: {a.lang} | Voto: {a.likes}
+                      <div className="px-2 py-1.5 border-t border-border space-y-1.5">
+                        <div className="text-[10px] text-center text-muted-foreground">
+                          Tipo: {a.our_type} · Lingua: {a.lang} · Voto: {a.likes}
+                        </div>
+                        <Button size="sm" className="w-full h-7" onClick={() => downloadOne(a)} disabled={busy === a.url}>
+                          {busy === a.url ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3" />}
+                          <span className="ml-1 text-xs">Scarica</span>
+                        </Button>
                       </div>
-                      <Button size="sm" className="w-full" onClick={() => downloadOne(a)} disabled={busy === a.url}>
-                        {busy === a.url ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3" />}
-                        <span className="ml-1 text-xs">Scarica</span>
-                      </Button>
                     </div>
-                  ))}
-                </div>
-              )}
+                  ))
+                )}
+              </div>
             </section>
 
           </div>
@@ -419,6 +537,43 @@ export function ArtworkModal({ open, onOpenChange, media, mediaType, onChanged }
           )}
         </DialogContent>
       </Dialog>
+
+      {/* [0.8.2] Conferma eliminazione artwork locale. Usa AlertDialog per
+          rendere l'azione distruttiva esplicita; il file viene rimosso solo
+          dopo la conferma (la DELETE API rivalida tutto lato server). */}
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(o) => {
+          if (!o && !deleting) setDeleteTarget(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminare questo artwork?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Il file <span className="font-mono text-foreground">{deleteTarget}</span> verrà
+              eliminato definitivamente dalla cartella del media. Questa operazione non può
+              essere annullata.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Annulla</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-white hover:bg-destructive/90"
+              disabled={deleting}
+              onClick={(e) => {
+                // Prevent Radix from closing immediately: we close only
+                // after the DELETE request completes (success or error).
+                e.preventDefault();
+                if (deleteTarget) void deleteOne(deleteTarget);
+              }}
+            >
+              {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+              Elimina
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
