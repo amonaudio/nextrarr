@@ -1,13 +1,14 @@
 # nEXTrarr — Stato del progetto
 
 Ultimo aggiornamento: 2026-10-26
-Workspace: `/config/workspace/nextrarr/nextrarr-0.8.2`
+Workspace: directory `nextrarr-0.8.3` (in origine `/config/workspace/nextrarr/nextrarr-0.8.2`)
 Repo: `https://github.com/amonaudio/nextrarr`
 Docker Hub: `amonaudio/nextrarr`
 Versione: `0.8.3`
 Branch: `main`
-Ultimo commit pubblicato: `68d77f6 ci: label images with checked out release revision`
+Commit workflow/CI: `68d77f6 ci: label images with checked out release revision`
 Commit sorgente release: `632c7da Release v0.8.3`
+Commit documentazione: `ed7e2f2 docs: record v0.8.3 release` (poi aggiornamenti pacchetto)
 Tag pubblicato: `v0.8.3`
 Stato: `v0.8.3` pubblicata su GitHub e Docker Hub (`amd64`); `latest` allineato.
 
@@ -122,10 +123,13 @@ Aggiornati: `package.json`, badge header, `README.md`, `CHANGELOG.md`,
 
 - Node di default nel container: **18.19.1**; Next.js 16 richiede **>= 20.9**.
 - Node 20.19.0 usato per build/test:
-  `/tmp/opencode/node-v20.19.0-linux-x64/bin` (directory temporanea).
+  `/tmp/opencode/node-v20.19.0-linux-x64/bin` (directory temporanea;
+  in un nuovo ambiente verificare che esista o installare Node 20+).
+- `.env` incluso nel pacchetto usa `DATABASE_URL=file:../db/custom.db`
+  (relativo a `prisma/schema.prisma`). `db/custom.db` è vuoto e senza segreti.
 - Build verificata dopo `rm -rf .next`:
   ```bash
-  cd /config/workspace/nextrarr/nextrarr-0.8.2
+  cd nextrarr-0.8.3
   PATH=/tmp/opencode/node-v20.19.0-linux-x64/bin:$PATH npm run build
   ```
 - Se la build fallisce con `ENOTEMPTY` su `.next/standalone/node_modules/.prisma`,
@@ -228,3 +232,30 @@ messaggio vecchio e fa force-push dei tag.
 - Il workflow builda solo `linux/amd64`: Unraid è x86_64-only.
 - Se si toccano icone: aggiornare `public/logo.svg`, eseguire
   `node scripts/generate-icons.mjs`, verificare i due PNG.
+
+## 10. Pacchetto sviluppo `nextrarr-0.8.3.zip`
+
+Contiene tutto il necessario per ripartire in una nuova chat/sessione:
+
+- sorgenti `src/`, `public/`, `prisma/`, `scripts/`, `.github/`, `unraid/`,
+  `mini-services/` e `.zscripts/` (senza PID);
+- configurazioni progetto, Docker, Unraid e lockfile `bun.lock`;
+- documentazione (`README.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `LICENSE`),
+  `STATO.md` e i mockup approvati;
+- `.env` di sviluppo con DB relativo e `db/custom.db` vuoto (0 righe).
+
+Esclusi di proposito: `.git` (può contenere il vecchio DB nella storia),
+`node_modules`, `.next`, `extrarr.db` (API key), `yarn.lock`, `*.tsbuildinfo`,
+`.zscripts/dev.pid` e artifact locali.
+
+Avvio rapido:
+
+```bash
+unzip nextrarr-0.8.3.zip
+cd nextrarr-0.8.3
+bun install
+bun run dev
+```
+
+In alternativa `npm install` / `npm run dev` con Node 20+. Per la cronologia
+Git completa usare il remoto `https://github.com/amonaudio/nextrarr`.
