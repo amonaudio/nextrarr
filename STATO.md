@@ -6,9 +6,10 @@ Repo: `https://github.com/amonaudio/nextrarr`
 Docker Hub: `amonaudio/nextrarr`
 Versione: `0.8.3`
 Branch: `main`
-Ultimo commit pubblicato: `2613a37 Release v0.8.2`
-Tag pubblicato: `v0.8.2`
-Stato: `v0.8.3` implementata e verificata localmente; commit/tag/push da eseguire.
+Ultimo commit pubblicato: `68d77f6 ci: label images with checked out release revision`
+Commit sorgente release: `632c7da Release v0.8.3`
+Tag pubblicato: `v0.8.3`
+Stato: `v0.8.3` pubblicata su GitHub e Docker Hub (`amd64`); `latest` allineato.
 
 Questo file serve a ripartire da un context nuovo senza perdere le decisioni
 importanti. Leggerlo prima di modificare codice; poi controllare `git status`
@@ -149,35 +150,46 @@ Aggiornati: `package.json`, badge header, `README.md`, `CHANGELOG.md`,
 - Nessun browser headless disponibile: test visivo manuale ancora consigliato.
 - Non ci sono CLI `docker` o `gh`; usare Git + GitHub Actions.
 
-## 6. Pubblicazione v0.8.3
+## 6. Release v0.8.3 pubblicata
 
-La GitHub Action `.github/workflows/docker-publish.yml`:
+- Git: tag annotato `v0.8.3` sul commit `632c7da`, pushato su `origin`.
+- `main` aggiornato a `68d77f6 ci: label images with checked out release revision`.
+- Docker Hub: `amonaudio/nextrarr:v0.8.3` e `:latest`.
+- GHCR: `ghcr.io/amonaudio/nextrarr:v0.8.3` e `:latest`.
+- Digest: `sha256:5580e249dc1c912f90258b3eddcdf8c28d123e1d8cc8fefe2aba036d2ca10463`.
+- Immagine: **linux/amd64** (più attestation `unknown/unknown`).
+- Label immagine `org.opencontainers.image.revision=632c7da...`, quindi il
+  contenuto corrisponde al tag release, non al commit del workflow manuale.
+- Non esiste `sha-632c7da`: i tag `sha-*` sono volutamente disabilitati sulle
+  run manuali di release, perché `github.sha` sarebbe il commit di `main`.
+- Run GitHub Actions di pubblicazione: `40402123376`, conclusa con successo.
+- Il primo tentativo multi-arch (run `40391698865`) è stato annullato dopo
+  oltre un'ora bloccato su QEMU/arm64. **Unraid è solo x86_64**: inutile.
 
-- su push `main`: build amd64, senza push;
-- su tag `v*`: build multi-arch amd64+arm64 e push su Docker Hub + GHCR;
-- `latest` viene aggiornato solo per tag `v*`.
+Workflow attuale (`.github/workflows/docker-publish.yml`):
 
-Comandi previsti:
+- su push `main` e PR: build `linux/amd64`, senza push;
+- su tag `v*`: build `linux/amd64` e push su Docker Hub + GHCR;
+- `workflow_dispatch` accetta `release_tag` per ripubblicare un tag già
+  esistente senza riscriverlo;
+- QEMU rimosso, `platforms: linux/amd64`;
+- `latest` aggiornato su tag `v*` o dispatch di release;
+- label `revision` presa dal commit effettivamente checkoutato.
+
+Comando equivalente futuro, se `gh` sarà disponibile:
 
 ```bash
-cd /config/workspace/nextrarr/nextrarr-0.8.2
-git add .gitignore CHANGELOG.md Dockerfile README.md entrypoint.sh package.json \
-  STATO.md mockup-v0.8.3.html src/app src/components src/lib
-git commit -m "Release v0.8.3"
-git tag -a v0.8.3 -m "Release v0.8.3"
-GIT_TERMINAL_PROMPT=0 git push origin main
-GIT_TERMINAL_PROMPT=0 git push origin v0.8.3
+gh workflow run docker-publish.yml --ref main -f release_tag=v0.8.3
 ```
 
-Non committare `yarn.lock`. Non usare `publish.sh`: fa `git add -A`, messaggio
-vecchio e force-push dei tag.
-
-Verifica CI pubblica:
+Verifica già eseguita:
 
 ```bash
-curl -s 'https://api.github.com/repos/amonaudio/nextrarr/actions/runs?per_page=5'
 curl -s 'https://hub.docker.com/v2/repositories/amonaudio/nextrarr/tags?page_size=10'
 ```
+
+Non committare `yarn.lock`. Non usare `publish.sh`: fa `git add -A`, usa un
+messaggio vecchio e fa force-push dei tag.
 
 ## 7. Sicurezza e file da non committare
 
@@ -213,5 +225,6 @@ curl -s 'https://hub.docker.com/v2/repositories/amonaudio/nextrarr/tags?page_siz
 - Prima di modificare, leggere i file interessati e controllare `git status`.
 - Usare Node 20 per build/dev; Node 18 non è compatibile con Next 16.
 - Non aggiungere segreti o `extrarr.db` al repository.
+- Il workflow builda solo `linux/amd64`: Unraid è x86_64-only.
 - Se si toccano icone: aggiornare `public/logo.svg`, eseguire
   `node scripts/generate-icons.mjs`, verificare i due PNG.
