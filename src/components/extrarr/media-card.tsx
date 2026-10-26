@@ -33,7 +33,7 @@
 import { useMemo, useState } from 'react';
 import { Settings2, Check, Download, Music, Eye, Film, Image as ImageIcon, AlertTriangle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 // [0.8.0] Badge styling helpers (resolution/codec/audio channels).
 import {
@@ -41,6 +41,7 @@ import {
   videoCodecBadgeClasses,
   audioChannelsBadgeClasses,
 } from '@/lib/media-info';
+import { isRecentlyAdded, needsMediaAction } from '@/lib/media-badge';
 import type { MediaItem } from '@/lib/types';
 
 interface MediaCardProps {
@@ -123,8 +124,12 @@ export function MediaCard({
       ? { kind: 'nofolder' as const, msg: `Errore: La cartella non esiste sul disco! Percorso calcolato: ${media.local_path}` }
       : null;
 
+  // [0.8.3] B3 — pulsing dot for recently added titles that still require
+  // an action. Only shown when both conditions are true, so it disappears
+  // once the title is complete even within the 14-day window.
+  const showNewBadge = isRecentlyAdded(media.date_added) && needsMediaAction(media);
+
   return (
-    <TooltipProvider delayDuration={300}>
     <Card
       id={`card-${media.id}`}
       data-title={media.title}
@@ -196,6 +201,22 @@ export function MediaCard({
           </>
         )}
 
+        {/* [0.8.3] Bottom-left so it never collides with the top icon row. */}
+        {showNewBadge && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span
+                tabIndex={0}
+                aria-label="Titolo nuovo con azioni da completare"
+                className="absolute bottom-1.5 left-1.5 z-10 flex h-5 w-5 cursor-help items-center justify-center rounded-full bg-primary shadow-lg shadow-primary/40 ring-2 ring-background/70 focus-visible:outline-none focus-visible:ring-primary"
+              >
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
+                <span className="relative h-2 w-2 rounded-full bg-primary-foreground" />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>Nuovo — ci sono ancora azioni da completare</TooltipContent>
+          </Tooltip>
+        )}
       </div>
 
       {/* [0.8.2] Badge B1 — strip directly below the poster (outside the
@@ -295,6 +316,5 @@ export function MediaCard({
         )}
       </div>
     </Card>
-    </TooltipProvider>
   );
 }

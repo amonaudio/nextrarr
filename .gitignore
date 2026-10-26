@@ -78,3 +78,8 @@ server.log
 /.venv/
 /.pytest_cache/
 /.eslintcache
+# [0.8.3] Keep the local-folder feature (the broad local-* rule above is
+# for local env/config files, not these source files).
+!src/app/api/local-folder/
+!src/app/api/local-folder/**
+!src/components/extrarr/local-folder-modal.tsx

@@ -4,6 +4,51 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.3] — 2026-10-26 — Tooltip delay, NEW indicator, artwork filters, folder view & external links
+
+### ✨ Added
+- **Artwork type filters** in the ArtworkModal. A single global filter
+  applies to the local, Fanart.tv and TMDB sections at once, with counts
+  for every type. It resets to "Tutti" each time the modal opens, and
+  zero-count types stay visible but disabled.
+- **Read-only local folder view**: clicking "Artwork Locali" opens an
+  in-app modal listing the media folder (files, directories and symlinks,
+  with sizes). New `GET /api/local-folder/[type]/[id]` endpoint with path
+  mapping/allow-prefix validation and a 500-entry cap.
+- **Fanart.tv / TMDB page links**: the online column titles are now
+  clickable. New `GET /api/external-links/[type]/[id]` resolves the exact
+  movie/series page from TMDB/TVDB IDs and falls back to a search URL when
+  an ID is missing.
+- **NEW indicator (B3)**: a pulsing dot on the poster for titles added in
+  the last 14 days that still need an action (mapping, theme, artwork or
+  trailer). It disappears automatically once the title is complete.
+- **Realistic demo dates**: mock titles now use relative `added` dates and
+  TV entries include TMDB IDs, so the NEW dot and external links can be
+  tested in demo mode.
+
+### 🏗️ Changed
+- **Tooltips now appear after 3 seconds everywhere**: a single
+  `TooltipProvider` in the root layout replaces the per-component
+  providers (which used 0/300 ms and overrode each other). Sidebar
+  tooltips use the same 3000 ms delay.
+- Bumped version 0.8.2 → 0.8.3 (header badge, package.json, README,
+  Dockerfile, entrypoint, CHANGELOG).
+
+### 🐛 Fixed
+- Removed the nested `TooltipProvider` inside the base `Tooltip`
+  component that silently forced every tooltip to open immediately.
+
+### 📋 Verification
+- `npm run build` succeeds with Node 20.
+- ESLint passes on all touched files; `tsc --noEmit` still reports only
+  the two pre-existing errors in `src/lib/security.ts` and
+  `src/lib/settings-store.ts`.
+- Demo-mode endpoint smoke tests: `/api/external-links` returns the
+  Matrix/Breaking Bad pages, `/api/local-folder` returns movie/TV
+  listings, `/api/artwork-files` and `/api/health` respond normally.
+- Pure-helper tests: 15/15 checks for the NEW badge date/action logic and
+  local artwork type classification.
+
 ## [0.8.2] — 2026-10-25 — Artwork modal redesign, delete artwork, cache & filters
 
 ### ✨ Added

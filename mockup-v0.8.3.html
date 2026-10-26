@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>nEXTrarr v0.8.3 — Mockup scelte implementative</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .option { transition: border-color .15s, background-color .15s, box-shadow .15s; cursor: pointer; }
+    .option:hover { border-color: #fb923c; }
+    .option-selected { border-color: #f97316 !important; background: rgba(249,115,22,.10) !important; box-shadow: 0 0 0 1px rgba(249,115,22,.45); }
+    .option-selected .option-dot { background: #f97316; border-color: #f97316; }
+    .option-dot { width: 16px; height: 16px; border-radius: 999px; border: 2px solid #52525b; flex: 0 0 auto; margin-top: 2px; }
+    .scroll-thin { scrollbar-width: thin; scrollbar-color: #f97316 #27272a; }
+    .scroll-thin::-webkit-scrollbar { width: 8px; height: 8px; }
+    .scroll-thin::-webkit-scrollbar-track { background: #27272a; border-radius: 999px; }
+    .scroll-thin::-webkit-scrollbar-thumb { background: #f97316; border-radius: 999px; }
+    .scroll-thin::-webkit-scrollbar-thumb:hover { background: #fb923c; }
+    .sticky-summary { backdrop-filter: blur(12px); background: rgba(9,9,11,.88); }
+    .chip { transition: background .12s, color .12s, border-color .12s; }
+    .chip-active { background: #f97316 !important; border-color: #f97316 !important; color: #09090b !important; font-weight: 700; }
+    .chip-disabled { opacity: .35; pointer-events: none; }
+    .tt-wrap { position: relative; display: inline-flex; }
+    .tt-bubble {
+      position: absolute; bottom: calc(100% + 9px); left: 50%; transform: translateX(-50%) translateY(4px);
+      background: #f97316; color: #09090b; font-size: 11px; font-weight: 600; line-height: 1.2;
+      padding: 6px 9px; border-radius: 7px; white-space: nowrap; opacity: 0; pointer-events: none;
+      transition: opacity .12s, transform .12s; z-index: 60; box-shadow: 0 8px 20px rgba(0,0,0,.35);
+    }
+    .tt-bubble::after {
+      content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+      border: 5px solid transparent; border-top-color: #f97316;
+    }
+    .tt-bubble.tt-visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .tt-trigger.tt-waiting { animation: ttPulse 1s ease-in-out infinite; }
+    @keyframes ttPulse { 0%,100% { opacity: .65; } 50% { opacity: 1; } }
+    .card-new-border { box-shadow: 0 0 0 2px #f97316, 0 12px 28px rgba(249,115,22,.20) !important; }
+    .badge-new { background: #f97316; color: #09090b; font-weight: 800; letter-spacing: .04em; }
+    .badge-new-soft { background: rgba(249,115,22,.15); color: #fb923c; border: 1px solid rgba(249,115,22,.45); font-weight: 800; letter-spacing: .04em; }
+    .pulse-dot::before {
+      content: ''; position: absolute; inset: 0; border-radius: 999px; background: #f97316;
+      animation: ping 1.4s cubic-bezier(0,0,.2,1) infinite;
+    }
+    @keyframes ping { 75%,100% { transform: scale(2.2); opacity: 0; } }
+    .filter-empty { display: none; }
+    .mock-modal-backdrop { background: rgba(0,0,0,.72); backdrop-filter: blur(4px); }
+    .filename-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    @media print { .no-print { display: none !important; } }
+  </style>
+</head>
+<body id="top" class="bg-zinc-950 text-zinc-100 p-4 lg:p-8">
+
+  <div class="max-w-[1500px] mx-auto">
+
+    <!-- ============================================================ -->
+    <!-- HEADER                                                       -->
+    <!-- ============================================================ -->
+    <header class="border-b border-zinc-800 pb-5">
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2 text-orange-400 font-bold text-sm mb-2">
+            <i data-lucide="flask-conical" class="w-4 h-4"></i>
+            <span>MOCKUP DI VALIDAZIONE · NESSUNA MODIFICA ALL'APP</span>
+          </div>
+          <h1 class="text-3xl lg:text-4xl font-bold text-orange-500">nEXTrarr v0.8.3 — Scelte implementative</h1>
+          <p class="text-zinc-400 mt-2 max-w-4xl leading-relaxed">
+            Le tre feature sono state scomposte in scelte indipendenti. Seleziona una variante per ogni gruppo,
+            guarda l'anteprima e copia il riepilogo: implementerò <strong class="text-zinc-200">solo dopo la tua conferma esplicita</strong>.
+          </p>
+        </div>
+        <div class="text-right text-xs text-zinc-500">
+          <div>Basato sulla working copy <strong class="text-zinc-300">0.8.2</strong></div>
+          <div>Data: 26 ottobre 2026</div>
+          <div>Branch: <code class="text-orange-300">main</code></div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-6">
+        <div class="bg-zinc-900/80 border border-zinc-800 rounded-lg p-3">
+          <div class="flex items-center gap-2 text-orange-400 font-bold text-sm">
+            <i data-lucide="timer" class="w-4 h-4"></i> 1 · Tooltip a 3 secondi
+          </div>
+          <p class="text-xs text-zinc-400 mt-1">Ritardo uniforme su tutti i tooltip shadcn. Oggi il delay impostato nei componenti è inefficace: ogni <code>Tooltip</code> crea un provider interno a 0 ms.</p>
+        </div>
+        <div class="bg-zinc-900/80 border border-zinc-800 rounded-lg p-3">
+          <div class="flex items-center gap-2 text-orange-400 font-bold text-sm">
+            <i data-lucide="sparkles" class="w-4 h-4"></i> 2 · Badge titoli nuovi
+          </div>
+          <p class="text-xs text-zinc-400 mt-1">Segnala i titoli appena aggiunti che richiedono ancora azioni, senza coprire le icone già presenti sulla locandina.</p>
+        </div>
+        <div class="bg-zinc-900/80 border border-zinc-800 rounded-lg p-3">
+          <div class="flex items-center gap-2 text-orange-400 font-bold text-sm">
+            <i data-lucide="images" class="w-4 h-4"></i> 3 · Filtri artwork + link
+          </div>
+          <p class="text-xs text-zinc-400 mt-1">Filtri istantanei per tipo nelle tre sezioni e titoli cliccabili verso cartella locale, Fanart.tv e TMDB.</p>
+        </div>
+      </div>
+    </header>
+
+    <!-- ============================================================ -->
+    <!-- STICKY SUMMARY                                               -->
+    <!-- ============================================================ -->
+    <div class="sticky-summary sticky top-0 z-40 border border-zinc-800 rounded-xl px-3 py-2 my-5 flex flex-wrap items-center gap-2 no-print">
+      <span class="text-[10px] font-bold uppercase tracking-wider text-orange-400 mr-1">Le tue scelte</span>
+      <span id="summary" class="text-xs text-zinc-300 flex-1 min-w-[280px] leading-relaxed"></span>
+      <button id="copy-btn" class="inline-flex items-center gap-1.5 bg-orange-500 hover:bg-orange-400 text-black text-xs font-bold px-3 py-1.5 rounded-md">
+        <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copia riepilogo
+      </button>
+      <button id="reset-btn" class="inline-flex items-center gap-1.5 border border-zinc-700 hover:border-zinc-500 text-zinc-300 text-xs font-semibold px-3 py-1.5 rounded-md">
+        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset
+      </button>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- INTERPRETATION                                               -->
+    <!-- ============================================================ -->
+    <section class="mb-12">
+      <h2 class="text-xl font-bold text-orange-400 border-b border-zinc-800 pb-2 mb-4">0 · Come ho interpretato la richiesta</h2>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 text-sm">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+          <h3 class="font-bold text-zinc-100 mb-2">1. Tooltip</h3>
+          <p class="text-zinc-400">Tutti i tooltip dell'app (header, card, player, eventuali nuovi controlli) devono comparire dopo 3 secondi. I <code>title</code> nativi del browser non sono controllabili via CSS/JS: se vuoi, li convertiremo in tooltip shadcn solo dove sono azioni.</p>
+          <p class="text-xs text-orange-300/90 mt-2">Nota tecnica: il delay va centralizzato in un unico provider globale.</p>
+        </div>
+        <div class="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+          <h3 class="font-bold text-zinc-100 mb-2">2. Titoli appena aggiunti</h3>
+          <p class="text-zinc-400">Badge visibile solo per i titoli con <code>date_added</code> recente e, preferibilmente, con almeno un'azione mancante (tema, artwork extra o trailer). Il badge sparisce da solo quando il titolo è completo o invecchia.</p>
+          <p class="text-xs text-orange-300/90 mt-2">Nessuna nuova API: il dato <code>date_added</code> è già presente in ogni <code>MediaItem</code>.</p>
+        </div>
+        <div class="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+          <h3 class="font-bold text-zinc-100 mb-2">3. Filtri e link</h3>
+          <p class="text-zinc-400">Filtri client-side per tipo artwork, senza richieste aggiuntive. I nomi delle tre sezioni diventano cliccabili: cartella locale, pagina Fanart.tv e pagina TMDB del titolo.</p>
+          <p class="text-xs text-orange-300/90 mt-2">Vincolo: un browser non può aprire il Finder/Explorer del server. Per “cartella locale” servono opzioni diverse, illustrate sotto.</p>
+        </div>
+      </div>
+      <div class="mt-4 bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 text-sm text-amber-200">
+        <div class="flex items-start gap-2">
+          <i data-lucide="alert-triangle" class="w-4 h-4 mt-0.5 shrink-0"></i>
+          <p><strong>Limite “cartella locale”:</strong> l'app gira nel container/server. Un link <code>file:///mnt/user/...</code> viene bloccato dai browser moderni quando la pagina è servita da HTTP. Le opzioni L1–L4 sotto mostrano le alternative tecnicamente affidabili.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- FEATURE 1 — TOOLTIP                                          -->
+    <!-- ============================================================ -->
+    <section class="mb-14">
+      <div class="flex flex-wrap items-center gap-3 border-b border-zinc-800 pb-2 mb-2">
+        <span class="bg-orange-500 text-black text-xs font-bold px-2.5 py-1 rounded">FEATURE 1</span>
+        <h2 class="text-xl font-bold text-zinc-100">Ritardo tooltip · 3 secondi</h2>
+      </div>
+      <p class="text-sm text-zinc-400 mb-5 max-w-4xl">
+        Passa il mouse sulle icone qui sotto: il tooltip rispetterà la variante selezionata. Il puntino arancione indica che il timer è in corso.
+      </p>
+
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-3 mb-6">
+        <label class="option option-selected bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex gap-3" data-group="tooltip" data-value="T1">
+          <input type="radio" name="tooltip" value="T1" class="sr-only" checked>
+          <span class="option-dot"></span>
+          <span>
+            <span class="block font-bold text-sm">T1 · 3 s uniforme, senza scorciatoie <span class="text-[10px] text-orange-400 ml-1">CONSIGLIATA</span></span>
+            <span class="block text-xs text-zinc-400 mt-1">Ogni tooltip attende sempre 3 secondi, anche passando da un'icona all'altra. È la lettura più letterale della richiesta.</span>
+            <span class="block text-[11px] text-zinc-500 mt-2">Un solo provider globale in <code>layout.tsx</code>; rimozione dei provider locali e del wrapper interno.</span>
+          </span>
+        </label>
+
+        <label class="option bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex gap-3" data-group="tooltip" data-value="T2">
+          <input type="radio" name="tooltip" value="T2" class="sr-only">
+          <span class="option-dot"></span>
+          <span>
+            <span class="block font-bold text-sm">T2 · 3 s al primo hover, poi 800 ms tra icone vicine</span>
+            <span class="block text-xs text-zinc-400 mt-1">Meno faticoso quando si esplorano più azioni di fila: dopo il primo tooltip, i successivi nella stessa zona sono quasi immediati per 800 ms.</span>
+            <span class="block text-[11px] text-zinc-500 mt-2">Sempre provider globale; sfrutta <code>skipDelayDuration</code> di Radix. Non tutti i tooltip attendono 3 s.</span>
+          </span>
+        </label>
+
+        <label class="option bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex gap-3" data-group="tooltip" data-value="T3">
+          <input type="radio" name="tooltip" value="T3" class="sr-only">
+          <span class="option-dot"></span>
+          <span>
+            <span class="block font-bold text-sm">T3 · 3 s solo sulle card, 300 ms altrove</span>
+            <span class="block text-xs text-zinc-400 mt-1">Riduce l'attesa su header e player, ma non è “tutti i tooltip”. Utile se il problema è solo la scoperta delle icone sulle locandine.</span>
+            <span class="block text-[11px] text-zinc-500 mt-2">Due provider distinti (card vs resto). Più configurazione, ma nessun impatto sulle azioni.</span>
+          </span>
+        </label>
+      </div>
+
+      <div class="bg-gradient-to-br from-zinc-900 to-zinc-950 border border-zinc-800 rounded-xl p-4 lg:p-6">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <h3 class="text-sm font-bold text-zinc-200 flex items-center gap-2"><i data-lucide="mouse-pointer-2" class="w-4 h-4 text-orange-400"></i> Anteprima interattiva</h3>
+          <span id="tt-status" class="text-xs text-zinc-400">Ritardo attivo: <strong class="text-orange-300">3000 ms</strong></span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="bg-zinc-900 border border-zinc-700 rounded-lg p-3">
+            <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold mb-3">Header / toolbar (fuori dalle card)</div>
+            <div class="flex items-center gap-3">
+              <div class="tt-wrap">
+                <button class="tt-trigger bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-md p-2" data-zone="header" data-tip="Aggiorna libreria"><i data-lucide="refresh-cw" class="w-4 h-4 text-zinc-200"></i></button>
+                <span class="tt-bubble">Aggiorna libreria</span>
+              </div>
+              <div class="tt-wrap">
+                <button class="tt-trigger bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-md p-2" data-zone="header" data-tip="Impostazioni"><i data-lucide="settings" class="w-4 h-4 text-zinc-200"></i></button>
+                <span class="tt-bubble">Impostazioni</span>
+              </div>
+              <div class="tt-wrap">
+                <button class="tt-trigger bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-md p-2" data-zone="header" data-tip="Tema chiaro/scuro"><i data-lucide="sun-moon" class="w-4 h-4 text-zinc-200"></i></button>
+                <span class="tt-bubble">Tema chiaro/scuro</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-zinc-900 border border-zinc-700 rounded-lg p-3">
+            <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold mb-3">Icone sulla card (poster)</div>
+            <div class="flex items-center gap-3">
+              <div class="tt-wrap">
+                <button class="tt-trigger bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-md p-2" data-zone="card" data-tip="Apri editor (tema, trailer, NFO)"><i data-lucide="settings-2" class="w-4 h-4 text-zinc-200"></i></button>
+                <span class="tt-bubble">Apri editor (tema, trailer, NFO)</span>
+              </div>
+              <div class="tt-wrap">
+                <button class="tt-trigger bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-md p-2" data-zone="card" data-tip="Scarica tema musicale"><i data-lucide="download" class="w-4 h-4 text-orange-400"></i></button>
+                <span class="tt-bubble">Scarica tema musicale</span>
+              </div>
+              <div class="tt-wrap">
+                <button class="tt-trigger bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-md p-2" data-zone="card" data-tip="Vedi e scarica artwork"><i data-lucide="eye" class="w-4 h-4 text-zinc-200"></i></button>
+                <span class="tt-bubble">Vedi e scarica artwork</span>
+              </div>
+              <div class="tt-wrap">
+                <button class="tt-trigger bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-md p-2" data-zone="card" data-tip="Scarica artwork (batch da Fanart.tv)"><i data-lucide="image" class="w-4 h-4 text-zinc-200"></i></button>
+                <span class="tt-bubble">Scarica artwork (batch da Fanart.tv)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 text-[11px] text-zinc-500 flex flex-wrap gap-x-4 gap-y-1">
+          <span><strong class="text-zinc-300">T1:</strong> 3000 ms sempre</span>
+          <span><strong class="text-zinc-300">T2:</strong> 3000 ms, poi finestra 800 ms</span>
+          <span><strong class="text-zinc-300">T3:</strong> card 3000 ms / header 300 ms</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- FEATURE 2 — BADGE                                            -->
+    <!-- ============================================================ -->
+    <section class="mb-14">
+      <div class="flex flex-wrap items-center gap-3 border-b border-zinc-800 pb-2 mb-2">
+        <span class="bg-orange-500 text-black text-xs font-bold px-2.5 py-1 rounded">FEATURE 2</span>
+        <h2 class="text-xl font-bold text-zinc-100">Badge sui titoli appena aggiunti</h2>
+      </div>
+      <p class="text-sm text-zinc-400 mb-5 max-w-4xl">
+        Il badge è derivato lato client da <code>date_added</code> e dai flag già disponibili (<code>has_theme</code>, <code>has_artwork</code>, <code>has_trailer</code>). Nessuna modifica alle API Radarr/Sonarr.
+      </p>
+
+      <!-- Criteria -->
+      <h3 class="text-sm font-bold text-zinc-200 mb-3">2a · Quando considerare un titolo “nuovo”</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 mb-7">
+        <label class="option bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex gap-3" data-group="badgeCriteria" data-value="C1">
+          <input type="radio" name="badgeCriteria" value="C1" class="sr-only">
+          <span class="option-dot"></span>
+          <span>
+            <span class="block font-bold text-sm">C1 · Ultimi 7 giorni</span>
+            <span class="block text-xs text-zinc-400 mt-1">Molto selettivo, badge di breve durata.</span>
+          </span>
+        </label>
+        <label class="option option-selected bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex gap-3" data-group="badgeCriteria" data-value="C2">
+          <input type="radio" name="badgeCriteria" value="C2" class="sr-only" checked>
+          <span class="option-dot"></span>
+          <span>
+            <span class="block font-bold text-sm">C2 · Ultimi 14 giorni <span class="text-[10px] text-orange-400 ml-1">CONSIGLIATA</span></span>
+            <span class="block text-xs text-zinc-400 mt-1">Buon compromesso: c'è tempo per completare le azioni.</span>
+          </span>
+        </label>
+        <label class="option bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex gap-3" data-group="badgeCriteria" data-value="C3">
+          <input type="radio" name="badgeCriteria" value="C3" class="sr-only">
+          <span class="option-dot"></span>
+          <span>
+            <span class="block font-bold text-sm">C3 · Ultimi 30 giorni</span>
+            <span class="block text-xs text-zinc-400 mt-1">Più visibile, ma rischia di restare a lungo.</span>
+          </span>
+        </label>
+        <label class="option bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex gap-3" data-group="badgeCriteria" data-value="C4">
+          <input type="radio" name="badgeCriteria" value="C4" class="sr-only">
+          <span class="option-dot"></span>
+          <span>
+            <span class="block font-bold text-sm">C4 · Ultimi 10 aggiunti</span>
+            <span class="block text-xs text-zinc-400 mt-1">Indipendente dalla data: utile se <code>date_added</code> è assente o errata.</span>
+          </span>
+        </label>
+      </div>
+
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-3 mb-7">
+        <label class="option bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex gap-3" data-group="badgeOnlyMissing" data-value="yes">
+          <input type="radio" name="badgeOnlyMissing" value="yes" class="sr-only" checked>
+          <span class="option-dot"></span>
+          <span>
+            <span class="block font-bold text-sm">Solo se manca almeno un'azione <span class="text-[10px] text-orange-400 ml-1">CONSIGLIATA</span></span>
+            <span class="block text-xs text-zinc-400 mt-1">Un titolo nuovo ma già completo non mostra il badge.</span>
+          </span>
+        </label>
+        <label class="option bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex gap-3" data-group="badgeOnlyMissing" data-value="no">
+          <input type="radio" name="badgeOnlyMissing" value="no" class="sr-only">
+          <span class="option-dot"></span>
+          <span>
+            <span class="block font-bold text-sm">Tutti i titoli nuovi</span>
+            <span class="block text-xs text-zinc-400 mt-1">Il badge indica la novità, anche se non c'è nulla da fare.</span>
+          </span>
+        </label>
+        <div class="bg-zinc-900/60 border border-dashed border-zinc-700 rounded-xl p-4 text-xs text-zinc-400">
+          <div class="font-bold text-zinc-300 mb-1">Regola automatica comune</div>
+          Il badge scompare quando il titolo diventa completo o supera la soglia scelta, senza bisogno di “segna come letto”. Nessuna scrittura su DB.
+        </div>
+      </div>
+
+      <!-- Style -->
+      <h3 class="text-sm font-bold text-zinc-200 mb-3">2b · Dove e come mostrarlo</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 mb-7">
+        <label class="option option-selected bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex gap-3" data-group="badgeStyle" data-value="B1">
+          <input type="radio" name="badgeStyle" value="B1" class="sr-only" checked>
+          <span class="option-dot"></span>
+          <span>
+            <span class="block font-bold text-sm">B1 · Pill nella riga titolo <span class="text-[10px] text-orange-400 ml-1">CONSIGLIATA</span></span>
+            <span class="block text-xs text-zinc-400 mt-1">Accanto a titolo/anno, fuori dal poster. Zero sovrapposizioni con le icone esistenti.</span>
+            <span class="block mt-2"><span class="badge-new text-[10px] px-1.5 py-0.5 rounded">NEW</span></span>
+          </span>
+        </label>
+        <label class="option bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex gap-3" data-group="badgeStyle" data-value="B2">
+          <input type="radio" name="badgeStyle" value="B2" class="sr-only">
+          <span class="option-dot"></span>
+          <span>
+            <span class="block font-bold text-sm">B2 · Striscia sotto il poster</span>
+            <span class="block text-xs text-zinc-400 mt-1">Riga dedicata, molto leggibile. Aggiunge altezza solo alle card nuove.</span>
+            <span class="block mt-2 text-[10px] badge-new-soft rounded px-2 py-1">NEW · 2 azioni</span>
+          </span>
+        </label>
+        <label class="option bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex gap-3" data-group="badgeStyle" data-value="B3">
+          <input type="radio" name="badgeStyle" value="B3" class="sr-only">
+          <span class="option-dot"></span>
+          <span>
+            <span class="block font-bold text-sm">B3 · Pallino pulsante sul poster</span>
+            <span class="block text-xs text-zinc-400 mt-1">Minimalista, in basso a sinistra (angoli superiori già occupati). Tooltip con dettaglio azioni.</span>
+            <span class="block mt-3"><span class="relative inline-flex w-3.5 h-3.5"><span class="pulse-dot absolute inset-0 rounded-full bg-orange-500"></span><span class="relative inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-orange-500 text-[7px] font-black text-black">N</span></span></span>
+          </span>
+        </label>
+        <label class="option bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex gap-3" data-group="badgeStyle" data-value="B4">
+          <input type="radio" name="badgeStyle" value="B4" class="sr-only">
+          <span class="option-dot"></span>
+          <span>
+            <span class="block font-bold text-sm">B4 · Bordo arancione + pill</span>
+            <span class="block text-xs text-zinc-400 mt-1">Massima evidenza, ma più invasivo e vicino all'effetto hover già presente.</span>
+            <span class="block mt-2"><span class="inline-flex items-center gap-2 border-2 border-orange-500 rounded px-2 py-1 text-[10px]"><span class="badge-new px-1.5 py-0.5 rounded">NEW</span><span class="text-zinc-400">2 azioni</span></span></span>
+          </span>
+        </label>
+      </div>
+
+      <!-- Detail -->
+      <h3 class="text-sm font-bold text-zinc-200 mb-3">2c · Quanto dettaglio nel badge</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-7">
+        <label class="option bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex gap-3" data-group="badgeDetail" data-value="D1">
+          <input type="radio" name="badgeDetail" value="D1" class="sr-only">
+          <span class="option-dot"></span>
+          <span>
+            <span class="block font-bold text-sm">D1 · Solo “NEW”</span>
+            <span class="block text-xs text-zinc-400 mt-1">Pulito, ma non dice quante azioni mancano.</span>
+            <span class="block mt-2"><span class="badge-new text-[10px] px-1.5 py-0.5 rounded">NEW</span></span>
+          </span>
+        </label>
+        <label class="option option-selected bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex gap-3" data-group="badgeDetail" data-value="D2">
+          <input type="radio" name="badgeDetail" value="D2" class="sr-only" checked>
+          <span class="option-dot"></span>
+          <span>
+            <span class="block font-bold text-sm">D2 · “NEW · N azioni” <span class="text-[10px] text-orange-400 ml-1">CONSIGLIATA</span></span>
+            <span class="block text-xs text-zinc-400 mt-1">Immediato: dice quante cose mancano senza allungare troppo.</span>
+            <span class="block mt-2"><span class="badge-new text-[10px] px-1.5 py-0.5 rounded">NEW · 2</span></span>
+          </span>
+        </label>
+        <label class="option bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex gap-3" data-group="badgeDetail" data-value="D3">
+          <input type="radio" name="badgeDetail" value="D3" class="sr-only">
+          <span class="option-dot"></span>
+          <span>
+            <span class="block font-bold text-sm">D3 · “NEW · manca tema, artwork”</span>
+            <span class="block text-xs text-zinc-400 mt-1">Massimo dettaglio, ma può essere lungo su card strette.</span>
+            <span class="block mt-2"><span class="badge-new-soft text-[9px] px-1.5 py-0.5 rounded">NEW · manca tema, artwork</span></span>
+          </span>
+        </label>
+      </div>
+
+      <!-- Badge preview -->
+      <div class="bg-gradient-to-br from-zinc-900 to-zinc-950 border border-zinc-800 rounded-xl p-4 lg:p-6">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <h3 class="text-sm font-bold text-zinc-200 flex items-center gap-2"><i data-lucide="layout-grid" class="w-4 h-4 text-orange-400"></i> Anteprima card</h3>
+          <span id="badge-status" class="text-xs text-zinc-400"></span>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
+          <!-- Card 1 -->
+          <div class="bg-zinc-900 border border-zinc-700 rounded-lg overflow-hidden transition-all" data-badge-card data-age-days="2" data-actions="2" data-missing="tema, artwork" data-newest="true">
+            <div class="relative">
+              <img src="https://image.tmdb.org/t/p/original/f89U3saN9XHCfQNjVqPGjEH2R7m.jpg" alt="The Matrix" class="w-full aspect-[2/3] object-cover">
+              <span class="absolute top-1 left-1 bg-black/70 rounded p-1"><i data-lucide="settings-2" class="w-4 h-4 text-zinc-200"></i></span>
+              <span class="absolute top-1 right-1 bg-black/70 rounded p-1"><i data-lucide="download" class="w-4 h-4 text-orange-400"></i></span>
+              <div data-badge-dot class="absolute bottom-1.5 left-1.5"></div>
+            </div>
+            <div data-badge-strip class="hidden"></div>
+            <div class="p-2">
+              <div class="flex items-start justify-between gap-1">
+                <div class="min-w-0 flex-1">
+                  <div class="text-sm font-bold truncate">The Matrix</div>
+                  <div class="text-xs text-zinc-500">1999</div>
+                </div>
+                <div data-badge-title class="shrink-0"></div>
+              </div>
+              <div class="flex items-center justify-between pt-2 mt-2 border-t border-zinc-800">
+                <div class="flex gap-1.5">
+                  <i data-lucide="music" class="w-4 h-4 text-zinc-600"></i>
+                  <i data-lucide="eye" class="w-4 h-4 text-zinc-300"></i>
+                  <i data-lucide="film" class="w-4 h-4 text-zinc-600"></i>
+                </div>
+                <i data-lucide="image" class="w-4 h-4 text-zinc-300"></i>
+              </div>
+            </div>
+            <div class="px-2 pb-2 text-[10px] text-zinc-500">Aggiunto 2 giorni fa · 2 azioni mancanti</div>
+          </div>
+
+          <!-- Card 2 -->
+          <div class="bg-zinc-900 border border-zinc-700 rounded-lg overflow-hidden transition-all" data-badge-card data-age-days="5" data-actions="0" data-missing="" data-newest="true">
+            <div class="relative">
+              <img src="https://image.tmdb.org/t/p/original/d5NXI3I1n5kMcdXU1t6tSuPRF8Y.jpg" alt="Dune" class="w-full aspect-[2/3] object-cover">
+              <span class="absolute top-1 left-1 bg-black/70 rounded p-1"><i data-lucide="settings-2" class="w-4 h-4 text-zinc-200"></i></span>
+              <span class="absolute top-1 right-1 bg-black/70 rounded p-1"><i data-lucide="check" class="w-4 h-4 text-green-500"></i></span>
+              <div data-badge-dot class="absolute bottom-1.5 left-1.5"></div>
+            </div>
+            <div data-badge-strip class="hidden"></div>
+            <div class="p-2">
+              <div class="flex items-start justify-between gap-1">
+                <div class="min-w-0 flex-1">
+                  <div class="text-sm font-bold truncate">Dune</div>
+                  <div class="text-xs text-zinc-500">2021</div>
+                </div>
+                <div data-badge-title class="shrink-0"></div>
+              </div>
+              <div class="flex items-center justify-between pt-2 mt-2 border-t border-zinc-800">
+                <div class="flex gap-1.5">
+                  <i data-lucide="music" class="w-4 h-4 text-orange-400"></i>
+                  <i data-lucide="eye" class="w-4 h-4 text-zinc-300"></i>
+                  <i data-lucide="film" class="w-4 h-4 text-orange-400"></i>
+                </div>
+                <i data-lucide="image" class="w-4 h-4 text-zinc-300"></i>
+              </div>
+            </div>
+            <div class="px-2 pb-2 text-[10px] text-zinc-500">Aggiunto 5 giorni fa · completa</div>
+          </div>
+
+          <!-- Card 3 -->
+          <div class="bg-zinc-900 border border-zinc-700 rounded-lg overflow-hidden transition-all" data-badge-card data-age-days="20" data-actions="1" data-missing="trailer" data-newest="false">
+            <div class="relative">
+              <img src="https://image.tmdb.org/t/p/original/gEU2QdEafN9oH0a5pR1zojVW6rN.jpg" alt="Interstellar" class="w-full aspect-[2/3] object-cover">
+              <span class="absolute top-1 left-1 bg-black/70 rounded p-1"><i data-lucide="settings-2" class="w-4 h-4 text-zinc-200"></i></span>
+              <span class="absolute top-1 right-1 bg-black/70 rounded p-1"><i data-lucide="check" class="w-4 h-4 text-green-500"></i></span>
+              <div data-badge-dot class="absolute bottom-1.5 left-1.5"></div>
+            </div>
+            <div data-badge-strip class="hidden"></div>
+            <div class="p-2">
+              <div class="flex items-start justify-between gap-1">
+                <div class="min-w-0 flex-1">
+                  <div class="text-sm font-bold truncate">Interstellar</div>
+                  <div class="text-xs text-zinc-500">2014</div>
+                </div>
+                <div data-badge-title class="shrink-0"></div>
+              </div>
+              <div class="flex items-center justify-between pt-2 mt-2 border-t border-zinc-800">
+                <div class="flex gap-1.5">
+                  <i data-lucide="music" class="w-4 h-4 text-orange-400"></i>
+                  <i data-lucide="eye" class="w-4 h-4 text-zinc-300"></i>
+                  <i data-lucide="film" class="w-4 h-4 text-zinc-600"></i>
+                </div>
+                <i data-lucide="image" class="w-4 h-4 text-zinc-300"></i>
+              </div>
+            </div>
+            <div class="px-2 pb-2 text-[10px] text-zinc-500">Aggiunto 20 giorni fa · 1 azione mancante</div>
+          </div>
+
+          <!-- Card 4 -->
+          <div class="bg-zinc-900 border border-zinc-700 rounded-lg overflow-hidden transition-all" data-badge-card data-age-days="45" data-actions="1" data-missing="artwork" data-newest="false">
+            <div class="relative">
+              <img src="https://image.tmdb.org/t/p/original/qJ2tW6WMUDuxVz5hm3CQ6XuUOfR.jpg" alt="The Dark Knight" class="w-full aspect-[2/3] object-cover">
+              <span class="absolute top-1 left-1 bg-black/70 rounded p-1"><i data-lucide="settings-2" class="w-4 h-4 text-zinc-200"></i></span>
+              <span class="absolute top-1 right-1 bg-black/70 rounded p-1"><i data-lucide="check" class="w-4 h-4 text-green-500"></i></span>
+              <div data-badge-dot class="absolute bottom-1.5 left-1.5"></div>
+            </div>
+            <div data-badge-strip class="hidden"></div>
+            <div class="p-2">
+              <div class="flex items-start justify-between gap-1">
+                <div class="min-w-0 flex-1">
+                  <div class="text-sm font-bold truncate">The Dark Knight</div>
+                  <div class="text-xs text-zinc-500">2008</div>
+                </div>
+                <div data-badge-title class="shrink-0"></div>
+              </div>
+              <div class="flex items-center justify-between pt-2 mt-2 border-t border-zinc-800">
+                <div class="flex gap-1.5">
+                  <i data-lucide="music" class="w-4 h-4 text-orange-400"></i>
+                  <i data-lucide="eye" class="w-4 h-4 text-zinc-300"></i>
+                  <i data-lucide="film" class="w-4 h-4 text-orange-400"></i>
+                </div>
+                <i data-lucide="image" class="w-4 h-4 text-zinc-300"></i>
+              </div>
+            </div>
+            <div class="px-2 pb-2 text-[10px] text-zinc-500">Aggiunto 45 giorni fa · 1 azione mancante</div>
+          </div>
+        </div>
+
+        <p class="text-[11px] text-zinc-500 mt-4">
+          Prova a cambiare criterio: con C1/C2/C3 solo le prime due card possono risultare “nuove”; con C4 anche una card più vecchia può rientrare se è tra gli ultimi 10 aggiunti. Se “solo con azioni mancanti” è attivo, Dune (completa) non mostra il badge.
+        </p>
+        <p class="text-[11px] text-amber-300/80 mt-2">
+          Nota demo: i dati mock attuali hanno date del 2024. In implementazione aggiorneremo alcune date mock a valori relativi (es. 2/5/20 giorni fa), altrimenti in demo mode il badge non comparirebbe mai.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- FEATURE 3 — FILTERS + LINKS                                  -->
+    <!-- ============================================================ -->
+    <section class="mb-14">
+      <div class="flex flex-wrap items-center gap-3 border-b border-zinc-800 pb-2 mb-2">
+        <span class="bg-orange-500 text-black text-xs font-bold px-2.5 py-1 rounded">FEATURE 3</span>
+        <h2 class="text-xl font-bold text-zinc-100">Filtri artwork e titoli cliccabili</h2>
+      </div>
+      <p class="text-sm text-zinc-400 mb-5 max-w-4xl">
+        I filtri sono puramente client-side: nessuna chiamata API aggiuntiva e nessuna modifica ai flussi di download/eliminazione. I titoli aprono link esterni o una vista cartella; per i link esterni l'ID viene risolto lato server.
+      </p>
+
+      <!-- Filter scope -->
+      <h3 class="text-sm font-bold text-zinc-200 mb-3">3a · Come disporre i filtri</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
+        <label class="option option-selected bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex gap-3" data-group="filterScope" data-value="F1">
+          <input type="radio" name="filterScope" value="F1" class="sr-only" checked>
+          <span class="option-dot"></span>
+          <span>
+            <span class="block font-bold text-sm">F1 · Barra unica globale <span class="text-[10px] text-orange-400 ml-1">CONSIGLIATA</span></span>
+            <span class="block text-xs text-zinc-400 mt-1">Un solo set di chip sotto l'header; filtra contemporaneamente le tre colonne. Coerente con la vista affiancata.</span>
+            <span class="block text-[11px] text-zinc-500 mt-2">Meno UI, comportamento prevedibile, conteggi globali.</span>
+          </span>
+        </label>
+        <label class="option bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex gap-3" data-group="filterScope" data-value="F2">
+          <input type="radio" name="filterScope" value="F2" class="sr-only">
+          <span class="option-dot"></span>
+          <span>
+            <span class="block font-bold text-sm">F2 · Chip per colonna</span>
+            <span class="block text-xs text-zinc-400 mt-1">Ogni sezione ha il proprio filtro indipendente. Massima flessibilità, ma più rumore visivo e tre stati da gestire.</span>
+            <span class="block text-[11px] text-zinc-500 mt-2">Esempio: locali su “Poster”, Fanart su “Clearlogo”, TMDB su “Tutti”.</span>
+          </span>
+        </label>
+        <label class="option bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex gap-3" data-group="filterScope" data-value="F3">
+          <input type="radio" name="filterScope" value="F3" class="sr-only">
+          <span class="option-dot"></span>
+          <span>
+            <span class="block font-bold text-sm">F3 · Menu a tendina globale</span>
+            <span class="block text-xs text-zinc-400 mt-1">Un solo select “Tipo artwork”. Più compatto, ma meno “istantaneo” e meno scopribile dei chip.</span>
+            <span class="block text-[11px] text-zinc-500 mt-2">Utile se in futuro i tipi diventano molti.</span>
+          </span>
+        </label>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-7">
+        <label class="option option-selected bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex gap-3" data-group="filterReset" data-value="P1">
+          <input type="radio" name="filterReset" value="P1" class="sr-only" checked>
+          <span class="option-dot"></span>
+          <span>
+            <span class="block font-bold text-sm">P1 · Reset a “Tutti” a ogni apertura <span class="text-[10px] text-orange-400 ml-1">CONSIGLIATA</span></span>
+            <span class="block text-xs text-zinc-400 mt-1">La modale si apre sempre completa: nessun filtro “fantasma” ereditato.</span>
+          </span>
+        </label>
+        <label class="option bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex gap-3" data-group="filterReset" data-value="P2">
+          <input type="radio" name="filterReset" value="P2" class="sr-only">
+          <span class="option-dot"></span>
+          <span>
+            <span class="block font-bold text-sm">P2 · Ricorda l'ultimo filtro</span>
+            <span class="block text-xs text-zinc-400 mt-1">Persistenza in memoria o localStorage. Comodo per sessioni ripetute, ma può confondere.</span>
+          </span>
+        </label>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-7">
+        <label class="option option-selected bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex gap-3" data-group="filterZero" data-value="Z1">
+          <input type="radio" name="filterZero" value="Z1" class="sr-only" checked>
+          <span class="option-dot"></span>
+          <span>
+            <span class="block font-bold text-sm">Z1 · Mostra tutti i tipi, con 0 disabilitato <span class="text-[10px] text-orange-400 ml-1">CONSIGLIATA</span></span>
+            <span class="block text-xs text-zinc-400 mt-1">L'utente vede subito quali tipi esistono e quali no, senza sorprese.</span>
+          </span>
+        </label>
+        <label class="option bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex gap-3" data-group="filterZero" data-value="Z2">
+          <input type="radio" name="filterZero" value="Z2" class="sr-only">
+          <span class="option-dot"></span>
+          <span>
+            <span class="block font-bold text-sm">Z2 · Nascondi i tipi con 0 risultati</span>
+            <span class="block text-xs text-zinc-400 mt-1">Barra più pulita, ma i tipi disponibili cambiano da titolo a titolo.</span>
+          </span>
+        </label>
+      </div>
+
+      <!-- Local open -->
+      <h3 class="text-sm font-bold text-zinc-200 mb-3">3b · Click su “Artwork Locali”</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 mb-7">
+        <label class="option option-selected bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex gap-3" data-group="localOpen" data-value="L1">
+          <input type="radio" name="localOpen" value="L1" class="sr-only" checked>
+          <span class="option-dot"></span>
+          <span>
+            <span class="block font-bold text-sm">L1 · Modale cartella in-app <span class="text-[10px] text-orange-400 ml-1">CONSIGLIATA</span></span>
+            <span class="block text-xs text-zinc-400 mt-1">Apre una vista read-only con i file della cartella del titolo e le anteprime. Funziona da qualsiasi dispositivo.</span>
+            <span class="block text-[11px] text-zinc-500 mt-2">Nuovo endpoint read-only + piccolo componente. Nessuna apertura del Finder/Explorer del server.</span>
+          </span>
+        </label>
+        <label class="option bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex gap-3" data-group="localOpen" data-value="L2">
+          <input type="radio" name="localOpen" value="L2" class="sr-only">
+          <span class="option-dot"></span>
+          <span>
+            <span class="block font-bold text-sm">L2 · Nuova scheda con indice cartella</span>
+            <span class="block text-xs text-zinc-400 mt-1">Una pagina server mostra il contenuto della cartella in una nuova tab, in stile “directory index”.</span>
+            <span class="block text-[11px] text-zinc-500 mt-2">Più semplice di L1, ma si esce dall'app.</span>
+          </span>
+        </label>
+        <label class="option bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex gap-3" data-group="localOpen" data-value="L3">
+          <input type="radio" name="localOpen" value="L3" class="sr-only">
+          <span class="option-dot"></span>
+          <span>
+            <span class="block font-bold text-sm">L3 · Copia percorso</span>
+            <span class="block text-xs text-zinc-400 mt-1">Click copia <code>/mnt/user/...</code> e mostra un toast. Non apre nulla, ma è immediato e sicuro.</span>
+            <span class="block text-[11px] text-zinc-500 mt-2">Utile come fallback sempre disponibile, anche con L1/L2.</span>
+          </span>
+        </label>
+        <label class="option bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex gap-3" data-group="localOpen" data-value="L4">
+          <input type="radio" name="localOpen" value="L4" class="sr-only">
+          <span class="option-dot"></span>
+          <span>
+            <span class="block font-bold text-sm">L4 · Tentativo <code>file://</code></span>
+            <span class="block text-xs text-zinc-400 mt-1">Prova ad aprire il percorso nel file manager del client. Funziona solo se il browser è sulla stessa macchina e spesso viene bloccato.</span>
+            <span class="block text-[11px] text-red-400/90 mt-2">Sconsigliata: comportamento incoerente tra browser e sistemi.</span>
+          </span>
+        </label>
+      </div>
+
+      <!-- External link strategy -->
+      <h3 class="text-sm font-bold text-zinc-200 mb-3">3c · Link Fanart.tv / TMDB</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-7">
+        <label class="option option-selected bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex gap-3" data-group="linkImpl" data-value="X1">
+          <input type="radio" name="linkImpl" value="X1" class="sr-only" checked>
+          <span class="option-dot"></span>
+          <span>
+            <span class="block font-bold text-sm">X1 · Endpoint “external links” <span class="text-[10px] text-orange-400 ml-1">CONSIGLIATA</span></span>
+            <span class="block text-xs text-zinc-400 mt-1">Il server risolve TMDB/TVDB ID e restituisce gli URL già pronti. Gestisce anche Sonarr senza TMDB ID.</span>
+            <span class="block text-[11px] text-zinc-500 mt-2">Nuovo endpoint read-only; nessun ID extra nel payload della griglia.</span>
+          </span>
+        </label>
+        <label class="option bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex gap-3" data-group="linkImpl" data-value="X2">
+          <input type="radio" name="linkImpl" value="X2" class="sr-only">
+          <span class="option-dot"></span>
+          <span>
+            <span class="block font-bold text-sm">X2 · ID nel payload + URL client-side</span>
+            <span class="block text-xs text-zinc-400 mt-1">Aggiunge <code>tmdb_id</code>/<code>tvdb_id</code> a <code>MediaItem</code> e costruisce i link nel browser.</span>
+            <span class="block text-[11px] text-zinc-500 mt-2">Meno richieste, ma cambia il contratto di <code>/api/media</code> e duplica la logica di risoluzione.</span>
+          </span>
+        </label>
+        <label class="option bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex gap-3" data-group="linkImpl" data-value="X3">
+          <input type="radio" name="linkImpl" value="X3" class="sr-only">
+          <span class="option-dot"></span>
+          <span>
+            <span class="block font-bold text-sm">X3 · Link di ricerca per titolo</span>
+            <span class="block text-xs text-zinc-400 mt-1">Apre la ricerca “The Matrix” su Fanart/TMDB. Nessun ID necessario, ma non porta sempre alla scheda esatta.</span>
+            <span class="block text-[11px] text-zinc-500 mt-2">Semplice fallback se gli ID mancano.</span>
+          </span>
+        </label>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-7">
+        <label class="option option-selected bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex gap-3" data-group="linkFallback" data-value="yes">
+          <input type="radio" name="linkFallback" value="yes" class="sr-only" checked>
+          <span class="option-dot"></span>
+          <span>
+            <span class="block font-bold text-sm">Fallback alla ricerca se l'ID manca <span class="text-[10px] text-orange-400 ml-1">CONSIGLIATA</span></span>
+            <span class="block text-xs text-zinc-400 mt-1">Il titolo resta cliccabile e apre la ricerca invece di un link morto o disabilitato.</span>
+          </span>
+        </label>
+        <label class="option bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex gap-3" data-group="linkFallback" data-value="no">
+          <input type="radio" name="linkFallback" value="no" class="sr-only">
+          <span class="option-dot"></span>
+          <span>
+            <span class="block font-bold text-sm">Nessun fallback: link disabilitato</span>
+            <span class="block text-xs text-zinc-400 mt-1">Più esplicito: se l'ID non c'è, il titolo non è cliccabile e mostra un tooltip.</span>
+          </span>
+        </label>
+      </div>
+
+      <!-- Artwork modal preview -->
+      <div class="bg-gradient-to-br from-zinc-900 to-zinc-950 border border-zinc-800 rounded-xl p-3 lg:p-5">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4 px-1">
+          <h3 class="text-sm font-bold text-zinc-200 flex items-center gap-2"><i data-lucide="panel-top" class="w-4 h-4 text-orange-400"></i> Anteprima modale Artwork</h3>
+          <span class="text-[11px] text-zinc-500">Clicca i titoli delle colonne per provare il comportamento scelto</span>
+        </div>
+
+        <div class="max-w-[1350px] mx-auto bg-zinc-950 border border-zinc-700 rounded-xl overflow-hidden">
+          <!-- Modal header -->
+          <div class="px-4 py-3 border-b border-zinc-800 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2 min-w-0">
+              <i data-lucide="image" class="w-5 h-5 text-orange-500"></i>
+              <span class="font-bold">Gestione Artwork</span>
+              <span class="text-sm text-zinc-400 truncate">The Matrix (1999)</span>
+            </div>
+            <button class="p-1.5 rounded hover:bg-zinc-800 text-zinc-500"><i data-lucide="x" class="w-5 h-5"></i></button>
+          </div>
+
+          <!-- Filter bar global -->
+          <div id="global-filter-bar" class="px-3 py-2 border-b border-zinc-800 bg-zinc-900/60">
+            <div class="flex flex-wrap items-center gap-1.5">
+              <span class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold mr-1">Filtra tipo</span>
+              <div id="global-chips" class="flex flex-wrap items-center gap-1.5"></div>
+              <div id="global-select-wrap" class="hidden">
+                <select id="global-select" class="bg-zinc-800 border border-zinc-600 text-zinc-200 text-xs rounded-md px-2 py-1.5"></select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Columns -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-2 p-2 h-[560px] lg:h-[520px]">
+            <!-- Local -->
+            <section class="flex flex-col min-h-0 bg-zinc-900 border border-zinc-700 rounded-lg overflow-hidden">
+              <div class="px-3 py-2 border-b border-zinc-700 bg-zinc-900 shrink-0">
+                <button class="flex items-center gap-1.5 text-sm font-bold text-orange-400 hover:text-orange-300 group w-full text-left" data-open-local>
+                  <i data-lucide="hard-drive" class="w-4 h-4"></i>
+                  <span class="underline decoration-dotted underline-offset-4">Artwork Locali</span>
+                  <span class="text-[10px] font-normal text-zinc-500">(7)</span>
+                  <i data-lucide="folder-open" class="w-3.5 h-3.5 ml-auto opacity-50 group-hover:opacity-100"></i>
+                </button>
+                <div id="local-chips" class="hidden flex-wrap items-center gap-1 mt-2"></div>
+              </div>
+              <div class="flex-1 min-h-0 overflow-y-auto scroll-thin p-2 space-y-2" data-column="local">
+                <div class="art-item" data-source="local" data-type="poster">
+                  <img src="https://image.tmdb.org/t/p/original/f89U3saN9XHCfQNjVqPGjEH2R7m.jpg" class="w-full h-28 object-contain bg-black" alt="poster">
+                  <div class="text-[10px] text-zinc-500 px-2 py-1 flex justify-between"><span class="filename-mono">The Matrix-poster.jpg</span><span class="text-orange-400">poster</span></div>
+                </div>
+                <div class="art-item" data-source="local" data-type="clearlogo">
+                  <img src="https://picsum.photos/seed/matrix-clearlogo/800/300" class="w-full h-28 object-contain bg-black" alt="clearlogo">
+                  <div class="text-[10px] text-zinc-500 px-2 py-1 flex justify-between"><span class="filename-mono">The Matrix-clearlogo.png</span><span class="text-orange-400">clearlogo</span></div>
+                </div>
+                <div class="art-item" data-source="local" data-type="clearart">
+                  <img src="https://picsum.photos/seed/matrix-clearart/800/380" class="w-full h-28 object-contain bg-black" alt="clearart">
+                  <div class="text-[10px] text-zinc-500 px-2 py-1 flex justify-between"><span class="filename-mono">The Matrix-clearart.png</span><span class="text-orange-400">clearart</span></div>
+                </div>
+                <div class="art-item" data-source="local" data-type="banner">
+                  <img src="https://picsum.photos/seed/matrix-banner/800/250" class="w-full h-28 object-contain bg-black" alt="banner">
+                  <div class="text-[10px] text-zinc-500 px-2 py-1 flex justify-between"><span class="filename-mono">The Matrix-banner.jpg</span><span class="text-orange-400">banner</span></div>
+                </div>
+                <div class="art-item" data-source="local" data-type="landscape">
+                  <img src="https://picsum.photos/seed/matrix-fanart/800/450" class="w-full h-28 object-contain bg-black" alt="fanart">
+                  <div class="text-[10px] text-zinc-500 px-2 py-1 flex justify-between"><span class="filename-mono">The Matrix-fanart.jpg</span><span class="text-orange-400">landscape</span></div>
+                </div>
+                <div class="art-item" data-source="local" data-type="discart">
+                  <img src="https://picsum.photos/seed/matrix-disc/500/500" class="w-full h-28 object-contain bg-black" alt="discart">
+                  <div class="text-[10px] text-zinc-500 px-2 py-1 flex justify-between"><span class="filename-mono">The Matrix-discart.png</span><span class="text-orange-400">discart</span></div>
+                </div>
+                <div class="art-item" data-source="local" data-type="keyart">
+                  <img src="https://picsum.photos/seed/matrix-keyart/800/300" class="w-full h-28 object-contain bg-black" alt="keyart">
+                  <div class="text-[10px] text-zinc-500 px-2 py-1 flex justify-between"><span class="filename-mono">The Matrix-keyart.jpg</span><span class="text-orange-400">keyart</span></div>
+                </div>
+                <div class="filter-empty text-xs text-zinc-500 py-8 text-center" data-empty="local">Nessun artwork di questo tipo nella cartella.</div>
+              </div>
+              <div class="px-2 py-1.5 border-t border-zinc-700 text-[10px] text-zinc-500 text-center shrink-0">Anteprima read-only · upload/delete invariati</div>
+            </section>
+
+            <!-- Fanart -->
+            <section class="flex flex-col min-h-0 bg-zinc-900 border border-zinc-700 rounded-lg overflow-hidden">
+              <div class="px-3 py-2 border-b border-zinc-700 bg-zinc-900 shrink-0">
+                <button class="flex items-center gap-1.5 text-sm font-bold text-orange-400 hover:text-orange-300 group w-full text-left" data-open-external="fanart">
+                  <i data-lucide="globe" class="w-4 h-4"></i>
+                  <span class="underline decoration-dotted underline-offset-4">Online (Fanart.tv)</span>
+                  <span class="text-[10px] font-normal text-zinc-500">(5)</span>
+                  <i data-lucide="external-link" class="w-3.5 h-3.5 ml-auto opacity-50 group-hover:opacity-100"></i>
+                </button>
+                <div id="fanart-chips" class="hidden flex-wrap items-center gap-1 mt-2"></div>
+              </div>
+              <div class="flex-1 min-h-0 overflow-y-auto scroll-thin p-2 space-y-2" data-column="fanart">
+                <div class="art-item" data-source="fanart" data-type="clearlogo">
+                  <img src="https://picsum.photos/seed/fanart-logo1/800/300" class="w-full h-28 object-contain bg-black" alt="clearlogo">
+                  <div class="text-[10px] text-zinc-500 px-2 py-1 flex justify-between"><span>clearlogo · en · likes 42</span><span class="text-orange-400">clearlogo</span></div>
+                </div>
+                <div class="art-item" data-source="fanart" data-type="clearart">
+                  <img src="https://picsum.photos/seed/fanart-clearart/800/380" class="w-full h-28 object-contain bg-black" alt="clearart">
+                  <div class="text-[10px] text-zinc-500 px-2 py-1 flex justify-between"><span>clearart · en · likes 31</span><span class="text-orange-400">clearart</span></div>
+                </div>
+                <div class="art-item" data-source="fanart" data-type="banner">
+                  <img src="https://picsum.photos/seed/fanart-banner/800/250" class="w-full h-28 object-contain bg-black" alt="banner">
+                  <div class="text-[10px] text-zinc-500 px-2 py-1 flex justify-between"><span>banner · en · likes 18</span><span class="text-orange-400">banner</span></div>
+                </div>
+                <div class="art-item" data-source="fanart" data-type="landscape">
+                  <img src="https://picsum.photos/seed/fanart-thumb/800/450" class="w-full h-28 object-contain bg-black" alt="landscape">
+                  <div class="text-[10px] text-zinc-500 px-2 py-1 flex justify-between"><span>landscape · en · likes 27</span><span class="text-orange-400">landscape</span></div>
+                </div>
+                <div class="art-item" data-source="fanart" data-type="discart">
+                  <img src="https://picsum.photos/seed/fanart-disc/500/500" class="w-full h-28 object-contain bg-black" alt="discart">
+                  <div class="text-[10px] text-zinc-500 px-2 py-1 flex justify-between"><span>discart · en · likes 12</span><span class="text-orange-400">discart</span></div>
+                </div>
+                <div class="filter-empty text-xs text-zinc-500 py-8 text-center" data-empty="fanart">Nessun artwork di questo tipo su Fanart.tv.</div>
+              </div>
+              <div class="px-2 py-1.5 border-t border-zinc-700 text-[10px] text-zinc-500 text-center shrink-0">Il download resta invariato</div>
+            </section>
+
+            <!-- TMDB -->
+            <section class="flex flex-col min-h-0 bg-zinc-900 border border-zinc-700 rounded-lg overflow-hidden">
+              <div class="px-3 py-2 border-b border-zinc-700 bg-zinc-900 shrink-0">
+                <button class="flex items-center gap-1.5 text-sm font-bold text-orange-400 hover:text-orange-300 group w-full text-left" data-open-external="tmdb">
+                  <i data-lucide="film" class="w-4 h-4"></i>
+                  <span class="underline decoration-dotted underline-offset-4">Online (TMDB)</span>
+                  <span class="text-[10px] font-normal text-zinc-500">(6)</span>
+                  <i data-lucide="external-link" class="w-3.5 h-3.5 ml-auto opacity-50 group-hover:opacity-100"></i>
+                </button>
+                <div id="tmdb-chips" class="hidden flex-wrap items-center gap-1 mt-2"></div>
+              </div>
+              <div class="flex-1 min-h-0 overflow-y-auto scroll-thin p-2 space-y-2" data-column="tmdb">
+                <div class="art-item" data-source="tmdb" data-type="clearlogo">
+                  <img src="https://picsum.photos/seed/tmdb-logo1/800/300" class="w-full h-28 object-contain bg-black" alt="clearlogo">
+                  <div class="text-[10px] text-zinc-500 px-2 py-1 flex justify-between"><span>clearlogo · en · voto 8.5</span><span class="text-orange-400">clearlogo</span></div>
+                </div>
+                <div class="art-item" data-source="tmdb" data-type="clearlogo">
+                  <img src="https://picsum.photos/seed/tmdb-logo2/800/300" class="w-full h-28 object-contain bg-black" alt="clearlogo">
+                  <div class="text-[10px] text-zinc-500 px-2 py-1 flex justify-between"><span>clearlogo · it · voto 7.2</span><span class="text-orange-400">clearlogo</span></div>
+                </div>
+                <div class="art-item" data-source="tmdb" data-type="landscape">
+                  <img src="https://picsum.photos/seed/tmdb-backdrop1/800/450" class="w-full h-28 object-contain bg-black" alt="landscape">
+                  <div class="text-[10px] text-zinc-500 px-2 py-1 flex justify-between"><span>landscape · voto 9.1</span><span class="text-orange-400">landscape</span></div>
+                </div>
+                <div class="art-item" data-source="tmdb" data-type="landscape">
+                  <img src="https://picsum.photos/seed/tmdb-backdrop2/800/450" class="w-full h-28 object-contain bg-black" alt="landscape">
+                  <div class="text-[10px] text-zinc-500 px-2 py-1 flex justify-between"><span>landscape · voto 6.4</span><span class="text-orange-400">landscape</span></div>
+                </div>
+                <div class="art-item" data-source="tmdb" data-type="poster">
+                  <img src="https://picsum.photos/seed/tmdb-poster1/500/750" class="w-full h-28 object-contain bg-black" alt="poster">
+                  <div class="text-[10px] text-zinc-500 px-2 py-1 flex justify-between"><span>poster · en · voto 8.8</span><span class="text-orange-400">poster</span></div>
+                </div>
+                <div class="art-item" data-source="tmdb" data-type="poster">
+                  <img src="https://picsum.photos/seed/tmdb-poster2/500/750" class="w-full h-28 object-contain bg-black" alt="poster">
+                  <div class="text-[10px] text-zinc-500 px-2 py-1 flex justify-between"><span>poster · it · voto 7.9</span><span class="text-orange-400">poster</span></div>
+                </div>
+                <div class="filter-empty text-xs text-zinc-500 py-8 text-center" data-empty="tmdb">Nessun artwork di questo tipo su TMDB.</div>
+              </div>
+              <div class="px-2 py-1.5 border-t border-zinc-700 text-[10px] text-zinc-500 text-center shrink-0">Il download resta invariato</div>
+            </section>
+          </div>
+        </div>
+
+        <div class="mt-3 text-[11px] text-zinc-500 flex flex-wrap gap-x-5 gap-y-1 px-1">
+          <span><strong class="text-zinc-300">Tipi riconosciuti:</strong> poster, clearlogo (logo), clearart, banner, landscape (fanart), discart, keyart</span>
+          <span><strong class="text-zinc-300">Locale:</strong> tipo dedotto dal filename con le stesse keyword di <code>scanLocalArtwork</code></span>
+          <span><strong class="text-zinc-300">Online:</strong> tipo già presente in <code>our_type</code></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- IMPACT                                                       -->
+    <!-- ============================================================ -->
+    <section class="mb-14">
+      <h2 class="text-xl font-bold text-orange-400 border-b border-zinc-800 pb-2 mb-4">4 · Impatto tecnico e prevenzione regressioni</h2>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+          <h3 class="font-bold text-sm text-zinc-100 mb-2">File toccati (previsti)</h3>
+          <ul class="text-xs text-zinc-400 space-y-1 list-disc list-inside">
+            <li><code>src/components/ui/tooltip.tsx</code> + <code>src/app/layout.tsx</code></li>
+            <li><code>header.tsx</code>, <code>media-card.tsx</code>, <code>media-player.tsx</code> (rimozione provider locali)</li>
+            <li><code>media-card.tsx</code> (badge NEW, solo UI)</li>
+            <li><code>artwork-modal.tsx</code> (filtri + header cliccabili)</li>
+            <li><code>src/lib/services/artwork.ts</code> (riconoscimento tipo locale)</li>
+            <li>Nuovo endpoint link esterni + endpoint cartella read-only</li>
+          </ul>
+        </div>
+        <div class="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+          <h3 class="font-bold text-sm text-zinc-100 mb-2">Cosa non cambia</h3>
+          <ul class="text-xs text-zinc-400 space-y-1 list-disc list-inside">
+            <li>Download, upload ed eliminazione artwork</li>
+            <li>Cache media/folder e refresh</li>
+            <li>Filtri, sort e ricerca della libreria</li>
+            <li>Demo mode e dati mock</li>
+            <li>API key, path mapping e sicurezza esistente</li>
+          </ul>
+        </div>
+        <div class="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+          <h3 class="font-bold text-sm text-zinc-100 mb-2">Test prima della release</h3>
+          <ul class="text-xs text-zinc-400 space-y-1 list-disc list-inside">
+            <li>Tooltip su header, card e player: nessuno prima di 3 s, nessuno bloccato</li>
+            <li>Badge: nuovo/completo/vecchio, demo con date aggiornate</li>
+            <li>Filtri: conteggi, empty state, upload/delete e refresh</li>
+            <li>Link: Radarr e Sonarr, ID mancante/fallback, path non valido</li>
+            <li>Regressione modale: zoom, drag&drop, delete, scroll indipendenti</li>
+            <li><code>npm run build</code>, <code>tsc --noEmit</code>, ESLint sui file toccati</li>
+          </ul>
+        </div>
+      </div>
+      <div class="mt-4 bg-orange-500/10 border border-orange-500/30 rounded-lg p-4 text-xs text-orange-200/90">
+        <strong>Nota sicurezza:</strong> l'endpoint “cartella” sarà read-only, riuserà <code>resolveLocalPath</code> + <code>validateLocalPath</code>, non permetterà path arbitrari e non esporrà file fuori dalla cartella del media. L'endpoint link esterni non restituirà API key.
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- FINAL CHOICES                                                -->
+    <!-- ============================================================ -->
+    <section class="mb-16">
+      <div class="bg-gradient-to-br from-orange-500/15 to-zinc-900 border border-orange-500/40 rounded-2xl p-5 lg:p-7">
+        <h2 class="text-xl font-bold text-orange-300 mb-2">Conferma richiesta</h2>
+        <p class="text-sm text-zinc-300 mb-4">
+          Quando hai scelto, incollami in chat il riepilogo qui sotto (o scrivi la combinazione).
+          <strong class="text-white">Non implementerò nulla finché non ricevo una conferma esplicita.</strong>
+        </p>
+        <div id="final-summary" class="bg-black/40 border border-zinc-700 rounded-xl p-4 text-sm text-zinc-200 whitespace-pre-line leading-relaxed"></div>
+        <div class="flex flex-wrap gap-2 mt-4 no-print">
+          <button id="copy-btn-2" class="inline-flex items-center gap-1.5 bg-orange-500 hover:bg-orange-400 text-black text-sm font-bold px-4 py-2 rounded-md">
+            <i data-lucide="clipboard-check" class="w-4 h-4"></i> Copia le mie scelte
+          </button>
+          <a href="#top" class="inline-flex items-center gap-1.5 border border-zinc-600 hover:border-zinc-400 text-zinc-300 text-sm font-semibold px-4 py-2 rounded-md">
+            <i data-lucide="arrow-up" class="w-4 h-4"></i> Torna all'inizio
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <footer class="border-t border-zinc-800 pt-4 pb-8 text-xs text-zinc-600 flex flex-wrap justify-between gap-2">
+      <span>nEXTrarr · mockup di validazione v0.8.3 · nessun file applicativo modificato</span>
+      <span>Le scelte predefinite sono quelle consigliate.</span>
+    </footer>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- LOCAL FOLDER MODAL (L1 demo)                                 -->
+  <!-- ============================================================ -->
+  <div id="folder-modal" class="hidden fixed inset-0 z-[70] mock-modal-backdrop items-center justify-center p-3">
+    <div class="bg-zinc-950 border border-zinc-700 rounded-xl w-full max-w-3xl max-h-[88vh] flex flex-col overflow-hidden">
+      <div class="px-4 py-3 border-b border-zinc-800 flex items-center gap-2">
+        <i data-lucide="folder-open" class="w-5 h-5 text-orange-400"></i>
+        <div class="min-w-0 flex-1">
+          <div class="font-bold text-sm">Cartella di The Matrix (1999)</div>
+          <div class="text-[11px] text-zinc-500 filename-mono truncate">/mnt/user/movies/The Matrix</div>
+        </div>
+        <button id="folder-close" class="p-1.5 rounded hover:bg-zinc-800 text-zinc-400"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <div class="p-3 overflow-y-auto scroll-thin">
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <div class="bg-zinc-900 border border-zinc-700 rounded-lg overflow-hidden"><img src="https://image.tmdb.org/t/p/original/f89U3saN9XHCfQNjVqPGjEH2R7m.jpg" class="w-full h-32 object-contain bg-black"><div class="p-2 text-[10px] filename-mono text-zinc-400 truncate">The Matrix-poster.jpg</div></div>
+          <div class="bg-zinc-900 border border-zinc-700 rounded-lg overflow-hidden"><img src="https://picsum.photos/seed/matrix-clearlogo/800/300" class="w-full h-32 object-contain bg-black"><div class="p-2 text-[10px] filename-mono text-zinc-400 truncate">The Matrix-clearlogo.png</div></div>
+          <div class="bg-zinc-900 border border-zinc-700 rounded-lg overflow-hidden"><img src="https://picsum.photos/seed/matrix-clearart/800/380" class="w-full h-32 object-contain bg-black"><div class="p-2 text-[10px] filename-mono text-zinc-400 truncate">The Matrix-clearart.png</div></div>
+          <div class="bg-zinc-900 border border-zinc-700 rounded-lg overflow-hidden"><img src="https://picsum.photos/seed/matrix-banner/800/250" class="w-full h-32 object-contain bg-black"><div class="p-2 text-[10px] filename-mono text-zinc-400 truncate">The Matrix-banner.jpg</div></div>
+          <div class="bg-zinc-900 border border-zinc-700 rounded-lg overflow-hidden"><img src="https://picsum.photos/seed/matrix-fanart/800/450" class="w-full h-32 object-contain bg-black"><div class="p-2 text-[10px] filename-mono text-zinc-400 truncate">The Matrix-fanart.jpg</div></div>
+          <div class="bg-zinc-900 border border-zinc-700 rounded-lg overflow-hidden"><img src="https://picsum.photos/seed/matrix-disc/500/500" class="w-full h-32 object-contain bg-black"><div class="p-2 text-[10px] filename-mono text-zinc-400 truncate">The Matrix-discart.png</div></div>
+          <div class="bg-zinc-900 border border-zinc-700 rounded-lg overflow-hidden"><img src="https://picsum.photos/seed/matrix-keyart/800/300" class="w-full h-32 object-contain bg-black"><div class="p-2 text-[10px] filename-mono text-zinc-400 truncate">The Matrix-keyart.jpg</div></div>
+          <div class="bg-zinc-900 border border-zinc-700 rounded-lg overflow-hidden flex flex-col items-center justify-center h-full min-h-[160px] text-zinc-500"><i data-lucide="file-text" class="w-7 h-7 mb-2"></i><span class="text-[10px] filename-mono">The Matrix.nfo</span></div>
+          <div class="bg-zinc-900 border border-zinc-700 rounded-lg overflow-hidden flex flex-col items-center justify-center h-full min-h-[160px] text-zinc-500"><i data-lucide="music" class="w-7 h-7 mb-2"></i><span class="text-[10px] filename-mono">theme.mp3</span></div>
+        </div>
+        <p class="text-[11px] text-zinc-500 mt-3">Vista read-only: nessun pulsante di modifica o eliminazione. Il percorso è validato lato server.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="hidden fixed bottom-4 right-4 z-[80] bg-zinc-900 border border-orange-500/50 text-zinc-100 text-sm rounded-lg px-4 py-3 shadow-2xl max-w-sm"></div>
+
+  <script>
+    const DEFAULTS = {
+      tooltip: 'T1',
+      badgeCriteria: 'C2',
+      badgeOnlyMissing: 'yes',
+      badgeStyle: 'B1',
+      badgeDetail: 'D2',
+      filterScope: 'F1',
+      filterReset: 'P1',
+      filterZero: 'Z1',
+      localOpen: 'L1',
+      linkImpl: 'X1',
+      linkFallback: 'yes',
+    };
+
+    const state = { ...DEFAULTS };
+
+    const LABELS = {
+      tooltip: {
+        T1: 'T1 — 3 s uniforme, senza scorciatoie',
+        T2: 'T2 — 3 s al primo hover, poi 800 ms tra icone vicine',
+        T3: 'T3 — 3 s solo sulle card, 300 ms altrove',
+      },
+      badgeCriteria: {
+        C1: 'C1 — ultimi 7 giorni',
+        C2: 'C2 — ultimi 14 giorni',
+        C3: 'C3 — ultimi 30 giorni',
+        C4: 'C4 — ultimi 10 aggiunti',
+      },
+      badgeOnlyMissing: {
+        yes: 'solo titoli con almeno un\'azione mancante',
+        no: 'tutti i titoli nuovi',
+      },
+      badgeStyle: {
+        B1: 'B1 — pill nella riga titolo',
+        B2: 'B2 — striscia sotto il poster',
+        B3: 'B3 — pallino pulsante sul poster',
+        B4: 'B4 — bordo arancione + pill',
+      },
+      badgeDetail: {
+        D1: 'D1 — solo “NEW”',
+        D2: 'D2 — “NEW · N azioni”',
+        D3: 'D3 — “NEW · manca …”',
+      },
+      filterScope: {
+        F1: 'F1 — barra unica globale',
+        F2: 'F2 — chip per colonna',
+        F3: 'F3 — menu a tendina globale',
+      },
+      filterReset: {
+        P1: 'P1 — reset a “Tutti” a ogni apertura',
+        P2: 'P2 — ricorda l\'ultimo filtro',
+      },
+      filterZero: {
+        Z1: 'Z1 — mostra tutti i tipi, 0 disabilitato',
+        Z2: 'Z2 — nascondi i tipi con 0 risultati',
+      },
+      localOpen: {
+        L1: 'L1 — modale cartella in-app',
+        L2: 'L2 — nuova scheda con indice cartella',
+        L3: 'L3 — copia percorso',
+        L4: 'L4 — tentativo file://',
+      },
+      linkImpl: {
+        X1: 'X1 — endpoint external-links lato server',
+        X2: 'X2 — ID nel payload + URL client-side',
+        X3: 'X3 — link di ricerca per titolo',
+      },
+      linkFallback: {
+        yes: 'sì, fallback alla ricerca se manca l\'ID',
+        no: 'no, link disabilitato se manca l\'ID',
+      },
+    };
+
+    function optionLabel(group) {
+      return LABELS[group][state[group]];
+    }
+
+    function summaryText() {
+      return [
+        `Tooltip: ${optionLabel('tooltip')}`,
+        `Badge: ${optionLabel('badgeCriteria')} · ${optionLabel('badgeStyle')} · ${optionLabel('badgeDetail')} (${optionLabel('badgeOnlyMissing')})`,
+        `Filtri: ${optionLabel('filterScope')} · ${optionLabel('filterReset')} · ${optionLabel('filterZero')}`,
+        `Cartella locale: ${optionLabel('localOpen')}`,
+        `Link esterni: ${optionLabel('linkImpl')} (${optionLabel('linkFallback')})`,
+      ].join('  ·  ');
+    }
+
+    function finalText() {
+      return [
+        'nEXTrarr v0.8.3 — scelte dal mockup:',
+        `- Tooltip: ${optionLabel('tooltip')}`,
+        `- Badge nuovi: ${optionLabel('badgeCriteria')}; ${optionLabel('badgeStyle')}; ${optionLabel('badgeDetail')}; ${optionLabel('badgeOnlyMissing')}`,
+        `- Filtri artwork: ${optionLabel('filterScope')}; ${optionLabel('filterReset')}; ${optionLabel('filterZero')}`,
+        `- Click Artwork Locali: ${optionLabel('localOpen')}`,
+        `- Link Fanart/TMDB: ${optionLabel('linkImpl')}; ${optionLabel('linkFallback')}`,
+        '',
+        'Confermo queste scelte: procedi con l\'implementazione.',
+      ].join('\n');
+    }
+
+    function updateSummary() {
+      document.getElementById('summary').textContent = summaryText();
+      document.getElementById('final-summary').textContent = finalText();
+    }
+
+    function syncOptionStyles() {
+      document.querySelectorAll('.option').forEach((el) => {
+        const group = el.dataset.group;
+        const input = el.querySelector('input[type="radio"]');
+        const selected = input && input.checked;
+        el.classList.toggle('option-selected', !!selected);
+      });
+    }
+
+    function updateTooltipStatus() {
+      const el = document.getElementById('tt-status');
+      if (!el) return;
+      if (state.tooltip === 'T3') {
+        el.innerHTML = 'Card: <strong class="text-orange-300">3000 ms</strong> · Header: <strong class="text-orange-300">300 ms</strong>';
+      } else if (state.tooltip === 'T2') {
+        el.innerHTML = 'Ritardo attivo: <strong class="text-orange-300">3000 ms</strong> · poi finestra <strong class="text-orange-300">800 ms</strong>';
+      } else {
+        el.innerHTML = 'Ritardo attivo: <strong class="text-orange-300">3000 ms</strong>';
+      }
+    }
+
+    /* ---------- Tooltip demo ---------- */
+    let tooltipTimer = null;
+    let activeTooltip = null;
+    let skipUntil = 0;
+
+    function collectTooltipState() {
+      return state.tooltip;
+    }
+
+    function hideTooltip() {
+      if (tooltipTimer) {
+        clearTimeout(tooltipTimer);
+        tooltipTimer = null;
+      }
+      if (activeTooltip) {
+        activeTooltip.classList.remove('tt-visible');
+        const trigger = activeTooltip.parentElement.querySelector('.tt-trigger');
+        if (trigger) trigger.classList.remove('tt-waiting');
+        activeTooltip = null;
+      }
+    }
+
+    document.querySelectorAll('.tt-trigger').forEach((trigger) => {
+      const wrap = trigger.closest('.tt-wrap');
+      const bubble = wrap.querySelector('.tt-bubble');
+      const zone = trigger.dataset.zone;
+
+      trigger.addEventListener('mouseenter', () => {
+        hideTooltip();
+        let delay = 3000;
+        if (collectTooltipState() === 'T3' && zone !== 'card') delay = 300;
+        if (collectTooltipState() === 'T2' && Date.now() < skipUntil) delay = 0;
+        trigger.classList.add('tt-waiting');
+        tooltipTimer = setTimeout(() => {
+          trigger.classList.remove('tt-waiting');
+          bubble.classList.add('tt-visible');
+          activeTooltip = bubble;
+          skipUntil = Date.now() + 800;
+          tooltipTimer = null;
+        }, delay);
+      });
+
+      trigger.addEventListener('mouseleave', () => {
+        hideTooltip();
+      });
+    });
+
+    /* ---------- Badge preview ---------- */
+    function badgeLabel(card, missing, actions) {
+      if (state.badgeDetail === 'D1') return 'NEW';
+      if (state.badgeDetail === 'D2') return `NEW · ${actions}`;
+      return `NEW · manca ${missing}`;
+    }
+
+    function renderBadges() {
+      const cards = Array.from(document.querySelectorAll('[data-badge-card]'));
+      cards.forEach((card) => {
+        card.classList.remove('card-new-border');
+        const titleSlot = card.querySelector('[data-badge-title]');
+        const stripSlot = card.querySelector('[data-badge-strip]');
+        const dotSlot = card.querySelector('[data-badge-dot]');
+        titleSlot.innerHTML = '';
+        stripSlot.innerHTML = '';
+        stripSlot.className = 'hidden';
+        dotSlot.innerHTML = '';
+
+        const age = Number(card.dataset.ageDays);
+        const actions = Number(card.dataset.actions);
+        const missing = card.dataset.missing || '';
+        const empty = actions === 0;
+
+        if (state.badgeOnlyMissing === 'yes' && empty) return;
+
+        let isNew = false;
+        if (state.badgeCriteria === 'C1') isNew = age <= 7;
+        else if (state.badgeCriteria === 'C2') isNew = age <= 14;
+        else if (state.badgeCriteria === 'C3') isNew = age <= 30;
+        else if (state.badgeCriteria === 'C4') isNew = card.dataset.newest === 'true';
+
+        if (!isNew) return;
+
+        const label = badgeLabel(card, missing, actions);
+
+        if (state.badgeStyle === 'B1') {
+          titleSlot.innerHTML = `<span class="badge-new text-[9px] px-1.5 py-0.5 rounded whitespace-nowrap">${label}</span>`;
+        } else if (state.badgeStyle === 'B2') {
+          stripSlot.className = 'px-2 py-1 border-b border-zinc-800 bg-orange-500/10 text-[10px] text-orange-300 font-bold flex items-center gap-1.5';
+          stripSlot.innerHTML = `<i data-lucide="sparkles" class="w-3 h-3"></i><span>${label}</span>`;
+        } else if (state.badgeStyle === 'B3') {
+          dotSlot.innerHTML = `
+            <span class="tt-wrap">
+              <span class="tt-trigger relative inline-flex w-5 h-5 cursor-help" data-zone="card" data-tip="${label}">
+                <span class="pulse-dot absolute inset-0 rounded-full bg-orange-500"></span>
+                <span class="relative inline-flex items-center justify-center w-5 h-5 rounded-full bg-orange-500 text-[8px] font-black text-black">N</span>
+              </span>
+              <span class="tt-bubble">${label}</span>
+            </span>`;
+          const dotTrigger = dotSlot.querySelector('.tt-trigger');
+          const dotBubble = dotSlot.querySelector('.tt-bubble');
+          dotTrigger.addEventListener('mouseenter', () => {
+            dotBubble.textContent = label;
+            dotBubble.classList.add('tt-visible');
+          });
+          dotTrigger.addEventListener('mouseleave', () => dotBubble.classList.remove('tt-visible'));
+        } else if (state.badgeStyle === 'B4') {
+          card.classList.add('card-new-border');
+          titleSlot.innerHTML = `<span class="badge-new text-[9px] px-1.5 py-0.5 rounded whitespace-nowrap">${label}</span>`;
+        }
+      });
+
+      const status = document.getElementById('badge-status');
+      if (status) {
+        status.innerHTML = `${optionLabel('badgeCriteria')} · ${optionLabel('badgeStyle')} · ${optionLabel('badgeDetail')} · ${optionLabel('badgeOnlyMissing')}`;
+      }
+
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    /* ---------- Filter preview ---------- */
+    const FILTER_TYPES = ['all', 'poster', 'clearlogo', 'clearart', 'banner', 'landscape', 'discart', 'keyart'];
+    const TYPE_LABELS = {
+      all: 'Tutti',
+      poster: 'Poster',
+      clearlogo: 'Clearlogo',
+      clearart: 'Clearart',
+      banner: 'Banner',
+      landscape: 'Landscape / Fanart',
+      discart: 'Discart',
+      keyart: 'Keyart',
+    };
+
+    const filterState = { global: 'all', local: 'all', fanart: 'all', tmdb: 'all' };
+
+    function sourceItems(source) {
+      if (source === 'all') return Array.from(document.querySelectorAll('.art-item'));
+      return Array.from(document.querySelectorAll(`.art-item[data-source="${source}"]`));
+    }
+
+    function countType(source, type) {
+      if (type === 'all') return sourceItems(source).length;
+      return sourceItems(source).filter((el) => el.dataset.type === type).length;
+    }
+
+    function chipHtml(source, type) {
+      const count = countType(source, type);
+      const active = source === 'all' ? filterState.global === type : filterState[source] === type;
+      const disabled = type !== 'all' && count === 0;
+      const hidden = state.filterZero === 'Z2' && disabled;
+      if (hidden) return '';
+      return `<button type="button" data-chip-source="${source}" data-chip-type="${type}"
+        class="chip ${active ? 'chip-active' : ''} ${disabled ? 'chip-disabled' : ''}
+        border border-zinc-700 bg-zinc-800/70 hover:bg-zinc-700 text-zinc-300 text-[10px] font-semibold px-2 py-1 rounded-md">
+        ${TYPE_LABELS[type]} <span class="opacity-70">(${count})</span>
+      </button>`;
+    }
+
+    function buildChips() {
+      const global = document.getElementById('global-chips');
+      global.innerHTML = FILTER_TYPES.map((type) => chipHtml('all', type)).join('');
+
+      ['local', 'fanart', 'tmdb'].forEach((source) => {
+        const el = document.getElementById(source + '-chips');
+        el.innerHTML = FILTER_TYPES.map((type) => chipHtml(source, type)).join('');
+      });
+
+      const select = document.getElementById('global-select');
+      select.innerHTML = FILTER_TYPES.map((type) => {
+        const count = countType('all', type);
+        const disabled = type !== 'all' && count === 0 && state.filterZero === 'Z2';
+        if (disabled) return '';
+        return `<option value="${type}" ${filterState.global === type ? 'selected' : ''}>${TYPE_LABELS[type]} (${count})</option>`;
+      }).join('');
+    }
+
+    function applyFilters() {
+      const scope = state.filterScope;
+      ['local', 'fanart', 'tmdb'].forEach((source) => {
+        const active = scope === 'F2' ? filterState[source] : filterState.global;
+        const items = sourceItems(source);
+        let visible = 0;
+        items.forEach((item) => {
+          const show = active === 'all' || item.dataset.type === active;
+          item.classList.toggle('hidden', !show);
+          if (show) visible += 1;
+        });
+        const empty = document.querySelector(`[data-empty="${source}"]`);
+        if (empty) {
+          empty.classList.toggle('filter-empty', visible !== 0);
+          empty.textContent = active === 'all'
+            ? 'Nessun artwork in questa sezione.'
+            : `Nessun artwork di tipo “${TYPE_LABELS[active]}” in questa sezione.`;
+        }
+      });
+
+      document.querySelectorAll('[data-chip-source]').forEach((chip) => {
+        const source = chip.dataset.chipSource;
+        const type = chip.dataset.chipType;
+        const active = (source === 'all' ? filterState.global : filterState[source]) === type;
+        chip.classList.toggle('chip-active', active);
+      });
+    }
+
+    function updateFilterLayout() {
+      const globalBar = document.getElementById('global-filter-bar');
+      const globalChips = document.getElementById('global-chips');
+      const globalSelectWrap = document.getElementById('global-select-wrap');
+      const perColumn = state.filterScope === 'F2';
+      const dropdown = state.filterScope === 'F3';
+
+      globalBar.classList.toggle('hidden', perColumn);
+      globalChips.classList.toggle('hidden', dropdown);
+      globalSelectWrap.classList.toggle('hidden', !dropdown);
+
+      ['local', 'fanart', 'tmdb'].forEach((source) => {
+        const el = document.getElementById(source + '-chips');
+        el.classList.toggle('hidden', !perColumn);
+        el.classList.toggle('flex', perColumn);
+      });
+
+      buildChips();
+      applyFilters();
+    }
+
+    document.addEventListener('click', (event) => {
+      const chip = event.target.closest('[data-chip-source]');
+      if (!chip) return;
+      const source = chip.dataset.chipSource;
+      const type = chip.dataset.chipType;
+      if (source === 'all') filterState.global = type;
+      else filterState[source] = type;
+      applyFilters();
+      buildChips();
+    });
+
+    document.getElementById('global-select').addEventListener('change', (event) => {
+      filterState.global = event.target.value;
+      applyFilters();
+      buildChips();
+    });
+
+    /* ---------- Toast + local/external links ---------- */
+    let toastTimer = null;
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.remove('hidden');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.add('hidden'), 3600);
+    }
+
+    const LOCAL_PATH = '/mnt/user/movies/The Matrix';
+
+    function openLocalFolder() {
+      if (state.localOpen === 'L1') {
+        const modal = document.getElementById('folder-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      } else if (state.localOpen === 'L2') {
+        showToast('Nuova scheda (mock): indice read-only di ' + LOCAL_PATH);
+      } else if (state.localOpen === 'L3') {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(LOCAL_PATH).then(() => showToast('Percorso copiato: ' + LOCAL_PATH)).catch(() => showToast('Percorso: ' + LOCAL_PATH));
+        } else {
+          showToast('Percorso: ' + LOCAL_PATH);
+        }
+      } else {
+        showToast('file://' + LOCAL_PATH + ' verrebbe bloccato dal browser. Opzione sconsigliata.');
+      }
+    }
+
+    document.querySelectorAll('[data-open-local]').forEach((el) => {
+      el.addEventListener('click', openLocalFolder);
+    });
+
+    document.getElementById('folder-close').addEventListener('click', () => {
+      const modal = document.getElementById('folder-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    });
+
+    document.getElementById('folder-modal').addEventListener('click', (event) => {
+      if (event.target.id === 'folder-modal') {
+        document.getElementById('folder-close').click();
+      }
+    });
+
+    const EXTERNAL_URLS = {
+      fanart: 'https://fanart.tv/movie/603/the-matrix/',
+      tmdb: 'https://www.themoviedb.org/movie/603-the-matrix',
+    };
+
+    document.querySelectorAll('[data-open-external]').forEach((el) => {
+      el.addEventListener('click', () => {
+        const type = el.dataset.openExternal;
+        if (state.linkImpl === 'X3') {
+          const q = encodeURIComponent('The Matrix');
+          const url = type === 'fanart'
+            ? `https://fanart.tv/?s=${q}`
+            : `https://www.themoviedb.org/search?query=${q}`;
+          window.open(url, '_blank', 'noopener,noreferrer');
+        } else {
+          window.open(EXTERNAL_URLS[type], '_blank', 'noopener,noreferrer');
+        }
+      });
+    });
+
+    /* ---------- Bindings ---------- */
+    document.querySelectorAll('.option input[type="radio"]').forEach((input) => {
+      input.addEventListener('change', () => {
+        const group = input.name;
+        const value = input.value;
+        state[group] = value;
+        syncOptionStyles();
+        updateSummary();
+
+        if (group === 'tooltip') {
+          hideTooltip();
+          updateTooltipStatus();
+        }
+        if (group.startsWith('badge')) renderBadges();
+        if (group.startsWith('filter')) {
+          if (group === 'filterScope') {
+            filterState.global = 'all';
+            filterState.local = 'all';
+            filterState.fanart = 'all';
+            filterState.tmdb = 'all';
+          }
+          updateFilterLayout();
+        }
+      });
+    });
+
+    function resetAll() {
+      Object.assign(state, DEFAULTS);
+      document.querySelectorAll('.option input[type="radio"]').forEach((input) => {
+        input.checked = input.value === DEFAULTS[input.name];
+      });
+      filterState.global = 'all';
+      filterState.local = 'all';
+      filterState.fanart = 'all';
+      filterState.tmdb = 'all';
+      hideTooltip();
+      syncOptionStyles();
+      updateSummary();
+      updateTooltipStatus();
+      renderBadges();
+      updateFilterLayout();
+    }
+
+    document.getElementById('reset-btn').addEventListener('click', resetAll);
+
+    function copyFinal() {
+      const text = finalText();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text)
+          .then(() => showToast('Riepilogo copiato. Incollalo in chat per confermare.'))
+          .catch(() => showToast(text));
+      } else {
+        showToast(text);
+      }
+    }
+
+    document.getElementById('copy-btn').addEventListener('click', copyFinal);
+    document.getElementById('copy-btn-2').addEventListener('click', copyFinal);
+
+    /* ---------- Init ---------- */
+    syncOptionStyles();
+    updateSummary();
+    updateTooltipStatus();
+    renderBadges();
+    updateFilterLayout();
+    if (window.lucide) window.lucide.createIcons();
+  </script>
+</body>
+</html>

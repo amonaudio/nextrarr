@@ -27,7 +27,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useMemo, useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -88,13 +88,12 @@ export function Header({ onOpenSettings, onOpenCustomFilters, onGlobalSearch, on
     // [0.7.10] Sticky header — stays at top while scrolling.
     // z-50 to stay above alpha-nav (z-40) and cards.
     // backdrop-blur + bg-background/95 for a "frosted glass" effect.
-    <TooltipProvider delayDuration={300}>
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
       <div className="px-4 sm:px-6 lg:px-10 py-3 flex flex-wrap items-end justify-between gap-3">
         <div className="flex items-center gap-2">
           <img src="/logo.svg" alt="nEXTrarr" className="h-8 w-8 shrink-0" />
           <h1 className="text-xl font-bold text-primary">nEXTrarr</h1>
-          <Badge variant="outline" className="text-xs ml-1">v0.8.2</Badge>
+          <Badge variant="outline" className="text-xs ml-1">v0.8.3</Badge>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -322,6 +321,5 @@ export function Header({ onOpenSettings, onOpenCustomFilters, onGlobalSearch, on
         </div>
       </div>
     </header>
-    </TooltipProvider>
   );
 }

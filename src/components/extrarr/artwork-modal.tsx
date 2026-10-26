@@ -35,7 +35,7 @@
 
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -58,10 +58,28 @@ import {
   X,
   Trash2,
   Maximize2,
+  Filter,
+  ExternalLink,
+  FolderOpen,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import {
+  ARTWORK_TYPES,
+  ARTWORK_TYPE_LABELS,
+  getLocalArtworkType,
+  normalizeArtworkType,
+  type ArtworkType,
+} from '@/lib/artwork-types';
+import { LocalFolderModal } from '@/components/extrarr/local-folder-modal';
 import type { ArtworkItem, MediaItem } from '@/lib/types';
+
+interface ExternalLinks {
+  fanart: string;
+  tmdb: string;
+}
+
+type ArtworkFilter = 'all' | ArtworkType;
 
 interface ArtworkModalProps {
   open: boolean;
@@ -88,19 +106,29 @@ export function ArtworkModal({ open, onOpenChange, media, mediaType, onChanged }
   // the modal, highlight the modal with a primary-color ring so they
   // know they can drop. Set/unset on dragenter/dragleave.
   const [dragActive, setDragActive] = useState(false);
+  // [0.8.3] Global artwork-type filter (F1) — reset to "Tutti" on every
+  // open (P1). Zero-count types stay visible but disabled (Z1).
+  const [selectedType, setSelectedType] = useState<ArtworkFilter>('all');
+  const [externalLinks, setExternalLinks] = useState<ExternalLinks | null>(null);
+  const [localFolderOpen, setLocalFolderOpen] = useState(false);
 
   useEffect(() => {
     if (!open || !media) return;
+    // Reset every dialog-local field when a new media is opened.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLocalFiles([]);
     setFanartItems(null);
     setTmdbItems(null);
     setFanartError(null);
     setTmdbError(null);
     setDeleteTarget(null);
+    setSelectedType('all');
+    setExternalLinks(null);
+    setLocalFolderOpen(false);
     setLocalVersion(Date.now());
 
     (async () => {
-      const [loc, fan, tmdb] = await Promise.all([
+      const [loc, fan, tmdb, links] = await Promise.all([
         fetch(`/api/artwork-files/${mediaType}/${media.id}`, { cache: 'no-store' })
           .then((r) => r.json())
           .catch(() => []),
@@ -110,12 +138,21 @@ export function ArtworkModal({ open, onOpenChange, media, mediaType, onChanged }
         fetch(`/api/search-tmdb-artwork/${mediaType}/${media.id}`, { cache: 'no-store' })
           .then((r) => r.json())
           .catch((e) => ({ status: 'error', message: e.message })),
+        fetch(
+          `/api/external-links/${mediaType}/${media.id}?title=${encodeURIComponent(media.title)}`,
+          { cache: 'no-store' },
+        )
+          .then((r) => r.json())
+          .catch(() => null),
       ]);
       setLocalFiles(Array.isArray(loc) ? loc : []);
       if (Array.isArray(fan)) setFanartItems(fan);
       else if (fan.status === 'error') setFanartError(fan.message);
       if (Array.isArray(tmdb)) setTmdbItems(tmdb);
       else if (tmdb.status === 'error') setTmdbError(tmdb.message);
+      if (links && typeof links.fanart === 'string' && typeof links.tmdb === 'string') {
+        setExternalLinks(links);
+      }
     })();
   }, [open, media, mediaType]);
 
@@ -133,6 +170,47 @@ export function ArtworkModal({ open, onOpenChange, media, mediaType, onChanged }
       // ignore — list will refresh on next modal open
     }
   }, [media, mediaType]);
+
+  // [0.8.3] Counts are global across the three sections, matching the
+  // chosen F1 behaviour. Unknown/unmanaged file types still count in
+  // "Tutti" but do not belong to any specific category.
+  const typeCounts = useMemo(() => {
+    const counts = { all: 0 } as Record<ArtworkFilter, number>;
+    for (const type of ARTWORK_TYPES) counts[type] = 0;
+
+    for (const filename of localFiles) {
+      counts.all += 1;
+      const type = getLocalArtworkType(filename);
+      if (type) counts[type] += 1;
+    }
+    for (const item of [...(fanartItems ?? []), ...(tmdbItems ?? [])]) {
+      counts.all += 1;
+      const type = normalizeArtworkType(item.our_type);
+      if (type) counts[type] += 1;
+    }
+    return counts;
+  }, [localFiles, fanartItems, tmdbItems]);
+
+  const visibleLocalFiles = selectedType === 'all'
+    ? localFiles
+    : localFiles.filter((filename) => getLocalArtworkType(filename) === selectedType);
+  const visibleFanartItems = selectedType === 'all'
+    ? (fanartItems ?? [])
+    : (fanartItems ?? []).filter((item) => normalizeArtworkType(item.our_type) === selectedType);
+  const visibleTmdbItems = selectedType === 'all'
+    ? (tmdbItems ?? [])
+    : (tmdbItems ?? []).filter((item) => normalizeArtworkType(item.our_type) === selectedType);
+  const selectedTypeLabel = selectedType === 'all' ? 'Tutti' : ARTWORK_TYPE_LABELS[selectedType];
+
+  function openExternal(kind: 'fanart' | 'tmdb') {
+    const title = media?.title ?? '';
+    const fallback = kind === 'fanart'
+      ? (title ? `https://fanart.tv/?s=${encodeURIComponent(title)}` : 'https://fanart.tv/')
+      : (title
+        ? `https://www.themoviedb.org/search?query=${encodeURIComponent(title)}`
+        : 'https://www.themoviedb.org/');
+    window.open(externalLinks?.[kind] ?? fallback, '_blank', 'noopener,noreferrer');
+  }
 
   if (!media) return null;
 
@@ -288,7 +366,7 @@ export function ArtworkModal({ open, onOpenChange, media, mediaType, onChanged }
             // scrolla (scrollano le singole liste); su mobile scrolla la
             // modale intera e le liste hanno un max-height.
             'w-[100vw] max-w-[100vw] sm:max-w-[100vw] h-[95vh] max-h-[95vh] overflow-y-auto lg:overflow-hidden',
-            'grid-rows-[auto_minmax(0,1fr)] gap-3 p-4 sm:p-6',
+            'grid-rows-[auto_auto_minmax(0,1fr)] gap-3 p-4 sm:p-6',
             dragActive && 'ring-2 ring-primary ring-offset-2 ring-offset-background',
           )}
         >
@@ -308,6 +386,43 @@ export function ArtworkModal({ open, onOpenChange, media, mediaType, onChanged }
             </DialogDescription>
           </DialogHeader>
 
+          {/* [0.8.3] F1 — unico filtro globale per tutte e tre le sezioni.
+              P1: selectedType torna a "all" nell'effect di apertura.
+              Z1: i tipi con 0 elementi restano visibili ma disabilitati. */}
+          <div
+            className="flex flex-wrap items-center gap-1.5 rounded-lg border border-border bg-muted/30 px-3 py-2"
+            role="group"
+            aria-label="Filtra artwork per tipo"
+          >
+            <Filter className="h-3.5 w-3.5 text-primary mr-1" aria-hidden />
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mr-1">
+              Filtra tipo
+            </span>
+            {(['all', ...ARTWORK_TYPES] as const).map((type) => {
+              const count = typeCounts[type];
+              const disabled = type !== 'all' && count === 0;
+              return (
+                <button
+                  key={type}
+                  type="button"
+                  disabled={disabled}
+                  aria-pressed={selectedType === type}
+                  onClick={() => setSelectedType(type)}
+                  className={cn(
+                    'rounded-md border px-2 py-1 text-[10px] font-semibold transition-colors',
+                    selectedType === type
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'border-border bg-background/70 text-muted-foreground hover:bg-muted hover:text-foreground',
+                    disabled && 'cursor-not-allowed opacity-40 hover:bg-background/70 hover:text-muted-foreground',
+                  )}
+                >
+                  {type === 'all' ? 'Tutti' : ARTWORK_TYPE_LABELS[type]}
+                  <span className="ml-1 opacity-70">({count})</span>
+                </button>
+              );
+            })}
+          </div>
+
           {/* Tre pannelli indipendenti. lg:min-h-0 + overflow-hidden sul
               contenitore permette alle liste interne di avere il proprio
               scroll senza far crescere la modale oltre il 95vh. */}
@@ -316,11 +431,17 @@ export function ArtworkModal({ open, onOpenChange, media, mediaType, onChanged }
             {/* === Colonna 1: Artwork Locali === */}
             <section className="flex flex-col min-h-0 overflow-hidden rounded-lg border border-border bg-card/40">
               <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-border bg-muted/30 shrink-0">
-                <h3 className="text-sm font-semibold text-primary flex items-center gap-1.5">
-                  <ImageIcon className="h-4 w-4" />
-                  Artwork Locali
+                <button
+                  type="button"
+                  onClick={() => setLocalFolderOpen(true)}
+                  className="group flex min-w-0 items-center gap-1.5 text-left text-sm font-semibold text-primary hover:text-primary/80"
+                  title="Apri la cartella locale del media"
+                >
+                  <FolderOpen className="h-4 w-4 shrink-0" />
+                  <span className="truncate underline decoration-dotted underline-offset-4">Artwork Locali</span>
                   <span className="text-xs font-normal text-muted-foreground">({localFiles.length})</span>
-                </h3>
+                  <FolderOpen className="h-3.5 w-3.5 shrink-0 opacity-50 group-hover:opacity-100" />
+                </button>
                 {/* [0.8.0] Pulsante "Carica da PC" — usa <label> con un <input type="file">
                     nascosto (via sr-only), così il pulsante è uno stile standard Button
                     ma attiva comunque il file picker nativo del browser.
@@ -353,16 +474,22 @@ export function ArtworkModal({ open, onOpenChange, media, mediaType, onChanged }
               </div>
 
               <div className="overflow-y-auto p-2 space-y-2 max-h-[48vh] lg:max-h-none lg:flex-1 lg:min-h-0">
-                {localFiles.length === 0 ? (
+                {visibleLocalFiles.length === 0 ? (
                   <p className="text-xs text-muted-foreground py-10 text-center">
-                    Nessuna immagine locale trovata.
-                    <br />
-                    <span className="text-[10px] opacity-70">
-                      Usa il pulsante &quot;Carica da PC&quot; o scarica da Fanart/TMDB.
-                    </span>
+                    {localFiles.length === 0
+                      ? 'Nessuna immagine locale trovata.'
+                      : `Nessun artwork di tipo “${selectedTypeLabel}” nella cartella.`}
+                    {localFiles.length === 0 && (
+                      <>
+                        <br />
+                        <span className="text-[10px] opacity-70">
+                          Usa il pulsante &quot;Carica da PC&quot; o scarica da Fanart/TMDB.
+                        </span>
+                      </>
+                    )}
                   </p>
                 ) : (
-                  localFiles.map((f) => (
+                  visibleLocalFiles.map((f) => (
                     <div key={f} className="rounded-md border border-border bg-background overflow-hidden">
                       {/* Stile eliminazione 2: immagine + riga azioni sotto. */}
                       <img
@@ -416,25 +543,33 @@ export function ArtworkModal({ open, onOpenChange, media, mediaType, onChanged }
             {/* === Colonna 2: Artwork Online (Fanart.tv) === */}
             <section className="flex flex-col min-h-0 overflow-hidden rounded-lg border border-border bg-card/40">
               <div className="flex items-center gap-2 px-3 py-2 border-b border-border bg-muted/30 shrink-0">
-                <h3 className="text-sm font-semibold text-primary flex items-center gap-1.5">
-                  <Globe className="h-4 w-4" />
-                  Online (Fanart.tv)
+                <button
+                  type="button"
+                  onClick={() => openExternal('fanart')}
+                  className="group flex min-w-0 items-center gap-1.5 text-left text-sm font-semibold text-primary hover:text-primary/80"
+                  title="Apri la pagina Fanart.tv del media"
+                >
+                  <Globe className="h-4 w-4 shrink-0" />
+                  <span className="truncate underline decoration-dotted underline-offset-4">Online (Fanart.tv)</span>
                   <span className="text-xs font-normal text-muted-foreground">
                     ({fanartItems?.length ?? 0})
                   </span>
-                </h3>
+                  <ExternalLink className="ml-auto h-3.5 w-3.5 shrink-0 opacity-50 group-hover:opacity-100" />
+                </button>
               </div>
               <div className="overflow-y-auto p-2 space-y-2 max-h-[48vh] lg:max-h-none lg:flex-1 lg:min-h-0">
                 {fanartError ? (
                   <p className="text-xs text-destructive py-4 px-2">{fanartError}</p>
                 ) : !fanartItems ? (
                   <p className="text-xs text-muted-foreground py-10 text-center">Caricamento...</p>
-                ) : fanartItems.length === 0 ? (
+                ) : visibleFanartItems.length === 0 ? (
                   <p className="text-xs text-muted-foreground py-10 text-center">
-                    Nessuna immagine trovata su Fanart.tv.
+                    {fanartItems.length === 0
+                      ? 'Nessuna immagine trovata su Fanart.tv.'
+                      : `Nessun artwork di tipo “${selectedTypeLabel}” su Fanart.tv.`}
                   </p>
                 ) : (
-                  fanartItems.map((a) => (
+                  visibleFanartItems.map((a) => (
                     <div key={a.url} className="rounded-md border border-border bg-background overflow-hidden">
                       <img
                         src={a.url}
@@ -461,25 +596,33 @@ export function ArtworkModal({ open, onOpenChange, media, mediaType, onChanged }
             {/* === Colonna 3: Artwork Online (TMDB) === */}
             <section className="flex flex-col min-h-0 overflow-hidden rounded-lg border border-border bg-card/40">
               <div className="flex items-center gap-2 px-3 py-2 border-b border-border bg-muted/30 shrink-0">
-                <h3 className="text-sm font-semibold text-primary flex items-center gap-1.5">
-                  <Film className="h-4 w-4" />
-                  Online (TMDB)
+                <button
+                  type="button"
+                  onClick={() => openExternal('tmdb')}
+                  className="group flex min-w-0 items-center gap-1.5 text-left text-sm font-semibold text-primary hover:text-primary/80"
+                  title="Apri la pagina TMDB del media"
+                >
+                  <Film className="h-4 w-4 shrink-0" />
+                  <span className="truncate underline decoration-dotted underline-offset-4">Online (TMDB)</span>
                   <span className="text-xs font-normal text-muted-foreground">
                     ({tmdbItems?.length ?? 0})
                   </span>
-                </h3>
+                  <ExternalLink className="ml-auto h-3.5 w-3.5 shrink-0 opacity-50 group-hover:opacity-100" />
+                </button>
               </div>
               <div className="overflow-y-auto p-2 space-y-2 max-h-[48vh] lg:max-h-none lg:flex-1 lg:min-h-0">
                 {tmdbError ? (
                   <p className="text-xs text-destructive py-4 px-2">{tmdbError}</p>
                 ) : !tmdbItems ? (
                   <p className="text-xs text-muted-foreground py-10 text-center">Caricamento...</p>
-                ) : tmdbItems.length === 0 ? (
+                ) : visibleTmdbItems.length === 0 ? (
                   <p className="text-xs text-muted-foreground py-10 text-center">
-                    Nessuna immagine trovata su TMDB.
+                    {tmdbItems.length === 0
+                      ? 'Nessuna immagine trovata su TMDB.'
+                      : `Nessun artwork di tipo “${selectedTypeLabel}” su TMDB.`}
                   </p>
                 ) : (
-                  tmdbItems.map((a) => (
+                  visibleTmdbItems.map((a) => (
                     <div key={a.url} className="rounded-md border border-border bg-background overflow-hidden">
                       <img
                         src={a.url}
@@ -506,6 +649,15 @@ export function ArtworkModal({ open, onOpenChange, media, mediaType, onChanged }
           </div>
         </DialogContent>
       </Dialog>
+
+      {localFolderOpen && (
+        <LocalFolderModal
+          open={localFolderOpen}
+          onOpenChange={setLocalFolderOpen}
+          media={media}
+          mediaType={mediaType}
+        />
+      )}
 
       {/* [0.7.2] Image zoom — now a Radix Dialog, so it stacks correctly
           above the parent ArtworkModal and is not affected by `inert`.

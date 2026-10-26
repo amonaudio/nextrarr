@@ -6,6 +6,10 @@
 
 import type { ArrMedia, MediaType } from './services/radarr-sonarr';
 
+// [0.8.3] Relative dates keep the demo useful over time: recent entries
+// trigger the NEW badge, older ones don't.
+const daysAgo = (days: number) => new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+
 const MOCK_MOVIES: ArrMedia[] = [
   {
     id: 1,
@@ -13,7 +17,7 @@ const MOCK_MOVIES: ArrMedia[] = [
     year: 1999,
     path: '/movies/The Matrix',
     images: [{ coverType: 'poster', remoteUrl: 'https://image.tmdb.org/t/p/original/f89U3saN9XHCfQNjVqPGjEH2R7m.jpg' }],
-    added: '2024-01-15T00:00:00Z',
+    added: daysAgo(2),
     tmdbId: 603,
   },
   {
@@ -22,7 +26,7 @@ const MOCK_MOVIES: ArrMedia[] = [
     year: 2017,
     path: '/movies/Blade Runner 2049',
     images: [{ coverType: 'poster', remoteUrl: 'https://image.tmdb.org/t/p/original/gajva2f0B8X1kC0fFNcSjLsPtLP.jpg' }],
-    added: '2024-02-20T00:00:00Z',
+    added: daysAgo(7),
     tmdbId: 335984,
   },
   {
@@ -31,7 +35,7 @@ const MOCK_MOVIES: ArrMedia[] = [
     year: 2014,
     path: '/movies/Interstellar',
     images: [{ coverType: 'poster', remoteUrl: 'https://image.tmdb.org/t/p/original/gEU2QdEafN9oH0a5pR1zojVW6rN.jpg' }],
-    added: '2024-03-30T00:00:00Z',
+    added: daysAgo(20),
     tmdbId: 157336,
   },
   {
@@ -40,7 +44,7 @@ const MOCK_MOVIES: ArrMedia[] = [
     year: 1972,
     path: '/movies/The Godfather',
     images: [{ coverType: 'poster', remoteUrl: 'https://image.tmdb.org/t/p/original/3bhkrj58Vtxx1REj4cFBHD7f6Wz.jpg' }],
-    added: '2024-04-10T00:00:00Z',
+    added: daysAgo(40),
     tmdbId: 238,
   },
   {
@@ -49,7 +53,7 @@ const MOCK_MOVIES: ArrMedia[] = [
     year: 2021,
     path: '/movies/Dune',
     images: [{ coverType: 'poster', remoteUrl: 'https://image.tmdb.org/t/p/original/d5NXI3I1n5kMcdXU1t6tSuPRF8Y.jpg' }],
-    added: '2024-05-12T00:00:00Z',
+    added: daysAgo(60),
     tmdbId: 438631,
   },
   {
@@ -58,7 +62,7 @@ const MOCK_MOVIES: ArrMedia[] = [
     year: 1994,
     path: '/movies/Pulp Fiction',
     images: [{ coverType: 'poster', remoteUrl: 'https://image.tmdb.org/t/p/original/d5iIlFn2sVA0EE3Rv0YFnEcALEw.jpg' }],
-    added: '2024-06-05T00:00:00Z',
+    added: daysAgo(90),
     tmdbId: 680,
   },
   {
@@ -67,7 +71,7 @@ const MOCK_MOVIES: ArrMedia[] = [
     year: 2010,
     path: '/movies/Inception',
     images: [{ coverType: 'poster', remoteUrl: 'https://image.tmdb.org/t/p/original/9gk7ad4fYHk2Ri5eCfmmZ2nTkvs.jpg' }],
-    added: '2024-07-22T00:00:00Z',
+    added: daysAgo(120),
     tmdbId: 27205,
   },
   {
@@ -76,7 +80,7 @@ const MOCK_MOVIES: ArrMedia[] = [
     year: 2008,
     path: '/movies/The Dark Knight',
     images: [{ coverType: 'poster', remoteUrl: 'https://image.tmdb.org/t/p/original/qJ2tW6WMUDuxVz5hm3CQ6XuUOfR.jpg' }],
-    added: '2024-08-15T00:00:00Z',
+    added: daysAgo(150),
     tmdbId: 155,
   },
   {
@@ -85,7 +89,7 @@ const MOCK_MOVIES: ArrMedia[] = [
     year: 2009,
     path: '/movies/Avatar',
     images: [{ coverType: 'poster', remoteUrl: 'https://image.tmdb.org/t/p/original/jRXYjD9Ncv1d0eFn6nhpYN1a5XZ.jpg' }],
-    added: '2024-09-01T00:00:00Z',
+    added: daysAgo(200),
     tmdbId: 19995,
   },
   {
@@ -94,7 +98,7 @@ const MOCK_MOVIES: ArrMedia[] = [
     year: 2019,
     path: '/movies/Parasite',
     images: [{ coverType: 'poster', remoteUrl: 'https://image.tmdb.org/t/p/original/7IiTTgloJoKcfLTu3U6CssnoUd2.jpg' }],
-    added: '2024-10-10T00:00:00Z',
+    added: daysAgo(240),
     tmdbId: 496243,
   },
   {
@@ -103,7 +107,7 @@ const MOCK_MOVIES: ArrMedia[] = [
     year: 2015,
     path: '/movies/Mad Max Fury Road',
     images: [{ coverType: 'poster', remoteUrl: 'https://image.tmdb.org/t/p/original/8tZYtuVg0BSdPwm45OPsWjj5D9r.jpg' }],
-    added: '2024-11-03T00:00:00Z',
+    added: daysAgo(300),
     tmdbId: 76341,
   },
   {
@@ -112,7 +116,7 @@ const MOCK_MOVIES: ArrMedia[] = [
     year: 2022,
     path: '/movies/Everything Everywhere',
     images: [{ coverType: 'poster', remoteUrl: 'https://image.tmdb.org/t/p/original/w3LGuY6mS7NIQ9RDxKdHnWVa9aY.jpg' }],
-    added: '2024-12-15T00:00:00Z',
+    added: daysAgo(400),
     tmdbId: 545611,
   },
 ];
@@ -124,7 +128,8 @@ const MOCK_TV: ArrMedia[] = [
     year: 2008,
     path: '/tv/Breaking Bad',
     images: [{ coverType: 'poster', remoteUrl: 'https://image.tmdb.org/t/p/original/ggFHVNu6YYdNtXjVmt5nQNUbVYc.jpg' }],
-    added: '2024-01-20T00:00:00Z',
+    added: daysAgo(3),
+    tmdbId: 1396,
     tvdbId: 81189,
   },
   {
@@ -133,7 +138,8 @@ const MOCK_TV: ArrMedia[] = [
     year: 2016,
     path: '/tv/Stranger Things',
     images: [{ coverType: 'poster', remoteUrl: 'https://image.tmdb.org/t/p/original/49WFEfeYsfQB87y4XTV7c6Js7BP.jpg' }],
-    added: '2024-02-25T00:00:00Z',
+    added: daysAgo(10),
+    tmdbId: 66732,
     tvdbId: 305439,
   },
   {
@@ -142,7 +148,8 @@ const MOCK_TV: ArrMedia[] = [
     year: 2005,
     path: '/tv/The Office',
     images: [{ coverType: 'poster', remoteUrl: 'https://image.tmdb.org/t/p/original/qWnYa5JSucvv6Y7of3CuUFTX7oj.jpg' }],
-    added: '2024-03-15T00:00:00Z',
+    added: daysAgo(30),
+    tmdbId: 2316,
     tvdbId: 73244,
   },
   {
@@ -151,7 +158,8 @@ const MOCK_TV: ArrMedia[] = [
     year: 2011,
     path: '/tv/Game of Thrones',
     images: [{ coverType: 'poster', remoteUrl: 'https://image.tmdb.org/t/p/original/u37b9nmI4r7PioxPuhq5jo0x1a3.jpg' }],
-    added: '2024-04-18T00:00:00Z',
+    added: daysAgo(45),
+    tmdbId: 1399,
     tvdbId: 121361,
   },
 ];

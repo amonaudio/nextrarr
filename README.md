@@ -1,4 +1,4 @@
-# 🎬 nEXTrarr 0.8.2 (Next.js)
+# 🎬 nEXTrarr 0.8.3 (Next.js)
 
 A web-based companion tool for **Radarr** and **Sonarr** that fills in the
 metadata gaps your media server doesn't handle on its own:
@@ -9,11 +9,11 @@ metadata gaps your media server doesn't handle on its own:
 
 Built for **Unraid** deployments via **Community Applications**, with a Docker image published to Docker Hub and GitHub Container Registry.
 
-**This is the Next.js 16 (v0.8.2) version** — full TypeScript + React + Prisma rewrite of the original Flask app. Same feature set, same security model, modern UI with shadcn/ui.
+**This is the Next.js 16 (v0.8.3) version** — full TypeScript + React + Prisma rewrite of the original Flask app. Same feature set, same security model, modern UI with shadcn/ui.
 
 [![Build & Publish](https://github.com/amonaudio/nextrarr/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/amonaudio/nextrarr/actions/workflows/docker-publish.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.8.2-orange)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.8.3-orange)](CHANGELOG.md)
 
 ---
 
@@ -24,7 +24,8 @@ Built for **Unraid** deployments via **Community Applications**, with a Docker i
 - **Sort** by title, year, or date added (ascending / descending)
 - **Search** the local library or search YouTube globally and assign a result to any media
 - **Editor** per media: search YouTube for theme or trailer, or paste a URL directly
-- **Browse** local files, Fanart.tv results, and TMDB results side-by-side, download/specific
+- **Browse** local files, Fanart.tv results, and TMDB results side-by-side, with artwork-type filters, a read-only local folder view, and direct links to the Fanart.tv/TMDB pages
+- **Spot new titles** with a pulsing indicator on recently added items that still need metadata actions
 - **Directory browser** to set path mappings (Docker container path → host path)
 - **Light / dark theme** with persistent preference (next-themes)
 - **Alphabetical navigation** sidebar for fast jumping through large libraries (FIXED in v0.7 — was broken in v1.x due to a typo)

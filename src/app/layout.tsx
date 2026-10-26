@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster as SonnerToaster } from "sonner";
 import { ThemeProvider } from "@/components/extrarr/theme-provider";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,9 +37,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
-        <ThemeProvider>
-          {children}
-        </ThemeProvider>
+        <TooltipProvider delayDuration={3000} skipDelayDuration={0}>
+          <ThemeProvider>
+            {children}
+          </ThemeProvider>
+        </TooltipProvider>
         <SonnerToaster position="bottom-center" theme="system" richColors />
       </body>
     </html>

@@ -21,7 +21,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useExtrarrStore } from '@/store/extrarr-store';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   Play, Pause, SkipBack, SkipForward,
   Volume2, VolumeX, Volume1, Music, Loader2, X,
@@ -126,7 +126,6 @@ export function MediaPlayer() {
   const hasTrack = !!playingUrl;
 
   return (
-    <TooltipProvider delayDuration={300}>
     <div
       className="fixed bottom-0 left-0 w-full z-40 border-t border-border/50 backdrop-blur-xl bg-gradient-to-r from-card/95 via-card/90 to-card/95 px-3 sm:px-6 py-3 flex items-center gap-3 sm:gap-4 h-20 box-border shadow-2xl shadow-black/30"
     >
@@ -325,6 +324,5 @@ export function MediaPlayer() {
         )}
       </div>
     </div>
-    </TooltipProvider>
   );
 }

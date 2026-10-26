@@ -21,7 +21,7 @@ interface TmdbImagesResponse {
   posters?: TmdbImage[];
 }
 
-async function resolveTmdbId(
+export async function resolveTmdbId(
   tmdbKey: string,
   media: ArrMedia,
   mediaType: MediaType,
