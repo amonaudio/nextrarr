@@ -1,0 +1,75 @@
+# .dockerignore — exclude files that should NOT be copied into the Docker image.
+# Keeps the build context small and the build fast.
+
+# Version control
+.git
+.gitignore
+.github
+.gitattributes
+
+# Build artifacts (will be regenerated inside the image)
+.next
+out
+dist
+build
+
+# Dependencies (will be reinstalled in the deps stage)
+node_modules
+.venv
+venv
+.venv-*
+**/.venv
+**/.venv-*
+
+# Tests + scripts (not needed at runtime)
+tests
+__tests__
+**/__tests__
+scripts
+*.test.ts
+*.spec.ts
+
+# Documentation
+docs
+*.md
+!README.md
+LICENSE
+
+# IDE / OS
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Logs
+*.log
+dev.log
+server.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime / cache
+.cache
+.eslintcache
+.parcel-cache
+.next/cache
+
+# Env files (kept inside the container via entrypoint.sh / Dockerfile ENV)
+.env.local
+.env.*.local
+
+# Project-specific runtime artifacts
+db/
+config/
+download/
+tool-results/
+.zscripts/
+upload/
+skills/
+
+# Local database (contains API keys / runtime settings)
+extrarr.db
+extrarr.db-journal

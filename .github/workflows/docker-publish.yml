@@ -1,0 +1,90 @@
+name: Build & Publish Docker Image
+
+on:
+  push:
+    tags: ["v*"]
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Tag esistente da buildare/pubblicare (es. v0.8.3). Vuoto = run normale."
+        required: false
+        type: string
+
+# Explicit permissions for the auto-generated GITHUB_TOKEN.
+# By default GitHub restricts the token to read-only — we need:
+# - contents: read  → checkout the code
+# - packages: write  → push the image to GHCR (ghcr.io/<owner>/nextrarr)
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ (github.event_name == 'workflow_dispatch' && inputs.release_tag) || github.ref }}
+
+      - name: Resolve source revision
+        id: source
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub (only on tag/release)
+        if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.release_tag != '')
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Login to GHCR (only on tag/release)
+        if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.release_tag != '')
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker metadata (tags + labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ secrets.DOCKERHUB_USERNAME && format('{0}/nextrarr', secrets.DOCKERHUB_USERNAME) || '' }}
+            ghcr.io/${{ github.repository }}
+          # Use type=ref,event=tag (NOT type=semver) so any tag works —
+          # semver requires strict MAJOR.MINOR.PATCH (3 parts), which would
+          # reject tags like "v0.2". Using type=ref accepts whatever tag
+          # name was pushed (with optional v prefix stripped).
+          tags: |
+            type=ref,event=tag
+            type=raw,value=${{ inputs.release_tag || 'unused' }},enable=${{ github.event_name == 'workflow_dispatch' && inputs.release_tag != '' }}
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.release_tag != '') }}
+            type=sha,prefix=sha-,format=short,enable=${{ github.event_name != 'workflow_dispatch' }}
+          labels: |
+            org.opencontainers.image.title=nEXTrarr
+            org.opencontainers.image.description=Radarr/Sonarr metadata completion tool (Next.js 16)
+            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.revision=${{ steps.source.outputs.sha }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          # nEXTrarr targets Unraid, which is x86_64-only. Do not add arm64
+          # here: QEMU emulation made the v0.8.3 release build exceed 1 hour.
+          platforms: linux/amd64
+          push: ${{ startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.release_tag != '') }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
