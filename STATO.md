@@ -6,8 +6,8 @@ Repo: `https://github.com/amonaudio/nextrarr`
 Docker Hub: `amonaudio/nextrarr`
 Versione: `0.8.32`
 Branch: `main`
-Stato: sviluppo completato e build verificata; **non ancora pubblicata**
-(tag/immagine restano `v0.8.3` finché non viene richiesta la release).
+Stato: **pubblicata** su GitHub (tag `v0.8.32`), Docker Hub e GHCR
+(`linux/amd64`); `latest` allineato.
 
 Questo file serve a ripartire da un context nuovo senza perdere le decisioni
 importanti. Leggerlo prima di modificare codice; poi controllare `git status`
@@ -146,12 +146,19 @@ Aggiornati: `package.json`, `README.md`, `CHANGELOG.md`, `Dockerfile`,
 - Nessun browser headless disponibile: test visivo manuale ancora consigliato.
 - Non ci sono CLI `docker` o `gh`; usare Git + GitHub Actions.
 
-## 6. Release
+## 6. Release v0.8.32 pubblicata
 
-- `v0.8.32` **non è ancora stata pubblicata**: niente tag, push o immagine
-  Docker senza richiesta esplicita.
-- Ultima release pubblicata: `v0.8.3` (Git tag, Docker Hub e GHCR,
-  `linux/amd64`, `latest` allineato).
+- Git: `main` aggiornato al commit `dd5f285` (`Release v0.8.32 - Editorial
+  library redesign`); tag annotato `v0.8.32` (oggetto `30d7b70`, commit
+  `dd5f285`) pushato su `origin`.
+- Docker Hub: `amonaudio/nextrarr:v0.8.32` e `:latest`, `linux/amd64`.
+- GHCR: `ghcr.io/amonaudio/nextrarr:v0.8.32` e `:latest`, `linux/amd64`.
+- Digest immagine: `sha256:de9d23e4767d6af36dcaf1b00beb08ee446debab664e82452b926a602c15520a`.
+- Run GitHub Actions tag `v0.8.32`: `41009098236`, conclusa con successo
+  (login Docker Hub/GHCR e build+push OK).
+- Run GitHub Actions push `main`: `41009089877`, conclusa con successo
+  (solo build, nessun push immagine).
+- La precedente `v0.8.31` resta sul tag `v0.8.31` e sul branch `master`.
 - Workflow attuale (`.github/workflows/docker-publish.yml`):
   - su push `main` e PR: build `linux/amd64`, senza push;
   - su tag `v*`: build `linux/amd64` e push su Docker Hub + GHCR;
@@ -192,8 +199,8 @@ Aggiornati: `package.json`, `README.md`, `CHANGELOG.md`, `Dockerfile`,
 
 ## 9. Regole per il nuovo agent
 
-- `0.8.32` è pronta per la verifica/release; non pubblicarla senza richiesta.
-- Per modifiche nuove dopo la release usare la versione successiva (0.8.4).
+- `0.8.32` è pubblicata: non riscrivere tag né immagini già rilasciate.
+- Per modifiche nuove dopo la release usare la versione successiva (0.8.33/0.8.4).
 - Non committare, taggare o pushare senza richiesta esplicita.
 - Prima di modificare, leggere i file interessati e controllare `git status`.
 - Usare Node 20+ per build/dev; Node 18 non è compatibile con Next 16.
