@@ -1,16 +1,13 @@
 # nEXTrarr — Stato del progetto
 
-Ultimo aggiornamento: 2026-10-26
-Workspace: directory `nextrarr-0.8.3` (in origine `/config/workspace/nextrarr/nextrarr-0.8.2`)
+Ultimo aggiornamento: 2026-10-30
+Workspace: directory `nextrarr-0.8.32`
 Repo: `https://github.com/amonaudio/nextrarr`
 Docker Hub: `amonaudio/nextrarr`
-Versione: `0.8.3`
+Versione: `0.8.32`
 Branch: `main`
-Commit workflow/CI: `68d77f6 ci: label images with checked out release revision`
-Commit sorgente release: `632c7da Release v0.8.3`
-Commit documentazione: `ed7e2f2 docs: record v0.8.3 release` (poi aggiornamenti pacchetto)
-Tag pubblicato: `v0.8.3`
-Stato: `v0.8.3` pubblicata su GitHub e Docker Hub (`amd64`); `latest` allineato.
+Stato: sviluppo completato e build verificata; **non ancora pubblicata**
+(tag/immagine restano `v0.8.3` finché non viene richiesta la release).
 
 Questo file serve a ripartire da un context nuovo senza perdere le decisioni
 importanti. Leggerlo prima di modificare codice; poi controllare `git status`
@@ -31,85 +28,83 @@ Stack:
 Modalità demo: `EXTRARR_DEMO_MODE=1` oppure API key non configurate.
 In demo mode le API restituiscono dati mock.
 
-## 2. Cosa contiene v0.8.3
+## 2. Cosa contiene v0.8.32
 
-### Tooltip — 3 secondi uniformi (T1)
-- Un unico `TooltipProvider` nel root layout con
-  `delayDuration={3000}` e `skipDelayDuration={0}`.
-- Rimosso il provider interno al componente base `Tooltip`, che aveva
-  `delayDuration=0` e annullava i provider esterni.
-- Rimossi i provider locali da header, media-card e media-player.
-- Sidebar allineata a 3000 ms.
-- File: `src/app/layout.tsx`, `src/components/ui/tooltip.tsx`,
-  `src/components/ui/sidebar.tsx`, `header.tsx`, `media-card.tsx`,
-  `media-player.tsx`.
+### Nuova shell editoriale
+- Design derivato dal mockup approvato `mockup-v0.8.32.html`.
+- Palette calda chiaro/scuro, tipografia serif per i titoli, accento tangerine.
+- Rail sinistro persistente con viste rapide, cartelle e stato connessione.
+- Topbar sticky con ricerca, sorgente Film/Serie, refresh e azioni.
+- Drawer mobile per la navigazione.
+- File: `src/app/globals.css`, `src/app/page.tsx`,
+  `src/components/extrarr/library-sidebar.tsx`,
+  `src/components/extrarr/library-topbar.tsx`.
 
-### Badge NEW — B3 / C2 / D1
-- Pallino pulsante in basso a sinistra sul poster.
-- Visibile solo per titoli aggiunti negli ultimi **14 giorni** e con almeno
-  un'azione mancante: mapping, cartella, tema, artwork o trailer.
-- Testo visibile solo "NEW" tramite tooltip al passaggio del mouse.
-- Logica pura in `src/lib/media-badge.ts` (`isRecentlyAdded`,
-  `needsMediaAction`), usata da `media-card.tsx`.
-- Mock aggiornati con date relative per mostrare il badge in demo mode;
-  TV mock con `tmdbId` per i link esterni.
+### Hero copertura libreria
+- Anello di copertura live, barre tema/artwork/trailer, conteggi titoli
+  validi e avvisi percorso.
+- Scorciatoie “Completa i mancanti”.
+- File: `src/components/extrarr/library-overview.tsx`.
 
-### Filtri artwork — F1 / P1 / Z1
-- Barra filtro globale unica sopra i tre pannelli della ArtworkModal.
-- Tipi: Tutti, Poster, Clearlogo, Clearart, Banner, Landscape/Fanart,
-  Discart, Keyart.
-- Conteggi globali su locale + Fanart + TMDB.
-- Reset a "Tutti" a ogni apertura.
-- Tipi con 0 elementi visibili ma disabilitati.
-- Tipo locale dedotto dal filename; tipo online da `our_type`.
-- Helper condiviso client/server: `src/lib/artwork-types.ts`.
-- Messaggi vuoti specifici per filtro e sezione.
-- File: `src/components/extrarr/artwork-modal.tsx`.
+### Toolbar e viste
+- Filtri principali, cartella root, ordinamento, ricerca locale e toggle
+  griglia/lista in un'unica toolbar.
+- Vista lista compatta con contatore completamento e azioni rapide per riga.
+- File: `src/components/extrarr/library-toolbar.tsx`,
+  `src/components/extrarr/media-grid.tsx`.
 
-### Cartella locale — L1
-- Click su "Artwork Locali" apre una modale in-app read-only.
-- Mostra path, file, directory e symlink, con dimensioni dei file.
-- Nessuna navigazione, upload o delete nella modale cartella.
-- Endpoint: `GET /api/local-folder/[type]/[id]`.
-- Sicurezza: tipo/id validati, path da Radarr/Sonarr risolto con path map,
-  controllo prefissi consentiti, nessun path utente, nessuna ricorsione,
-  symlink elencati ma non seguiti, limite 500 elementi.
-- File: `src/app/api/local-folder/[type]/[id]/route.ts`,
-  `src/components/extrarr/local-folder-modal.tsx`.
-- `.gitignore`: aggiunte eccezioni perché la regola `local-*` ignorava
-  per errore i nuovi file.
+### Command palette (⌘K)
+- Ricerca locale dei titoli, filtri rapidi, switch Radarr/Sonarr, refresh,
+  impostazioni, tema e ricerca YouTube globale.
+- File: `src/components/extrarr/command-palette.tsx`.
 
-### Link Fanart.tv / TMDB — X1
-- Titoli delle colonne online cliccabili.
-- Endpoint: `GET /api/external-links/[type]/[id]?title=...`.
-- Fanart: TMDB ID per film, TVDB ID per serie.
-- TMDB: `tmdbId`; per Sonarr senza `tmdbId` usa `resolveTmdbId`.
-- Se l'ID manca o Radarr/Sonarr non risponde, restituisce URL di ricerca.
-- `resolveTmdbId` ora esportata da `src/lib/services/tmdb.ts`.
-- I link vengono prefetchati all'apertura della modale; il client ha un
-  fallback di ricerca immediato per evitare popup bloccati.
+### Card e player
+- Card con overlay poster, badge NEW, chip qualità, stati di avviso e footer
+  completamento 0/3.
+- Player trasformato in dock flottante visibile solo durante la riproduzione.
+- File: `src/components/extrarr/media-card.tsx`,
+  `src/components/extrarr/media-player.tsx`.
+
+### Logica condivisa
+- Filtri, ordinamento e statistiche estratti in `src/lib/library.ts`, così
+  griglia, lista, hero e toolbar usano gli stessi conteggi.
+- Semantica esistente preservata: filtri, sort, cartella, ricerca e filtri
+  personalizzati.
+
+### Ereditato da v0.8.3 (ancora attivo)
+- Tooltip uniformi a 3 secondi (`TooltipProvider` globale).
+- Badge NEW: ultimi 14 giorni + almeno un'azione mancante
+  (`src/lib/media-badge.ts`).
+- Filtri artwork globali per tipo (`src/lib/artwork-types.ts`).
+- Cartella locale read-only (`/api/local-folder/[type]/[id]`).
+- Link esterni Fanart.tv/TMDB (`/api/external-links/[type]/[id]`).
 
 ### Version bump
-Aggiornati: `package.json`, badge header, `README.md`, `CHANGELOG.md`,
-`Dockerfile`, `entrypoint.sh`, `STATO.md`.
+Aggiornati: `package.json`, `README.md`, `CHANGELOG.md`, `Dockerfile`,
+`entrypoint.sh`, badge header, `STATO.md`.
 
 ## 3. File chiave
 
 | File | Ruolo |
 |---|---|
-| `src/components/extrarr/artwork-modal.tsx` | Filtri globali, header cliccabili, modale cartella |
+| `src/app/page.tsx` | Orchestrazione shell, stato, modali e azioni |
+| `src/app/globals.css` | Design tokens chiari/scuri, utility e tipografia |
+| `src/lib/library.ts` | Filtri, ordinamento e statistiche libreria |
+| `src/components/extrarr/library-sidebar.tsx` | Rail, viste, cartelle, connessione |
+| `src/components/extrarr/library-topbar.tsx` | Topbar sticky, ricerca, sorgente |
+| `src/components/extrarr/library-overview.tsx` | Hero copertura e scorciatoie |
+| `src/components/extrarr/library-toolbar.tsx` | Toolbar filtri e vista griglia/lista |
+| `src/components/extrarr/command-palette.tsx` | Palette comandi e ricerca YouTube |
+| `src/components/extrarr/media-grid.tsx` | Griglia/lista e stato vuoto |
+| `src/components/extrarr/media-card.tsx` | Card, badge NEW, azioni rapide |
+| `src/components/extrarr/media-player.tsx` | Player dock flottante |
+| `src/components/extrarr/artwork-modal.tsx` | Filtri artwork e modale cartella |
 | `src/components/extrarr/local-folder-modal.tsx` | Elenco cartella read-only |
-| `src/app/api/local-folder/[type]/[id]/route.ts` | API cartella locale |
-| `src/app/api/external-links/[type]/[id]/route.ts` | URL Fanart/TMDB + fallback |
-| `src/lib/artwork-types.ts` | Tipi artwork, label, classificazione filename |
-| `src/lib/media-badge.ts` | Logica badge NEW (14 giorni + azioni mancanti) |
+| `src/lib/artwork-types.ts` | Tipi artwork e classificazione filename |
+| `src/lib/media-badge.ts` | Logica badge NEW |
 | `src/lib/services/tmdb.ts` | `resolveTmdbId` esportata |
-| `src/app/layout.tsx` | `TooltipProvider` globale 3000 ms |
-| `src/components/ui/tooltip.tsx` | Tooltip senza provider interno |
-| `src/components/extrarr/media-card.tsx` | Pallino NEW B3 |
-| `src/lib/mock-data.ts` | Date relative + TMDB ID TV |
-| `mockup-v0.8.3.html` | Mockup approvato (T1, B3/C2/D1, F1/P1/Z1, L1, X1) |
-| `CHANGELOG.md` | Dettaglio modifiche 0.8.3 |
+| `mockup-v0.8.32.html` | Mockup approvato del redesign |
+| `CHANGELOG.md` | Dettaglio modifiche e verifiche 0.8.32 |
 
 ## 4. Cache
 
@@ -122,78 +117,51 @@ Aggiornati: `package.json`, badge header, `README.md`, `CHANGELOG.md`,
 ## 5. Ambiente e verifiche
 
 - Node di default nel container: **18.19.1**; Next.js 16 richiede **>= 20.9**.
-- Node 20.19.0 usato per build/test:
-  `/tmp/opencode/node-v20.19.0-linux-x64/bin` (directory temporanea;
-  in un nuovo ambiente verificare che esista o installare Node 20+).
+- Node 22.14.0 usato per build/test:
+  `/tmp/node-v22.14.0-linux-x64/bin` (directory temporanea; in un nuovo
+  ambiente verificare che esista o installare Node 20+).
 - `.env` incluso nel pacchetto usa `DATABASE_URL=file:../db/custom.db`
   (relativo a `prisma/schema.prisma`). `db/custom.db` è vuoto e senza segreti.
-- Build verificata dopo `rm -rf .next`:
+- Build verificata in `nextrarr-0.8.32`:
   ```bash
-  cd nextrarr-0.8.3
-  PATH=/tmp/opencode/node-v20.19.0-linux-x64/bin:$PATH npm run build
+  cd nextrarr-0.8.32
+  PATH=/tmp/node-v22.14.0-linux-x64/bin:$PATH npm run build
   ```
+  La build genera `.next/standalone` e copia `static` e `public`.
 - Se la build fallisce con `ENOTEMPTY` su `.next/standalone/node_modules/.prisma`,
   assicurarsi che non ci siano `next-server` attivi e rimuovere `.next`.
-- Typecheck: restano **2 errori preesistenti**, non introdotti in 0.8.3:
+- Typecheck: restano **2 errori preesistenti**, non introdotti in 0.8.32:
   - `src/lib/security.ts:74` (`name` unknown)
   - `src/lib/settings-store.ts:62` (type predicate)
-- ESLint sui file toccati: **pulito**.
-- `npm run lint` completo: restano **5 errori preesistenti**
+- ESLint sui componenti/helper nuovi o toccati: **pulito**.
+- `npm run lint` completo: restano errori preesistenti
   `react-hooks/set-state-in-effect` in `page.tsx`, `editor-modal.tsx`,
   `settings-modal.tsx`, `carousel.tsx`, `use-mobile.ts`.
-  Il reset della ArtworkModal ha una disable locale documentata.
-- Smoke test demo eseguito su build standalone:
-  - `/api/health` → 200
-  - `/` → 200, badge `v0.8.3` presente
-  - `/api/external-links/radarr/1` → pagina Matrix
-  - `/api/external-links/sonarr/101` → pagina Breaking Bad
-  - `/api/local-folder/radarr/1` e `/sonarr/101` → elenchi mock
-  - `/api/artwork-files/radarr/1` → `[]`
-- Test helper puri: 15/15 (date badge, azioni mancanti, classificazione
-  artwork locale, alias `logo`/`fanart`).
+- Smoke test demo su build standalone (porta 3123):
+  - `/` → 200
+  - `/api/media/radarr` → 200
+  - `/api/media/sonarr` → 200
+  - `/api/settings` → 200
+  - nessun errore runtime nel log del server.
 - Nessun browser headless disponibile: test visivo manuale ancora consigliato.
 - Non ci sono CLI `docker` o `gh`; usare Git + GitHub Actions.
 
-## 6. Release v0.8.3 pubblicata
+## 6. Release
 
-- Git: tag annotato `v0.8.3` sul commit `632c7da`, pushato su `origin`.
-- `main` aggiornato a `68d77f6 ci: label images with checked out release revision`.
-- Docker Hub: `amonaudio/nextrarr:v0.8.3` e `:latest`.
-- GHCR: `ghcr.io/amonaudio/nextrarr:v0.8.3` e `:latest`.
-- Digest: `sha256:5580e249dc1c912f90258b3eddcdf8c28d123e1d8cc8fefe2aba036d2ca10463`.
-- Immagine: **linux/amd64** (più attestation `unknown/unknown`).
-- Label immagine `org.opencontainers.image.revision=632c7da...`, quindi il
-  contenuto corrisponde al tag release, non al commit del workflow manuale.
-- Non esiste `sha-632c7da`: i tag `sha-*` sono volutamente disabilitati sulle
-  run manuali di release, perché `github.sha` sarebbe il commit di `main`.
-- Run GitHub Actions di pubblicazione: `40402123376`, conclusa con successo.
-- Il primo tentativo multi-arch (run `40391698865`) è stato annullato dopo
-  oltre un'ora bloccato su QEMU/arm64. **Unraid è solo x86_64**: inutile.
-
-Workflow attuale (`.github/workflows/docker-publish.yml`):
-
-- su push `main` e PR: build `linux/amd64`, senza push;
-- su tag `v*`: build `linux/amd64` e push su Docker Hub + GHCR;
-- `workflow_dispatch` accetta `release_tag` per ripubblicare un tag già
-  esistente senza riscriverlo;
-- QEMU rimosso, `platforms: linux/amd64`;
-- `latest` aggiornato su tag `v*` o dispatch di release;
-- label `revision` presa dal commit effettivamente checkoutato.
-
-Comando equivalente futuro, se `gh` sarà disponibile:
-
-```bash
-gh workflow run docker-publish.yml --ref main -f release_tag=v0.8.3
-```
-
-Verifica già eseguita:
-
-```bash
-curl -s 'https://hub.docker.com/v2/repositories/amonaudio/nextrarr/tags?page_size=10'
-```
-
-Non committare `yarn.lock`. Non usare `publish.sh`: fa `git add -A`, usa un
-messaggio vecchio e fa force-push dei tag.
+- `v0.8.32` **non è ancora stata pubblicata**: niente tag, push o immagine
+  Docker senza richiesta esplicita.
+- Ultima release pubblicata: `v0.8.3` (Git tag, Docker Hub e GHCR,
+  `linux/amd64`, `latest` allineato).
+- Workflow attuale (`.github/workflows/docker-publish.yml`):
+  - su push `main` e PR: build `linux/amd64`, senza push;
+  - su tag `v*`: build `linux/amd64` e push su Docker Hub + GHCR;
+  - `workflow_dispatch` accetta `release_tag` per ripubblicare un tag già
+    esistente senza riscriverlo;
+  - QEMU rimosso, `platforms: linux/amd64` (Unraid è solo x86_64);
+  - `latest` aggiornato su tag `v*` o dispatch di release;
+  - label `revision` presa dal commit effettivamente checkoutato.
+- Non committare `yarn.lock`. Non usare `publish.sh`: fa `git add -A`, usa un
+  messaggio vecchio e fa force-push dei tag.
 
 ## 7. Sicurezza e file da non committare
 
@@ -206,34 +174,35 @@ messaggio vecchio e fa force-push dei tag.
 - `yarn.lock` è untracked e non va committato (il progetto usa `bun.lock`).
 - `public/logo.svg` è il logo usato per header, favicon e Unraid.
 
-## 8. Test manuali consigliati su v0.8.3
+## 8. Test manuali consigliati su v0.8.32
 
-- Header, card e player: il tooltip compare dopo ~3 secondi, non subito.
-- Card di un titolo aggiunto da meno di 14 giorni con metadati mancanti:
-  pallino pulsante in basso a sinistra; sparisce quando tutto è completo.
-- ArtworkModal:
-  - filtro "Clearlogo" filtra tutte e tre le colonne;
-  - ricontrollare i conteggi;
-  - chiudere e riaprire: filtro torna "Tutti";
-  - un tipo a 0 è visibile ma disabilitato.
-- Click su "Artwork Locali": modale read-only con elenco cartella.
-- Click su "Online (Fanart.tv)" e "Online (TMDB)": apre la pagina esatta.
-- Provare un titolo senza ID / con servizio arr irraggiungibile: deve aprire
-  la ricerca, non fallire.
-- Verificare su desktop (3 colonne, scroll indipendenti) e mobile.
+- Desktop: rail persistente, topbar sticky, hero copertura e toolbar allineati;
+  nessuno scroll orizzontale indesiderato.
+- Mobile: drawer apribile/chiudibile, toolbar leggibile, card a colonna.
+- Toggle griglia/lista: stessi titoli, stessi conteggi, azioni rapide corrette.
+- `⌘K`/`Ctrl+K`: ricerca titoli, filtri, switch Film/Serie, refresh,
+  impostazioni e ricerca YouTube.
+- Hero: anello e barre coerenti con i filtri attivi; “Completa i mancanti”
+  imposta il filtro corretto.
+- Card: badge NEW, chip qualità, avvisi mapping/cartella e footer 0/3.
+- Player: il dock appare solo durante la riproduzione e si chiude correttamente.
+- ArtworkModal: filtro globale, conteggi, reset a “Tutti”, tipi a 0 disabilitati.
+- Cartella locale e link Fanart.tv/TMDB invariati rispetto alla 0.8.3.
+- Tooltip: compaiono dopo ~3 secondi, non subito.
 
 ## 9. Regole per il nuovo agent
 
-- Non rifare le release 0.8.2/0.8.3 già pubblicate; per modifiche nuove usare 0.8.4.
+- `0.8.32` è pronta per la verifica/release; non pubblicarla senza richiesta.
+- Per modifiche nuove dopo la release usare la versione successiva (0.8.4).
 - Non committare, taggare o pushare senza richiesta esplicita.
 - Prima di modificare, leggere i file interessati e controllare `git status`.
-- Usare Node 20 per build/dev; Node 18 non è compatibile con Next 16.
+- Usare Node 20+ per build/dev; Node 18 non è compatibile con Next 16.
 - Non aggiungere segreti o `extrarr.db` al repository.
 - Il workflow builda solo `linux/amd64`: Unraid è x86_64-only.
 - Se si toccano icone: aggiornare `public/logo.svg`, eseguire
   `node scripts/generate-icons.mjs`, verificare i due PNG.
 
-## 10. Pacchetto sviluppo `nextrarr-0.8.3.zip`
+## 10. Pacchetto sviluppo `nextrarr-0.8.32.zip`
 
 Contiene tutto il necessario per ripartire in una nuova chat/sessione:
 
@@ -241,7 +210,7 @@ Contiene tutto il necessario per ripartire in una nuova chat/sessione:
   `mini-services/` e `.zscripts/` (senza PID);
 - configurazioni progetto, Docker, Unraid e lockfile `bun.lock`;
 - documentazione (`README.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `LICENSE`),
-  `STATO.md` e i mockup approvati;
+  `STATO.md` e i mockup approvati, incluso `mockup-v0.8.32.html`;
 - `.env` di sviluppo con DB relativo e `db/custom.db` vuoto (0 righe).
 
 Esclusi di proposito: `.git` (può contenere il vecchio DB nella storia),
@@ -251,8 +220,8 @@ Esclusi di proposito: `.git` (può contenere il vecchio DB nella storia),
 Avvio rapido:
 
 ```bash
-unzip nextrarr-0.8.3.zip
-cd nextrarr-0.8.3
+unzip nextrarr-0.8.32.zip
+cd nextrarr-0.8.32
 bun install
 bun run dev
 ```

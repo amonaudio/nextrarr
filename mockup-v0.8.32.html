@@ -1,0 +1,2298 @@
+<!doctype html>
+<html lang="it" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>nEXTrarr 0.8.32 — Mockup redesign</title>
+<style>
+:root,[data-theme="dark"]{
+  --font-ui:"Inter","SF Pro Text",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --font-display:"Iowan Old Style","Palatino Linotype","Book Antiqua",Georgia,serif;
+  --font-mono:"SFMono-Regular","Cascadia Code","Roboto Mono",Consolas,monospace;
+  --bg:#08090b;--bg-elev:#0c0e11;--surface:#101318;--surface-2:#151920;--surface-3:#1c222b;
+  --text:#f3f1ec;--text-2:#c4c1ba;--muted:#838995;
+  --line:rgba(255,255,255,.075);--line-strong:rgba(255,255,255,.15);
+  --accent:#ff8a4c;--accent-2:#ffb37a;--accent-soft:rgba(255,138,76,.12);--accent-line:rgba(255,138,76,.34);--accent-ink:#1a0c05;
+  --success:#63e6b0;--warn:#ffc861;--danger:#ff7d7d;--info:#7ab8ff;
+  --shadow:0 24px 70px rgba(0,0,0,.48);--shadow-soft:0 12px 34px rgba(0,0,0,.24);
+  --radius:14px;--card-radius:13px;--grid-min:196px;--grid-gap:14px;--view-pad:clamp(16px,2.6vw,34px);
+  color-scheme:dark;
+}
+[data-theme="light"]{
+  --bg:#f2eee6;--bg-elev:#fbf8f1;--surface:#fffdf8;--surface-2:#f6f1e8;--surface-3:#ebe5da;
+  --text:#1d1b17;--text-2:#4b4740;--muted:#817b70;
+  --line:rgba(29,27,23,.09);--line-strong:rgba(29,27,23,.17);
+  --accent:#df6a2f;--accent-2:#f09a5e;--accent-soft:rgba(223,106,47,.11);--accent-line:rgba(223,106,47,.34);--accent-ink:#fffaf4;
+  --success:#1f8a5b;--warn:#97630e;--danger:#b44141;--info:#2e6ea6;
+  --shadow:0 24px 70px rgba(78,60,38,.16);--shadow-soft:0 12px 34px rgba(78,60,38,.10);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{background:var(--bg);scroll-behavior:smooth}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--font-ui);font-size:14px;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(900px 560px at 10% -12%,var(--accent-soft),transparent 62%),radial-gradient(760px 540px at 102% 4%,rgba(122,184,255,.055),transparent 60%),radial-gradient(680px 480px at 65% 108%,rgba(255,255,255,.025),transparent 60%)}
+[data-theme="light"] body::before{background:radial-gradient(900px 560px at 10% -12%,rgba(223,106,47,.12),transparent 62%),radial-gradient(700px 520px at 102% 4%,rgba(76,112,105,.08),transparent 60%)}
+button,input,select,textarea{font:inherit}
+button{color:inherit;cursor:pointer}
+button,a{-webkit-tap-highlight-color:transparent}
+img{display:block;max-width:100%}
+h1,h2,h3,h4,p{margin:0}
+a{color:inherit;text-decoration:none}
+::selection{background:var(--accent);color:var(--accent-ink)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+svg.ic{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+svg.ic.xs{width:13px;height:13px}svg.ic.sm{width:14px;height:14px}svg.ic.lg{width:20px;height:20px}
+
+.labbar{position:sticky;top:0;z-index:90;min-height:38px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:5px 16px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--bg-elev) 82%,transparent);backdrop-filter:blur(22px);font-size:10.5px;color:var(--muted)}
+.lab-left,.lab-right{display:flex;align-items:center;gap:9px;min-width:0}
+.lab-pill{display:inline-flex;align-items:center;gap:6px;padding:3px 7px;border:1px solid var(--accent-line);border-radius:999px;background:var(--accent-soft);color:var(--accent);font-family:var(--font-mono);font-size:8.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+.lab-title{font-weight:700;color:var(--text-2);white-space:nowrap}
+.lab-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lab-btn{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 8px;border:1px solid var(--line);border-radius:7px;background:transparent;color:var(--text-2);font-size:10px;font-weight:600;white-space:nowrap}
+.lab-btn:hover{background:var(--surface-2);border-color:var(--line-strong);color:var(--text)}
+.lab-hint{font-family:var(--font-mono);font-size:8.5px;opacity:.7;white-space:nowrap}
+kbd{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:17px;padding:0 4px;border:1px solid var(--line-strong);border-radius:4px;background:var(--surface-2);color:var(--muted);font-family:var(--font-mono);font-size:8.5px;line-height:1}
+
+.shell{position:relative;z-index:1;display:flex;min-height:calc(100vh - 38px)}
+.rail{position:sticky;top:38px;z-index:50;display:flex;flex:0 0 248px;flex-direction:column;gap:17px;width:248px;height:calc(100vh - 38px);padding:16px 12px 14px;border-right:1px solid var(--line);background:color-mix(in srgb,var(--surface) 66%,transparent);backdrop-filter:blur(24px);overflow-y:auto;overscroll-behavior:contain}
+.brand{display:flex;align-items:center;gap:10px;padding:2px 5px 0}
+.brand-mark{display:grid;place-items:center;width:35px;height:35px;border-radius:11px;background:linear-gradient(145deg,var(--accent),var(--accent-2));color:var(--accent-ink);font-size:18px;font-weight:900;letter-spacing:-.08em;box-shadow:0 8px 22px var(--accent-soft),inset 0 0 0 1px rgba(255,255,255,.18)}
+.brand-name{display:flex;align-items:baseline;gap:3px;font-size:16px;font-weight:850;letter-spacing:-.05em;white-space:nowrap}
+.brand-name b{color:var(--accent);font-weight:850}
+.version-pill{display:inline-block;margin-left:4px;padding:2px 5px;border:1px solid var(--line);border-radius:5px;color:var(--muted);font-family:var(--font-mono);font-size:7.5px;letter-spacing:.06em;vertical-align:2px}
+.source-switch{display:flex;gap:3px;padding:3px;border:1px solid var(--line);border-radius:11px;background:var(--surface-2)}
+.source-switch button{display:flex;flex:1;align-items:center;justify-content:center;gap:6px;height:33px;border:0;border-radius:8px;background:transparent;color:var(--muted);font-size:11.5px;font-weight:700;transition:.16s}
+.source-switch button:hover{color:var(--text)}
+.source-switch button.active{background:var(--surface-3);color:var(--text);box-shadow:inset 0 0 0 1px var(--line),0 2px 8px rgba(0,0,0,.16)}
+.source-switch button.active svg{color:var(--accent)}
+.rail-section{display:flex;flex-direction:column;gap:4px}
+.rail-label{padding:0 10px;margin-bottom:2px;color:var(--muted);font-size:8.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:9px;width:100%;height:35px;padding:0 10px;border:1px solid transparent;border-radius:9px;background:transparent;color:var(--text-2);font-size:12px;font-weight:550;text-align:left;transition:.14s}
+.nav-item svg{color:var(--muted)}
+.nav-item:hover{background:var(--surface-2);color:var(--text)}
+.nav-item.active{border-color:var(--accent-line);background:var(--accent-soft);color:var(--text)}
+.nav-item.active svg{color:var(--accent)}
+.nav-count{margin-left:auto;min-width:22px;padding:2px 6px;border-radius:999px;background:var(--surface-2);color:var(--muted);font-family:var(--font-mono);font-size:8.5px;text-align:center}
+.nav-item.active .nav-count{background:var(--accent);color:var(--accent-ink)}
+.folder-list{display:flex;flex-direction:column;gap:2px}
+.folder-item{display:flex;align-items:center;gap:7px;width:100%;padding:6px 10px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--muted);font-size:10.5px;text-align:left}
+.folder-item:hover{background:var(--surface-2);color:var(--text-2)}
+.folder-item.active{background:var(--surface-2);border-color:var(--line);color:var(--text)}
+.folder-item svg{width:13px;height:13px;opacity:.7}
+.folder-item span{margin-left:auto;font-family:var(--font-mono);font-size:8.5px;opacity:.7}
+.rail-spacer{flex:1}
+.connection-card{display:flex;align-items:center;gap:9px;padding:9px 10px;border:1px solid var(--line);border-radius:11px;background:var(--surface-2);font-size:10px}
+.pulse-dot{position:relative;width:7px;height:7px;border-radius:50%;background:var(--success);box-shadow:0 0 0 3px color-mix(in srgb,var(--success) 16%,transparent);flex:0 0 auto}
+.pulse-dot::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:1px solid var(--success);opacity:.4;animation:pulse 2.4s infinite}
+.connection-copy{display:flex;flex-direction:column;gap:1px;min-width:0;line-height:1.25}
+.connection-copy strong{color:var(--text-2);font-size:10.5px;font-weight:700}
+.connection-copy span{color:var(--muted);font-size:9px}
+.rail-settings{display:flex;align-items:center;gap:9px;width:100%;padding:7px 5px;border:0;border-radius:9px;background:transparent;color:var(--text);text-align:left}
+.rail-settings:hover{background:var(--surface-2)}
+.avatar{display:grid;place-items:center;width:33px;height:33px;border-radius:50%;background:linear-gradient(145deg,var(--accent),var(--accent-2));color:var(--accent-ink);font-size:10px;font-weight:900;flex:0 0 auto}
+.rail-settings .who{display:flex;flex-direction:column;gap:1px;min-width:0;line-height:1.25}
+.rail-settings strong{font-size:10.5px;font-weight:700}
+.rail-settings span{color:var(--muted);font-size:9px}
+.rail-settings svg{margin-left:auto;color:var(--muted)}
+.menu-btn{display:none}
+.rail-backdrop{display:none;position:fixed;inset:38px 0 0;z-index:45;background:rgba(0,0,0,.55);backdrop-filter:blur(3px)}
+
+.main{display:flex;flex:1;flex-direction:column;min-width:0}
+.topbar{position:sticky;top:38px;z-index:40;display:flex;align-items:center;gap:12px;height:64px;padding:0 var(--view-pad);border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(22px) saturate(1.15)}
+.breadcrumb{display:flex;align-items:center;gap:7px;min-width:0;color:var(--muted);font-size:11px;white-space:nowrap}
+.breadcrumb strong{color:var(--text-2);font-weight:650}
+.breadcrumb .sep{width:3px;height:3px;border-radius:50%;background:var(--muted);opacity:.5}
+.breadcrumb .now{overflow:hidden;text-overflow:ellipsis}
+.topbar-actions{display:flex;align-items:center;gap:7px;margin-left:auto}
+.search-trigger{display:flex;align-items:center;gap:8px;min-width:230px;height:36px;padding:0 9px 0 11px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--muted);font-size:11px;text-align:left}
+.search-trigger:hover{border-color:var(--line-strong);color:var(--text-2);background:var(--surface-2)}
+.search-trigger kbd{margin-left:auto}
+.icon-btn{display:grid;place-items:center;width:36px;height:36px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--muted);transition:.14s}
+.icon-btn:hover{border-color:var(--line-strong);background:var(--surface-2);color:var(--text)}
+.icon-btn.sm{width:29px;height:29px;border-radius:8px}
+.icon-btn.accent{border-color:var(--accent-line);background:var(--accent-soft);color:var(--accent)}
+
+.content{width:100%;max-width:1680px;margin:0 auto;padding:clamp(18px,2.6vw,32px) var(--view-pad) 128px}
+.overview{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(330px,.85fr);gap:16px;margin-bottom:22px}
+.hero{position:relative;overflow:hidden;padding:clamp(22px,3.1vw,38px);border:1px solid var(--line);border-radius:var(--radius);background:linear-gradient(135deg,color-mix(in srgb,var(--surface) 94%,transparent),var(--surface));box-shadow:var(--shadow-soft)}
+.hero::before{content:"";position:absolute;top:-45%;right:-12%;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,var(--accent-soft),transparent 68%);pointer-events:none}
+.hero::after{content:"";position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:46px 46px;mask-image:linear-gradient(120deg,transparent 25%,#000 100%);opacity:.28}
+.eyebrow{position:relative;z-index:1;display:flex;align-items:center;gap:7px;color:var(--muted);font-family:var(--font-mono);font-size:8.5px;font-weight:650;letter-spacing:.13em;text-transform:uppercase}
+.eyebrow .dot{width:5px;height:5px;border-radius:50%;background:var(--success);box-shadow:0 0 0 3px color-mix(in srgb,var(--success) 15%,transparent)}
+.hero h1{position:relative;z-index:1;max-width:720px;margin:12px 0 12px;font-family:var(--font-display);font-size:clamp(36px,4.3vw,58px);font-weight:500;line-height:.94;letter-spacing:-.055em}
+.hero h1 em{color:var(--accent);font-style:italic}
+.hero p{position:relative;z-index:1;max-width:535px;color:var(--muted);font-size:12.5px;line-height:1.58}
+.hero-actions{position:relative;z-index:1;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:22px}
+.hero-meta{position:relative;z-index:1;display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:16px;color:var(--muted);font-size:10px}
+.hero-meta span{display:inline-flex;align-items:center;gap:5px}
+.hero-meta svg{opacity:.6}
+.coverage{display:flex;flex-direction:column;gap:13px;padding:19px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow-soft)}
+.coverage-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.coverage-head .label{color:var(--muted);font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+.coverage-head strong{display:block;margin-top:5px;font-size:27px;font-weight:780;letter-spacing:-.05em;line-height:1}
+.coverage-head .trend{display:inline-flex;align-items:center;gap:4px;padding:3px 7px;border:1px solid color-mix(in srgb,var(--success) 26%,transparent);border-radius:99px;background:color-mix(in srgb,var(--success) 10%,transparent);color:var(--success);font-family:var(--font-mono);font-size:8.5px;font-weight:700}
+.ring-wrap{display:flex;align-items:center;gap:15px}
+.ring{--p:86;position:relative;display:grid;place-items:center;width:92px;height:92px;border-radius:50%;background:conic-gradient(var(--accent) calc(var(--p)*1%),var(--surface-3) 0);flex:0 0 auto;transition:background .5s}
+.ring::before{content:"";position:absolute;inset:8px;border-radius:50%;background:var(--surface)}
+.ring b{position:relative;font-size:18px;font-weight:800;letter-spacing:-.04em}
+.ring small{position:absolute;bottom:17px;color:var(--muted);font-family:var(--font-mono);font-size:7.5px;letter-spacing:.04em}
+.coverage-rows{display:flex;flex:1;flex-direction:column;gap:8px;min-width:0}
+.cov-row{display:grid;grid-template-columns:52px minmax(40px,1fr) 34px;align-items:center;gap:7px;font-size:9.5px;color:var(--muted)}
+.cov-row b{color:var(--text-2);font-family:var(--font-mono);font-size:8.5px;font-weight:600;text-align:right}
+.cov-track{height:5px;overflow:hidden;border-radius:99px;background:var(--surface-3)}
+.cov-fill{height:100%;border-radius:99px;background:var(--accent);transition:width .45s}
+.cov-row:nth-child(2) .cov-fill{background:var(--info)}
+.cov-row:nth-child(3) .cov-fill{background:var(--success)}
+.coverage-foot{display:flex;align-items:center;gap:7px;padding-top:10px;border-top:1px solid var(--line);color:var(--muted);font-size:9.5px;line-height:1.35}
+.coverage-foot svg{color:var(--warn);flex:0 0 auto}
+
+.library{position:relative}
+.library-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:12px}
+.library-head h2{display:flex;align-items:center;gap:7px;font-size:19px;font-weight:760;letter-spacing:-.035em}
+.library-head .count{display:inline-flex;align-items:center;height:20px;padding:0 7px;border:1px solid var(--line);border-radius:99px;background:var(--surface-2);color:var(--muted);font-family:var(--font-mono);font-size:8.5px;font-weight:600;letter-spacing:0}
+.library-head p{margin-top:3px;color:var(--muted);font-size:10.5px}
+.view-toggle{display:flex;gap:2px;padding:3px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2)}
+.view-toggle button{display:grid;place-items:center;width:29px;height:27px;border:0;border-radius:6px;background:transparent;color:var(--muted)}
+.view-toggle button:hover{color:var(--text)}
+.view-toggle button.active{background:var(--surface-3);color:var(--text);box-shadow:inset 0 0 0 1px var(--line)}
+.toolbar{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:8px;margin-bottom:15px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.chips{display:flex;align-items:center;gap:3px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 9px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--muted);font-size:10.5px;font-weight:600;white-space:nowrap}
+.chip:hover{background:var(--surface-2);color:var(--text)}
+.chip.active{border-color:var(--line-strong);background:var(--surface-3);color:var(--text)}
+.chip .n{display:inline-flex;align-items:center;justify-content:center;min-width:17px;height:16px;padding:0 4px;border-radius:99px;background:var(--surface-2);color:var(--muted);font-family:var(--font-mono);font-size:8px;font-weight:600}
+.chip.active .n{background:var(--accent);color:var(--accent-ink)}
+.chip.custom{max-width:190px}
+.chip.custom span{overflow:hidden;text-overflow:ellipsis}
+.chip.custom .x{display:inline-grid;place-items:center;width:14px;height:14px;border-radius:50%;background:var(--surface-2);color:var(--muted)}
+.chip.custom .x:hover{background:var(--danger);color:#fff}
+.toolbar-divider{width:1px;height:22px;margin:0 2px;background:var(--line)}
+.toolbar-right{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-left:auto}
+.field{display:flex;align-items:center;gap:6px;height:31px;padding:0 9px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);color:var(--text-2);font-size:10.5px}
+.field svg{color:var(--muted)}
+select.field{appearance:none;padding-right:25px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23838995' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;cursor:pointer}
+select.field:focus{outline:none;border-color:var(--accent-line);box-shadow:0 0 0 3px var(--accent-soft)}
+.search-mini{display:flex;align-items:center;gap:6px;height:31px;padding:0 9px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2)}
+.search-mini svg{color:var(--muted)}
+.search-mini input{width:132px;border:0;outline:0;background:transparent;color:var(--text);font-size:10.5px}
+.search-mini input::placeholder{color:var(--muted)}
+
+.library-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--grid-min),1fr));gap:var(--grid-gap)}
+.media-card{position:relative;min-width:0;overflow:hidden;border:1px solid var(--line);border-radius:var(--card-radius);background:var(--surface);transition:transform .18s,border-color .18s,box-shadow .18s}
+.media-card:hover{transform:translateY(-3px);border-color:var(--line-strong);box-shadow:var(--shadow-soft)}
+.media-card.is-invalid{border-color:color-mix(in srgb,var(--warn) 30%,var(--line))}
+.poster{position:relative;aspect-ratio:2/3;overflow:hidden;background:var(--surface-3);container-type:inline-size}
+.poster-art{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;background:linear-gradient(155deg,var(--c2) 0%,color-mix(in srgb,var(--c2) 76%,#000) 58%,#07080a 100%);isolation:isolate}
+.poster-art::before{content:"";position:absolute;inset:0;z-index:0;opacity:.92}
+.poster-art::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(0,0,0,.06) 0%,transparent 36%,transparent 58%,rgba(0,0,0,.66) 100%)}
+.poster-shape{position:absolute;z-index:0;pointer-events:none}
+.shape-a{top:-18%;right:-24%;width:82%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 36% 36%,color-mix(in srgb,var(--c1) 88%,transparent),transparent 66%);opacity:.9}
+.shape-b{bottom:12%;left:-24%;width:84%;height:34%;border-radius:50%;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--c1) 38%,transparent),transparent);filter:blur(9px);transform:rotate(-12deg)}
+.shape-c{right:12%;bottom:28%;width:32%;height:1px;background:var(--c1);box-shadow:0 0 18px var(--c1);opacity:.75}
+.poster-grain{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:.12;mix-blend-mode:soft-light;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E")}
+.poster-title{position:absolute;z-index:3;right:10px;bottom:37px;left:10px;display:-webkit-box;overflow:hidden;color:var(--ink,#fff);font-family:var(--font-display);font-size:clamp(12px,13.2cqw,31px);font-weight:600;line-height:.88;letter-spacing:-.04em;text-shadow:0 2px 20px rgba(0,0,0,.45);-webkit-box-orient:vertical;-webkit-line-clamp:3}
+.poster-title.is-long{font-size:clamp(10px,10.4cqw,25px)}
+.poster-title.is-xlong{font-size:clamp(9px,8.4cqw,20px)}
+.poster-title::before{content:"";display:block;width:28px;height:1px;margin-bottom:6px;background:var(--c1);opacity:.85}
+.motif-dunes::before{background:radial-gradient(ellipse at 82% 12%,color-mix(in srgb,var(--c1) 82%,transparent),transparent 58%),radial-gradient(ellipse at 16% 82%,color-mix(in srgb,var(--c1) 40%,transparent),transparent 62%)}
+.motif-rings::before{background:repeating-radial-gradient(circle at 72% 28%,transparent 0 17px,color-mix(in srgb,var(--c1) 36%,transparent) 18px 19px)}
+.motif-lines::before{background:repeating-linear-gradient(114deg,transparent 0 13px,color-mix(in srgb,var(--c1) 30%,transparent) 14px 15px)}
+.motif-grid::before{background-image:linear-gradient(color-mix(in srgb,var(--c1) 22%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--c1) 22%,transparent) 1px,transparent 1px);background-size:30px 30px}
+.motif-sun::before{background:radial-gradient(circle at 50% 36%,var(--c1) 0 17%,transparent 18%),linear-gradient(180deg,transparent 63%,color-mix(in srgb,var(--c1) 28%,transparent) 64%)}
+.motif-arch::before{background:radial-gradient(ellipse at 50% 106%,transparent 0 49%,color-mix(in srgb,var(--c1) 48%,transparent) 49.5% 51%,transparent 52%)}
+.motif-wave::before{background:repeating-radial-gradient(ellipse at 50% 126%,transparent 0 22px,color-mix(in srgb,var(--c1) 32%,transparent) 23px 24px)}
+.motif-tunnel::before{background:repeating-radial-gradient(circle at 50% 44%,transparent 0 15px,color-mix(in srgb,var(--c1) 28%,transparent) 16px 17px)}
+.motif-orbit::before{background:radial-gradient(circle at 72% 24%,var(--c1) 0 5%,transparent 5.5%),repeating-radial-gradient(circle at 26% 62%,transparent 0 21px,color-mix(in srgb,var(--c1) 25%,transparent) 22px 23px)}
+.motif-blocks::before{background:linear-gradient(90deg,color-mix(in srgb,var(--c1) 34%,transparent) 0 28%,transparent 28% 34%,color-mix(in srgb,var(--c1) 17%,transparent) 34% 62%,transparent 62%)}
+.motif-flame::before{background:radial-gradient(ellipse at 50% 92%,var(--c1) 0 12%,color-mix(in srgb,var(--c1) 34%,transparent) 13% 30%,transparent 31%)}
+.motif-spiral::before{background:repeating-radial-gradient(circle at 62% 38%,transparent 0 14px,color-mix(in srgb,var(--c1) 28%,transparent) 15px 16px);transform:rotate(8deg)}
+.motif-skyline::before{background:linear-gradient(180deg,transparent 58%,color-mix(in srgb,var(--c1) 32%,transparent) 58% 60%,transparent 60%),repeating-linear-gradient(90deg,transparent 0 18px,color-mix(in srgb,var(--c1) 20%,transparent) 19px 24px);background-size:auto,auto;clip-path:polygon(0 100%,0 62%,9% 62%,9% 48%,17% 48%,17% 70%,27% 70%,27% 55%,38% 55%,38% 76%,50% 76%,50% 50%,60% 50%,60% 66%,72% 66%,72% 42%,82% 42%,82% 60%,91% 60%,91% 52%,100% 52%,100% 100%)}
+.poster-top{position:absolute;top:8px;right:8px;left:8px;z-index:5;display:flex;align-items:flex-start;justify-content:space-between;gap:6px;pointer-events:none}
+.poster-top>*{pointer-events:auto}
+.new-flag{display:inline-flex;align-items:center;gap:4px;height:18px;padding:0 6px;border-radius:5px;background:var(--accent);color:var(--accent-ink);font-family:var(--font-mono);font-size:7.5px;font-weight:850;letter-spacing:.07em;box-shadow:0 4px 14px var(--accent-soft)}
+.new-flag i{width:4px;height:4px;border-radius:50%;background:currentColor;animation:pulse 1.8s infinite}
+.card-edit{display:grid;place-items:center;width:27px;height:27px;margin-left:auto;border:1px solid rgba(255,255,255,.16);border-radius:7px;background:rgba(0,0,0,.46);color:#fff;backdrop-filter:blur(10px);opacity:0;transform:translateY(-3px);transition:.16s}
+.media-card:hover .card-edit,.media-card:focus-within .card-edit{opacity:1;transform:none}
+.card-edit:hover{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.warning-ribbon{position:absolute;top:40px;right:8px;left:8px;z-index:4;display:flex;align-items:center;gap:5px;padding:5px 7px;border:1px solid color-mix(in srgb,var(--warn) 38%,transparent);border-radius:6px;background:color-mix(in srgb,var(--warn) 17%,rgba(0,0,0,.45));color:#ffe4a8;font-size:8px;font-weight:650;line-height:1.2;backdrop-filter:blur(8px);text-align:left}
+.warning-ribbon svg{width:11px;height:11px;color:var(--warn);flex:0 0 auto}
+.quality-row{position:absolute;right:9px;bottom:9px;left:9px;z-index:4;display:flex;gap:3px;flex-wrap:wrap}
+.q-badge{display:inline-flex;align-items:center;height:16px;padding:0 5px;border:1px solid rgba(255,255,255,.14);border-radius:4px;background:rgba(0,0,0,.52);color:#fff;font-family:var(--font-mono);font-size:7.5px;font-weight:700;letter-spacing:.02em;backdrop-filter:blur(8px)}
+.q-badge.res-4k{border-color:transparent;background:color-mix(in srgb,var(--success) 82%,#000);color:#04120c}
+.q-badge.res-fhd{border-color:transparent;background:color-mix(in srgb,#5a9bff 80%,#000);color:#04101f}
+.q-badge.res-hd{border-color:transparent;background:color-mix(in srgb,#56b9d8 74%,#000);color:#041217}
+.q-badge.res-sd{background:rgba(255,255,255,.13)}
+.card-info{display:flex;flex-direction:column;gap:5px;padding:9px 10px 10px}
+.card-info h3{overflow:hidden;color:var(--text);font-size:12px;font-weight:700;letter-spacing:-.015em;line-height:1.2;text-overflow:ellipsis;white-space:nowrap}
+.card-meta{display:flex;align-items:center;gap:5px;overflow:hidden;color:var(--muted);font-size:9.5px;white-space:nowrap;text-overflow:ellipsis}
+.card-meta .middot{opacity:.4}
+.status-row{display:flex;align-items:center;gap:4px;padding-top:5px;border-top:1px solid var(--line)}
+.status-btn{display:grid;place-items:center;width:23px;height:23px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--muted)}
+.status-btn svg{width:13px;height:13px}
+.status-btn.ok{background:var(--accent-soft);color:var(--accent)}
+.status-btn.missing{opacity:.55}
+.status-btn:hover{border-color:var(--line-strong);background:var(--surface-2);color:var(--text)}
+.status-btn.ok:hover{color:var(--accent);border-color:var(--accent-line)}
+.status-btn:disabled{opacity:.3;cursor:not-allowed}
+.completion-txt{margin-left:auto;color:var(--muted);font-family:var(--font-mono);font-size:8px;letter-spacing:.02em}
+.warning-txt{margin-left:auto;color:var(--warn);font-size:8px;font-weight:650;white-space:nowrap}
+
+.media-list{display:flex;flex-direction:column;gap:6px}
+.list-row{display:grid;grid-template-columns:44px minmax(170px,1.7fr) minmax(115px,1fr) 110px auto;align-items:center;gap:12px;padding:7px 9px;border:1px solid var(--line);border-radius:10px;background:var(--surface);transition:.14s}
+.list-row:hover{border-color:var(--line-strong);background:var(--surface-2)}
+.list-poster{position:relative;width:44px;aspect-ratio:2/3;overflow:hidden;border-radius:6px;background:var(--surface-3)}
+.list-poster .poster-title{display:none}
+.list-main{min-width:0}
+.list-main h3{overflow:hidden;font-size:12px;font-weight:700;text-overflow:ellipsis;white-space:nowrap}
+.list-main .card-meta{margin-top:2px}
+.list-quality{display:flex;gap:3px;flex-wrap:wrap}
+.list-status{display:flex;gap:3px}
+.list-actions{display:flex;gap:3px;justify-content:flex-end}
+.list-row.is-invalid{border-color:color-mix(in srgb,var(--warn) 28%,var(--line))}
+
+.alpha-nav{position:fixed;top:50%;right:9px;z-index:30;display:flex;flex-direction:column;gap:1px;padding:5px 3px;border:1px solid var(--line);border-radius:8px;background:color-mix(in srgb,var(--surface) 82%,transparent);backdrop-filter:blur(14px);transform:translateY(-50%)}
+.alpha-nav button{display:grid;place-items:center;width:16px;height:13px;border:0;border-radius:3px;background:transparent;color:var(--muted);font-family:var(--font-mono);font-size:7.5px}
+.alpha-nav button:hover{background:var(--accent);color:var(--accent-ink)}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:280px;padding:32px;border:1px dashed var(--line-strong);border-radius:var(--radius);background:var(--surface);text-align:center}
+.empty-icon{display:grid;place-items:center;width:48px;height:48px;border:1px solid var(--line);border-radius:14px;background:var(--surface-2);color:var(--muted)}
+.empty-state h3{font-size:15px}
+.empty-state p{max-width:340px;color:var(--muted);font-size:11px;line-height:1.5}
+
+.player{position:fixed;right:24px;bottom:18px;left:calc(248px + 24px);z-index:70;display:none;align-items:center;gap:11px;padding:9px 11px;border:1px solid var(--line-strong);border-radius:14px;background:color-mix(in srgb,var(--surface) 90%,transparent);box-shadow:var(--shadow);backdrop-filter:blur(26px)}
+.player.is-open{display:flex;animation:rise .22s ease-out}
+.player-cover{position:relative;width:42px;height:42px;overflow:hidden;border-radius:8px;background:var(--surface-3);flex:0 0 auto}
+.player-cover .poster-title{display:none}
+.player-cover .quality-row{display:none}
+.player-info{width:160px;min-width:0}
+.player-info strong{display:block;overflow:hidden;color:var(--text);font-size:10.5px;font-weight:700;text-overflow:ellipsis;white-space:nowrap}
+.player-info span{display:block;overflow:hidden;color:var(--muted);font-size:9px;text-overflow:ellipsis;white-space:nowrap}
+.player-controls{display:flex;align-items:center;gap:5px}
+.player-play{display:grid;place-items:center;width:34px;height:34px;border:0;border-radius:50%;background:var(--accent);color:var(--accent-ink);box-shadow:0 6px 16px var(--accent-soft)}
+.player-play:hover{filter:brightness(1.06)}
+.player-skip{display:grid;place-items:center;width:27px;height:27px;border:0;border-radius:7px;background:transparent;color:var(--muted)}
+.player-skip:hover{background:var(--surface-2);color:var(--text)}
+.player-track{display:flex;flex:1;align-items:center;gap:8px;min-width:0}
+.player-time{color:var(--muted);font-family:var(--font-mono);font-size:8.5px;white-space:nowrap}
+.player-bar{position:relative;flex:1;height:4px;overflow:hidden;border-radius:99px;background:var(--surface-3);cursor:pointer}
+.player-bar-fill{height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+.player-volume{display:flex;align-items:center;gap:5px;width:86px}
+.player-volume input{width:62px;accent-color:var(--accent)}
+.player-close{display:grid;place-items:center;width:27px;height:27px;border:0;border-radius:7px;background:transparent;color:var(--muted)}
+.player-close:hover{background:var(--surface-2);color:var(--text)}
+.equalize{display:inline-flex;align-items:flex-end;gap:1.5px;height:9px;margin-right:3px}
+.equalize i{display:block;width:2px;border-radius:2px;background:var(--accent);animation:eq 1s infinite ease-in-out}
+.equalize i:nth-child(1){height:45%}.equalize i:nth-child(2){height:100%;animation-delay:.15s}.equalize i:nth-child(3){height:60%;animation-delay:.3s}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:34px;padding:0 12px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);color:var(--text);font-size:11px;font-weight:650;white-space:nowrap;transition:.14s}
+.btn:hover{border-color:var(--line-strong);background:var(--surface-3)}
+.btn.primary{border-color:transparent;background:var(--accent);color:var(--accent-ink);box-shadow:0 8px 20px var(--accent-soft)}
+.btn.primary:hover{filter:brightness(1.05);background:var(--accent)}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--text-2)}
+.btn.ghost:hover{background:var(--surface-2);color:var(--text)}
+.btn.sm{height:28px;padding:0 9px;font-size:10px;border-radius:8px}
+.btn.xs{height:25px;padding:0 7px;font-size:9.5px;border-radius:7px}
+.btn.danger{color:var(--danger)}
+.btn.danger:hover{border-color:color-mix(in srgb,var(--danger) 40%,transparent);background:color-mix(in srgb,var(--danger) 10%,transparent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.input,.select,.textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);color:var(--text);font-size:11.5px;outline:none;transition:.14s}
+.input::placeholder,.textarea::placeholder{color:var(--muted)}
+.input:focus,.select:focus,.textarea:focus{border-color:var(--accent-line);box-shadow:0 0 0 3px var(--accent-soft)}
+.textarea{min-height:86px;resize:vertical;line-height:1.5}
+.select{appearance:none;padding-right:28px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23838995' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center}
+.label{display:block;margin-bottom:5px;color:var(--muted);font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.hint{color:var(--muted);font-size:9.5px;line-height:1.45}
+.divider{height:1px;background:var(--line);margin:13px 0}
+.tabs{display:flex;gap:3px;padding:3px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2)}
+.tab{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px;border:0;border-radius:6px;background:transparent;color:var(--muted);font-size:10.5px;font-weight:650;white-space:nowrap}
+.tab:hover{color:var(--text)}
+.tab.active{background:var(--surface-3);color:var(--text);box-shadow:inset 0 0 0 1px var(--line)}
+.tag{display:inline-flex;align-items:center;gap:4px;height:19px;padding:0 6px;border:1px solid var(--line);border-radius:5px;background:var(--surface-2);color:var(--muted);font-family:var(--font-mono);font-size:8px;font-weight:600}
+.tag.ok{border-color:color-mix(in srgb,var(--success) 26%,transparent);background:color-mix(in srgb,var(--success) 10%,transparent);color:var(--success)}
+.tag.no{border-color:color-mix(in srgb,var(--warn) 28%,transparent);background:color-mix(in srgb,var(--warn) 9%,transparent);color:var(--warn)}
+.tag.accent{border-color:var(--accent-line);background:var(--accent-soft);color:var(--accent)}
+
+.modal-layer{position:fixed;inset:0;z-index:120;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.62);backdrop-filter:blur(5px)}
+.modal-layer.is-open{display:flex;animation:fade .16s ease-out}
+.modal{display:flex;flex-direction:column;width:min(960px,100%);max-height:91vh;overflow:hidden;border:1px solid var(--line-strong);border-radius:16px;background:var(--bg-elev);box-shadow:0 30px 100px rgba(0,0,0,.55)}
+.modal.wide{width:min(1180px,100%)}
+.modal.medium{width:min(840px,100%)}
+.modal.small{width:min(620px,100%)}
+.modal-head{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line);background:var(--surface);flex:0 0 auto}
+.modal-head .head-main{min-width:0;flex:1}
+.modal-head h2{overflow:hidden;font-size:15px;font-weight:750;letter-spacing:-.025em;text-overflow:ellipsis;white-space:nowrap}
+.modal-head p{margin-top:2px;color:var(--muted);font-size:9.5px;line-height:1.3}
+.modal-close{display:grid;place-items:center;width:31px;height:31px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--muted);flex:0 0 auto}
+.modal-close:hover{background:var(--surface-2);color:var(--text)}
+.modal-body{padding:16px;overflow:auto;overscroll-behavior:contain}
+.modal-foot{display:flex;align-items:center;justify-content:flex-end;gap:7px;padding:11px 16px;border-top:1px solid var(--line);background:var(--surface);flex:0 0 auto}
+.head-thumb{position:relative;width:38px;aspect-ratio:2/3;overflow:hidden;border-radius:7px;background:var(--surface-3);flex:0 0 auto}
+.head-thumb .poster-title{display:none}
+.head-thumb .quality-row{display:none}
+
+.editor-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(260px,.65fr);gap:14px}
+.panel{border:1px solid var(--line);border-radius:11px;background:var(--surface);overflow:hidden}
+.panel-head{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);font-size:10.5px;font-weight:700}
+.panel-head svg{color:var(--accent)}
+.panel-body{padding:11px}
+.search-row{display:flex;gap:6px;margin-bottom:10px}
+.search-row .input{flex:1}
+.result-list{display:flex;flex-direction:column;gap:6px}
+.result{display:flex;align-items:center;gap:8px;padding:6px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);cursor:pointer}
+.result:hover,.result.selected{border-color:var(--accent-line);background:var(--accent-soft)}
+.result-thumb{position:relative;display:grid;place-items:center;width:67px;aspect-ratio:16/9;overflow:hidden;border-radius:5px;background:linear-gradient(145deg,var(--c1,#777),var(--c2,#222));color:#fff;flex:0 0 auto}
+.result-thumb svg{opacity:.9;filter:drop-shadow(0 1px 3px rgba(0,0,0,.4))}
+.result-copy{min-width:0;flex:1}
+.result-copy strong{display:block;overflow:hidden;font-size:10.5px;font-weight:650;text-overflow:ellipsis;white-space:nowrap}
+.result-copy span{display:block;margin-top:2px;color:var(--muted);font-size:8.5px}
+.result-actions{display:flex;gap:3px;flex:0 0 auto}
+.preview-pane{display:flex;flex-direction:column;gap:9px}
+.preview-video{position:relative;display:grid;place-items:center;aspect-ratio:16/9;overflow:hidden;border:1px solid var(--line);border-radius:10px;background:linear-gradient(145deg,var(--c1,#333),var(--c2,#111))}
+.preview-video .poster-art{opacity:.9}
+.preview-video::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.1),rgba(0,0,0,.35))}
+.play-fab{position:relative;z-index:3;display:grid;place-items:center;width:52px;height:52px;border:1px solid rgba(255,255,255,.24);border-radius:50%;background:rgba(0,0,0,.42);color:#fff;backdrop-filter:blur(10px)}
+.play-fab:hover{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.preview-copy strong{display:block;font-size:12px;font-weight:700;line-height:1.25}
+.preview-copy span{display:block;margin-top:3px;color:var(--muted);font-size:9.5px}
+.current-media{display:flex;align-items:center;gap:8px;padding:8px;margin-bottom:10px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2)}
+.current-media .mini{position:relative;width:30px;aspect-ratio:2/3;overflow:hidden;border-radius:4px;background:var(--surface-3);flex:0 0 auto}
+.current-media .mini .poster-title,.current-media .mini .quality-row{display:none}
+.current-media .copy{min-width:0;flex:1}
+.current-media .copy strong{display:block;font-size:10px;font-weight:700}
+.current-media .copy span{display:block;margin-top:2px;color:var(--muted);font-size:8.5px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.form-grid .full{grid-column:1/-1}
+.xml-box{max-height:360px;overflow:auto;padding:13px;border:1px solid var(--line);border-radius:9px;background:#080a0d;color:#c9d4e3;font-family:var(--font-mono);font-size:10.5px;line-height:1.55;white-space:pre-wrap}
+[data-theme="light"] .xml-box{background:#1b1d21;color:#e4e9f0}
+.nfo-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:11px}
+
+.art-layout{display:flex;flex-direction:column;gap:11px}
+.art-toolbar{display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap}
+.art-filters{display:flex;align-items:center;gap:3px;flex-wrap:wrap}
+.art-filter{display:inline-flex;align-items:center;gap:5px;height:27px;padding:0 8px;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--muted);font-size:9.5px;font-weight:600}
+.art-filter:hover{background:var(--surface-2);color:var(--text)}
+.art-filter.active{border-color:var(--line-strong);background:var(--surface-3);color:var(--text)}
+.art-filter .n{font-family:var(--font-mono);font-size:7.5px;opacity:.7}
+.art-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(154px,1fr));gap:9px}
+.art-tile{position:relative;aspect-ratio:16/10;overflow:hidden;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);cursor:pointer}
+.art-tile:hover{border-color:var(--accent-line)}
+.art-visual{position:absolute;inset:0;display:flex;align-items:flex-end;padding:10px;overflow:hidden;background:linear-gradient(145deg,var(--c1,#555),var(--c2,#111));color:#fff}
+.art-visual::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 35%,rgba(0,0,0,.62))}
+.art-visual .art-name{position:relative;z-index:2;font-family:var(--font-display);font-size:clamp(13px,2.3vw,20px);font-weight:600;line-height:.92;letter-spacing:-.03em;text-shadow:0 2px 12px rgba(0,0,0,.45)}
+.art-visual.logo{background:repeating-conic-gradient(#23262c 0 25%,#1a1d22 0 50%) 50%/12px 12px;align-items:center;justify-content:center;text-align:center}
+[data-theme="light"] .art-visual.logo{background:repeating-conic-gradient(#e8e2d7 0 25%,#f7f2e9 0 50%) 50%/12px 12px}
+.art-visual.logo::after{display:none}
+.art-visual.logo .art-name{color:var(--c1);font-size:clamp(15px,2.9vw,27px);text-shadow:none}
+.art-visual.disc{align-items:center;justify-content:center;background:radial-gradient(circle,#181a1f 0 32%,#0b0c0e 33%)}
+.art-visual.disc .disc-ring{position:absolute;width:58%;aspect-ratio:1;border:1px solid rgba(255,255,255,.16);border-radius:50%;box-shadow:inset 0 0 0 8px rgba(255,255,255,.03)}
+.art-visual.disc .art-name{position:relative;z-index:2;max-width:60%;text-align:center;font-size:11px}
+.art-badge{position:absolute;top:6px;left:6px;z-index:3;padding:2px 5px;border-radius:4px;background:rgba(0,0,0,.48);color:#fff;font-family:var(--font-mono);font-size:7px;letter-spacing:.04em;text-transform:uppercase;backdrop-filter:blur(6px)}
+.art-hover{position:absolute;right:5px;bottom:5px;z-index:4;display:flex;gap:3px;opacity:0;transform:translateY(3px);transition:.14s}
+.art-tile:hover .art-hover{opacity:1;transform:none}
+.art-hover button{display:grid;place-items:center;width:25px;height:25px;border:1px solid rgba(255,255,255,.16);border-radius:6px;background:rgba(0,0,0,.52);color:#fff;backdrop-filter:blur(8px)}
+.art-hover button:hover{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.art-empty{display:flex;flex-direction:column;align-items:center;gap:8px;padding:40px 18px;border:1px dashed var(--line-strong);border-radius:10px;color:var(--muted);text-align:center}
+.art-empty strong{color:var(--text-2);font-size:11.5px}
+.art-empty span{font-size:9.5px}
+
+.settings-layout{display:grid;grid-template-columns:188px minmax(0,1fr);min-height:410px}
+.settings-nav{display:flex;flex-direction:column;gap:3px;padding:12px;border-right:1px solid var(--line);background:var(--surface)}
+.settings-nav button{display:flex;align-items:center;gap:8px;height:34px;padding:0 9px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--muted);font-size:10.5px;font-weight:600;text-align:left}
+.settings-nav button:hover{background:var(--surface-2);color:var(--text)}
+.settings-nav button.active{border-color:var(--accent-line);background:var(--accent-soft);color:var(--text)}
+.settings-nav button.active svg{color:var(--accent)}
+.settings-panel{padding:17px;overflow:auto}
+.settings-panel h3{font-size:13px;font-weight:750;letter-spacing:-.02em}
+.settings-panel>p{margin-top:3px;margin-bottom:13px;color:var(--muted);font-size:9.5px;line-height:1.45}
+.connection-card{padding:13px;border:1px solid var(--line);border-radius:11px;background:var(--surface);margin-bottom:10px}
+.connection-top{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.connection-icon{display:grid;place-items:center;width:30px;height:30px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);color:var(--accent)}
+.connection-top strong{display:block;font-size:11px;font-weight:700}
+.connection-top span{display:block;margin-top:1px;color:var(--muted);font-size:8.5px}
+.status-pill{display:inline-flex;align-items:center;gap:4px;margin-left:auto;padding:3px 6px;border-radius:99px;font-family:var(--font-mono);font-size:7.5px;font-weight:700;letter-spacing:.04em}
+.status-pill.ok{border:1px solid color-mix(in srgb,var(--success) 26%,transparent);background:color-mix(in srgb,var(--success) 9%,transparent);color:var(--success)}
+.status-pill.testing{border:1px solid color-mix(in srgb,var(--warn) 26%,transparent);background:color-mix(in srgb,var(--warn) 9%,transparent);color:var(--warn)}
+.status-pill.error{border:1px solid color-mix(in srgb,var(--danger) 26%,transparent);background:color-mix(in srgb,var(--danger) 9%,transparent);color:var(--danger)}
+.secret-wrap{position:relative}
+.secret-wrap .input{padding-right:32px}
+.secret-toggle{position:absolute;top:50%;right:6px;display:grid;place-items:center;width:24px;height:24px;border:0;border-radius:5px;background:transparent;color:var(--muted);transform:translateY(-50%)}
+.secret-toggle:hover{background:var(--surface-3);color:var(--text)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:9px}
+.path-row{display:grid;grid-template-columns:1fr 1fr auto;gap:7px;align-items:end;padding:8px;margin-bottom:6px;border:1px solid var(--line);border-radius:9px;background:var(--surface)}
+.path-row .path-actions{display:flex;gap:3px}
+.settings-foot-note{display:flex;align-items:center;gap:6px;margin-top:11px;color:var(--muted);font-size:8.5px;line-height:1.35}
+.settings-foot-note svg{color:var(--info);flex:0 0 auto}
+
+.filter-layout{display:grid;grid-template-columns:245px minmax(0,1fr);gap:13px}
+.saved-filters{display:flex;flex-direction:column;gap:5px}
+.saved-filter{display:flex;align-items:center;gap:7px;padding:7px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-size:10px}
+.saved-filter .copy{min-width:0;flex:1}
+.saved-filter strong{display:block;overflow:hidden;font-size:10px;font-weight:650;text-overflow:ellipsis;white-space:nowrap}
+.saved-filter span{display:block;margin-top:2px;color:var(--muted);font-size:8px}
+.saved-filter .acts{display:flex;gap:2px}
+.rule-row{display:grid;grid-template-columns:1fr auto 1fr auto;align-items:center;gap:6px;margin-bottom:6px}
+.rule-op{color:var(--muted);font-size:9px}
+.filter-preview{display:flex;align-items:center;gap:7px;margin-top:10px;padding:8px 9px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);color:var(--muted);font-size:9px}
+.filter-preview b{color:var(--text-2);font-family:var(--font-mono);font-size:9px}
+
+.palette-layer{align-items:flex-start;padding-top:10vh}
+.palette{width:min(680px,100%);overflow:hidden;border:1px solid var(--line-strong);border-radius:14px;background:var(--bg-elev);box-shadow:0 30px 100px rgba(0,0,0,.6)}
+.palette-input{display:flex;align-items:center;gap:10px;padding:14px 15px;border-bottom:1px solid var(--line)}
+.palette-input svg{color:var(--muted)}
+.palette-input input{flex:1;border:0;outline:0;background:transparent;color:var(--text);font-size:15px}
+.palette-input input::placeholder{color:var(--muted)}
+.palette-results{max-height:430px;padding:7px;overflow:auto}
+.palette-group{padding:7px 8px 4px;color:var(--muted);font-size:8px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+.palette-item{display:flex;align-items:center;gap:9px;width:100%;padding:8px 9px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--text-2);font-size:11.5px;text-align:left}
+.palette-item:hover,.palette-item.active{border-color:var(--line);background:var(--surface-2);color:var(--text)}
+.palette-item svg{color:var(--muted)}
+.palette-item .p-copy{min-width:0;flex:1}
+.palette-item strong{display:block;overflow:hidden;font-size:11px;font-weight:600;text-overflow:ellipsis;white-space:nowrap}
+.palette-item span{display:block;margin-top:1px;color:var(--muted);font-size:8.5px}
+.palette-item kbd{margin-left:auto}
+.palette-foot{display:flex;align-items:center;gap:12px;padding:8px 14px;border-top:1px solid var(--line);color:var(--muted);font-family:var(--font-mono);font-size:8px}
+.palette-foot span{display:inline-flex;align-items:center;gap:4px}
+
+.video-shell{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(230px,.6fr);gap:13px}
+.video-frame{position:relative;display:grid;place-items:center;aspect-ratio:16/9;overflow:hidden;border:1px solid var(--line);border-radius:11px;background:linear-gradient(145deg,var(--c1,#333),var(--c2,#111))}
+.video-frame::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.45))}
+.video-play{position:relative;z-index:3;display:grid;place-items:center;width:62px;height:62px;border:1px solid rgba(255,255,255,.26);border-radius:50%;background:rgba(0,0,0,.44);color:#fff;backdrop-filter:blur(10px)}
+.video-play:hover{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.video-live{position:absolute;top:9px;left:9px;z-index:3;display:flex;align-items:center;gap:5px;padding:3px 6px;border-radius:4px;background:rgba(0,0,0,.45);color:#fff;font-family:var(--font-mono);font-size:7.5px;letter-spacing:.06em;backdrop-filter:blur(8px)}
+.video-live i{width:5px;height:5px;border-radius:50%;background:#ff5b5b}
+.video-copy{display:flex;flex-direction:column;gap:8px}
+.video-copy h3{font-size:14px;line-height:1.25}
+.video-copy p{color:var(--muted);font-size:9.5px;line-height:1.45}
+.video-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.video-actions{display:flex;flex-direction:column;gap:6px;margin-top:auto}
+
+.notes-layer{align-items:stretch;justify-content:flex-end;padding:0;background:rgba(0,0,0,.5)}
+.notes-panel{width:min(440px,100%);height:100%;padding:20px;border-left:1px solid var(--line-strong);background:var(--bg-elev);box-shadow:-20px 0 70px rgba(0,0,0,.4);overflow:auto;animation:slide-left .2s ease-out}
+.notes-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:16px}
+.notes-head h2{font-family:var(--font-display);font-size:26px;font-weight:500;letter-spacing:-.04em;line-height:1}
+.notes-head p{margin-top:4px;color:var(--muted);font-size:9.5px}
+.notes-block{padding:12px 0;border-top:1px solid var(--line)}
+.notes-block h3{display:flex;align-items:center;gap:6px;margin-bottom:6px;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.notes-block p,.notes-block li{color:var(--text-2);font-size:10.5px;line-height:1.55}
+.notes-block ul{margin:0;padding-left:16px}
+.notes-block li+li{margin-top:3px}
+.notes-block code{padding:1px 4px;border:1px solid var(--line);border-radius:4px;background:var(--surface-2);font-family:var(--font-mono);font-size:9px}
+.notes-cta{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+
+.folder-list-modal{display:flex;flex-direction:column;gap:5px}
+.folder-path{display:flex;align-items:center;gap:6px;padding:7px 8px;margin-bottom:4px;border:1px solid var(--line);border-radius:7px;background:var(--surface-2);color:var(--text-2);font-family:var(--font-mono);font-size:9px}
+.folder-row{display:flex;align-items:center;gap:7px;padding:6px 8px;border:1px solid transparent;border-radius:7px;font-size:10px;color:var(--text-2)}
+.folder-row:hover{border-color:var(--line);background:var(--surface-2)}
+.folder-row svg{color:var(--muted)}
+.folder-row .size{margin-left:auto;color:var(--muted);font-family:var(--font-mono);font-size:8px}
+.readonly-note{display:flex;align-items:center;gap:6px;margin-top:8px;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);color:var(--muted);font-size:8.5px}
+.readonly-note svg{color:var(--info)}
+
+.art-preview{display:flex;flex-direction:column;gap:10px}
+.art-preview-visual{position:relative;display:flex;align-items:flex-end;min-height:300px;overflow:hidden;border:1px solid var(--line);border-radius:11px;background:linear-gradient(145deg,var(--c1,#555),var(--c2,#111));padding:18px}
+.art-preview-visual .art-name{position:relative;z-index:2;max-width:80%;font-family:var(--font-display);font-size:42px;font-weight:600;line-height:.9;letter-spacing:-.04em;color:#fff;text-shadow:0 3px 24px rgba(0,0,0,.5)}
+.art-preview-visual::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,.55))}
+
+.toast-stack{position:fixed;right:18px;bottom:90px;z-index:220;display:flex;flex-direction:column;gap:7px;pointer-events:none}
+.toast{display:flex;align-items:center;gap:8px;max-width:340px;padding:9px 11px;border:1px solid var(--line-strong);border-radius:10px;background:var(--bg-elev);box-shadow:var(--shadow-soft);color:var(--text);font-size:10.5px;animation:toast-in .2s ease-out;pointer-events:auto}
+.toast svg{flex:0 0 auto}
+.toast.ok svg{color:var(--success)}.toast.warn svg{color:var(--warn)}.toast.info svg{color:var(--info)}.toast.err svg{color:var(--danger)}
+.toast.out{opacity:0;transform:translateY(6px);transition:.2s}
+
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.86)}}
+@keyframes eq{0%,100%{transform:scaleY(.45)}50%{transform:scaleY(1)}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes toast-in{from{opacity:0;transform:translateY(7px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes slide-left{from{transform:translateX(24px);opacity:.6}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+@media (max-width:1280px){
+  .overview{grid-template-columns:1fr}
+  .coverage{flex-direction:row;align-items:center;gap:20px}
+  .coverage-head{min-width:145px}
+  .ring-wrap{flex:1}
+  .coverage-foot{display:none}
+}
+@media (max-width:1100px){
+  :root{--grid-min:180px}
+  .search-trigger{min-width:0}
+  .search-trigger span{display:none}
+  .search-trigger kbd{margin-left:0}
+  .editor-grid{grid-template-columns:1fr}
+  .video-shell{grid-template-columns:1fr}
+}
+@media (max-width:980px){
+  .rail{position:fixed;top:38px;left:0;bottom:0;z-index:75;height:auto;transform:translateX(-104%);transition:transform .24s ease;box-shadow:24px 0 60px rgba(0,0,0,.4)}
+  .rail.open{transform:none}
+  .rail-backdrop.open{display:block}
+  .menu-btn{display:grid}
+  .player{left:18px}
+  .content{padding-bottom:118px}
+}
+@media (max-width:820px){
+  .topbar{height:58px}
+  .breadcrumb .now{display:none}
+  .overview{gap:12px}
+  .coverage{flex-direction:column;align-items:stretch;gap:10px}
+  .coverage-head{display:flex;align-items:center;justify-content:space-between}
+  .coverage-head strong{margin-top:0}
+  .ring-wrap{justify-content:space-between}
+  .coverage-foot{display:flex}
+  .library-head{align-items:center}
+  .toolbar{gap:5px}
+  .toolbar-right{margin-left:0;width:100%}
+  .search-mini{flex:1}
+  .search-mini input{width:100%}
+  .list-row{grid-template-columns:40px minmax(140px,1fr) 95px auto}
+  .list-quality{display:none}
+  .alpha-nav{display:none}
+  .settings-layout{grid-template-columns:1fr}
+  .settings-nav{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);padding:8px}
+  .settings-nav button{flex:0 0 auto}
+  .filter-layout{grid-template-columns:1fr}
+  .form-grid{grid-template-columns:1fr}
+  .form-row{grid-template-columns:1fr}
+  .path-row{grid-template-columns:1fr;align-items:stretch}
+  .path-row .path-actions{justify-content:flex-end}
+}
+@media (max-width:640px){
+  :root{--grid-min:142px;--grid-gap:10px}
+  .lab-sub,.lab-hint,.labbar .lab-btn span{display:none}
+  .labbar{padding:5px 10px}
+  .topbar{padding:0 13px}
+  .content{padding:14px 13px 110px}
+  .hero{padding:20px 17px}
+  .hero h1{font-size:clamp(32px,10vw,44px)}
+  .hero p{font-size:11.5px}
+  .hero-meta{gap:9px;font-size:9px}
+  .coverage{padding:15px}
+  .library-head h2{font-size:17px}
+  .view-toggle{display:none}
+  .chip{height:28px;padding:0 8px;font-size:9.5px}
+  .toolbar{padding:6px}
+  .field{height:29px;font-size:9.5px}
+  .search-mini{height:29px}
+  .card-info{padding:8px}
+  .card-info h3{font-size:11px}
+  .card-meta{font-size:8.5px}
+  .status-btn{width:22px;height:22px}
+  .player{right:10px;bottom:10px;left:10px;gap:7px;padding:8px}
+  .player-info{width:100px}
+  .player-volume{display:none}
+  .player-skip:first-of-type{display:none}
+  .toast-stack{right:10px;bottom:82px}
+  .modal-layer{padding:0}
+  .modal,.modal.wide,.modal.medium,.modal.small{width:100%;max-height:100vh;height:100%;border:0;border-radius:0}
+  .modal-body{padding:13px}
+  .modal-head{padding:11px 13px}
+  .modal-foot{padding:9px 13px}
+  .art-grid{grid-template-columns:repeat(auto-fill,minmax(124px,1fr))}
+  .list-row{grid-template-columns:36px minmax(120px,1fr) auto;gap:8px}
+  .list-status{display:none}
+  .notes-panel{width:100%}
+  .palette-layer{padding:8vh 10px 0}
+  .video-play{width:52px;height:52px}
+}
+@media (hover:none){
+  .card-edit{opacity:1;transform:none}
+  .art-hover{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+<symbol id="i-film" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5v14M17 5v14M3 9h4M3 15h4M17 9h4M17 15h4"/></symbol>
+<symbol id="i-tv" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="m8 3 4 4 4-4"/></symbol>
+<symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.4"/><rect x="14" y="3" width="7" height="7" rx="1.4"/><rect x="3" y="14" width="7" height="7" rx="1.4"/><rect x="14" y="14" width="7" height="7" rx="1.4"/></symbol>
+<symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.7-4L3 10M3 5v5h5M4 13a8 8 0 0 0 14.7 4L21 14m0 5v-5h-5"/></symbol>
+<symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4v-.2a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.6-1H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.6v-.2h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"/></symbol>
+<symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+<symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></symbol>
+<symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4.5 4.5L19 7"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 19h16"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="m8 5 11 7-11 7V5Z" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol>
+<symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></symbol>
+<symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m21 15-5-5L5 20"/></symbol>
+<symbol id="i-clapper" viewBox="0 0 24 24"><path d="m3 8 18-4M4 8l1 11a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2l1-11M3 8h18"/><path d="m8 4 1 4M14 3l1 4M20 2l1 4"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.3 3.7 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.7a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></symbol>
+<symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 6a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6Z"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+<symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+<symbol id="i-filter" viewBox="0 0 24 24"><path d="M3 5h18l-7 8v6l-4 2v-8L3 5Z"/></symbol>
+<symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h7M15 6h5M4 12h3M11 12h9M4 18h9M17 18h3"/><circle cx="13" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="18" r="2"/></symbol>
+<symbol id="i-arrow-up" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></symbol>
+<symbol id="i-arrow-down" viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></symbol>
+<symbol id="i-external" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="2.5"/></symbol>
+<symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></symbol>
+<symbol id="i-sparkles" viewBox="0 0 24 24"><path d="m12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3Z"/><path d="m19 16 .8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8L19 16Z"/></symbol>
+<symbol id="i-command" viewBox="0 0 24 24"><path d="M9 6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6Z"/></symbol>
+<symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-2.9-5.6 2.9 1.1-6.2L3 9.6l6.2-.9L12 3Z"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+<symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></symbol>
+<symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7l-1.2 1.2M14 11a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7l1.2-1.2"/></symbol>
+<symbol id="i-wand" viewBox="0 0 24 24"><path d="m4 20 10-10M14 4l1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2ZM19 11l.7 1.3L21 13l-1.3.7L19 15l-.7-1.3L17 13l1.3-.7L19 11Z"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13M10 11v6M14 11v6"/></symbol>
+<symbol id="i-pencil" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z"/></symbol>
+<symbol id="i-plug" viewBox="0 0 24 24"><path d="M12 22v-5M9 7V2M15 7V2M6 7h12v3a6 6 0 0 1-12 0V7Z"/></symbol>
+<symbol id="i-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 19V5m0 0-4 4m4-4 4 4M4 19h16"/></symbol>
+<symbol id="i-zoom" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4M8 11h6M11 8v6"/></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+<symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h.01M18 14h.01M9 14h6"/></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></symbol>
+<symbol id="i-hard-drive" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 15h.01M11 15h.01"/></symbol>
+<symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 16l9 5 9-5"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+<symbol id="i-rotate" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 8a8 8 0 0 1 13.3-1L20 12M4 12l.6 5a8 8 0 0 0 13.3-1"/></symbol>
+<symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.8 5.6a5.5 5.5 0 0 0-7.8 0L12 6.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 22l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></symbol>
+<symbol id="i-monitor" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 22h8M12 18v4"/></symbol>
+<symbol id="i-disc" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/></symbol>
+<symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></symbol>
+<symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 3.5 5.7 3.5 9S14.5 18.5 12 21M12 3C9.5 5.5 8.5 8.7 8.5 12S9.5 18.5 12 21"/></symbol>
+<symbol id="i-volume" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></symbol>
+<symbol id="i-volume-x" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="m16 9 6 6M22 9l-6 6"/></symbol>
+<symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
+</svg>
+
+<div class="labbar">
+  <div class="lab-left">
+    <span class="lab-pill"><span class="pulse-dot" style="width:5px;height:5px"></span>Mockup</span>
+    <span class="lab-title">nEXTrarr 0.8.32</span>
+    <span class="lab-sub">Redesign UI · anteprima interattiva</span>
+  </div>
+  <div class="lab-right">
+    <span class="lab-hint">⌘K ricerca · / filtra · Esc chiudi</span>
+    <button class="lab-btn" data-act="theme-toggle"><svg class="ic xs" id="labThemeIcon"><use href="#i-sun"/></svg><span id="labThemeTxt">Tema chiaro</span></button>
+    <button class="lab-btn" data-act="open-notes"><svg class="ic xs"><use href="#i-info"/></svg><span>Note di progetto</span></button>
+  </div>
+</div>
+
+<div class="shell">
+  <aside class="rail" id="rail" aria-label="Navigazione principale">
+    <div class="brand">
+      <div class="brand-mark">N</div>
+      <div class="brand-name">n<b>EXT</b>rarr <span class="version-pill">0.8.32</span></div>
+    </div>
+
+    <div class="source-switch" role="tablist" aria-label="Sorgente libreria">
+      <button data-act="source" data-source="radarr" class="active"><svg class="ic"><use href="#i-film"/></svg>Film</button>
+      <button data-act="source" data-source="sonarr"><svg class="ic"><use href="#i-tv"/></svg>Serie</button>
+    </div>
+
+    <div class="rail-section">
+      <div class="rail-label">Workspace</div>
+      <button class="nav-item" data-act="filter" data-filter="all"><svg class="ic"><use href="#i-grid"/></svg>Libreria<span class="nav-count" id="navAllCount">0</span></button>
+      <button class="nav-item" data-act="filter" data-filter="incomplete"><svg class="ic"><use href="#i-sparkles"/></svg>Da completare<span class="nav-count" id="navIncompleteCount">0</span></button>
+      <button class="nav-item" data-act="filter" data-filter="complete"><svg class="ic"><use href="#i-check"/></svg>Completi<span class="nav-count" id="navCompleteCount">0</span></button>
+    </div>
+
+    <div class="rail-section">
+      <div class="rail-label">Cartelle</div>
+      <div class="folder-list" id="folderList"></div>
+    </div>
+
+    <div class="rail-spacer"></div>
+
+    <div class="connection-card">
+      <span class="pulse-dot"></span>
+      <div class="connection-copy">
+        <strong id="connectionName">Radarr</strong>
+        <span id="connectionDetail">Connesso · 24 titoli</span>
+      </div>
+    </div>
+    <button class="rail-settings" data-act="open-settings">
+      <span class="avatar">NA</span>
+      <span class="who"><strong>Impostazioni</strong><span>Connessioni e percorsi</span></span>
+      <svg class="ic"><use href="#i-settings"/></svg>
+    </button>
+  </aside>
+  <div class="rail-backdrop" id="railBackdrop" data-act="close-rail"></div>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn menu-btn" data-act="open-rail" aria-label="Apri menu"><svg class="ic"><use href="#i-menu"/></svg></button>
+      <div class="breadcrumb">
+        <span>Libreria</span><span class="sep"></span><strong id="breadcrumbType">Film</strong><span class="sep"></span><span class="now" id="breadcrumbCount">24 titoli</span>
+      </div>
+      <div class="topbar-actions">
+        <button class="search-trigger" data-act="open-palette" aria-label="Apri ricerca globale">
+          <svg class="ic"><use href="#i-search"/></svg><span>Cerca o esegui un comando…</span><kbd>⌘K</kbd>
+        </button>
+        <button class="icon-btn" data-act="refresh" id="refreshBtn" title="Aggiorna libreria" aria-label="Aggiorna libreria"><svg class="ic" id="refreshIcon"><use href="#i-refresh"/></svg></button>
+        <button class="icon-btn" data-act="theme-toggle" id="appThemeBtn" title="Cambia tema" aria-label="Cambia tema"><svg class="ic" id="appThemeIcon"><use href="#i-sun"/></svg></button>
+        <button class="icon-btn" data-act="open-settings" title="Impostazioni" aria-label="Impostazioni"><svg class="ic"><use href="#i-settings"/></svg></button>
+      </div>
+    </header>
+
+    <main class="content">
+      <section class="overview">
+        <div class="hero">
+          <div class="eyebrow"><span class="dot"></span><span id="heroSource">Radarr</span> · connesso <span style="opacity:.4">/</span> <span id="heroSync">sync 2 min fa</span></div>
+          <h1>La tua libreria,<br><em>senza buchi.</em></h1>
+          <p id="heroSubtitle">Temi, artwork e trailer: tutto ciò che manca, in un unico posto.</p>
+          <div class="hero-actions">
+            <button class="btn primary" data-act="show-incomplete"><svg class="ic sm"><use href="#i-sparkles"/></svg>Completa i mancanti <span class="tag" style="margin-left:2px" id="heroMissing">0</span></button>
+            <button class="btn ghost" data-act="refresh"><svg class="ic sm"><use href="#i-refresh"/></svg>Aggiorna</button>
+          </div>
+          <div class="hero-meta">
+            <span><svg class="ic xs"><use href="#i-check"/></svg><span id="heroValid">0 titoli validi</span></span>
+            <span><svg class="ic xs"><use href="#i-alert"/></svg><span id="heroWarnings">0 avvisi</span></span>
+            <span><svg class="ic xs"><use href="#i-clock"/></svg><span id="heroNew">0 nuovi</span></span>
+          </div>
+        </div>
+
+        <aside class="coverage" aria-label="Copertura libreria">
+          <div class="coverage-head">
+            <div><span class="label">Copertura libreria</span><strong id="coveragePct">86%</strong></div>
+            <span class="trend"><svg class="ic xs"><use href="#i-arrow-up"/></svg><span id="coverageTrend">+4%</span></span>
+          </div>
+          <div class="ring-wrap">
+            <div class="ring" id="coverageRing" style="--p:86"><b id="coverageRingPct">86%</b><small>completo</small></div>
+            <div class="coverage-rows">
+              <div class="cov-row"><span>Tema</span><span class="cov-track"><span class="cov-fill" id="covThemeBar" style="width:0%"></span></span><b id="covThemeN">0/0</b></div>
+              <div class="cov-row"><span>Artwork</span><span class="cov-track"><span class="cov-fill" id="covArtBar" style="width:0%"></span></span><b id="covArtN">0/0</b></div>
+              <div class="cov-row"><span>Trailer</span><span class="cov-track"><span class="cov-fill" id="covTrailerBar" style="width:0%"></span></span><b id="covTrailerN">0/0</b></div>
+            </div>
+          </div>
+          <div class="coverage-foot"><svg class="ic xs"><use href="#i-alert"/></svg><span id="coverageFoot">Nessun avviso di percorso.</span></div>
+        </aside>
+      </section>
+
+      <section class="library" id="library">
+        <div class="library-head">
+          <div>
+            <h2>Libreria <span class="count" id="libraryCount">24</span></h2>
+            <p id="visibleSummary">24 titoli visibili</p>
+          </div>
+          <div class="view-toggle" role="group" aria-label="Vista libreria">
+            <button class="active" data-act="view" data-view="grid" title="Griglia" aria-label="Griglia"><svg class="ic sm"><use href="#i-grid"/></svg></button>
+            <button data-act="view" data-view="list" title="Lista" aria-label="Lista"><svg class="ic sm"><use href="#i-list"/></svg></button>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <div class="chips" id="filterChips"></div>
+          <span class="toolbar-divider"></span>
+          <div class="toolbar-right">
+            <select class="field" id="rootSelect" aria-label="Filtra per cartella"></select>
+            <select class="field" id="sortSelect" aria-label="Ordina libreria">
+              <option value="title">Titolo</option>
+              <option value="year">Anno</option>
+              <option value="added">Data aggiunta</option>
+            </select>
+            <button class="field" data-act="toggle-dir" id="dirBtn" title="Inverti ordinamento" aria-label="Inverti ordinamento"><svg class="ic sm" id="dirIcon"><use href="#i-arrow-up"/></svg></button>
+            <div class="search-mini">
+              <svg class="ic sm"><use href="#i-search"/></svg>
+              <input id="localSearch" type="search" placeholder="Filtra libreria…" autocomplete="off" aria-label="Filtra libreria">
+            </div>
+            <button class="field" data-act="open-filter" title="Filtri personalizzati" aria-label="Filtri personalizzati"><svg class="ic sm"><use href="#i-sliders"/></svg></button>
+          </div>
+        </div>
+
+        <div id="libraryBody"></div>
+        <nav class="alpha-nav" id="alphaNav" aria-label="Navigazione alfabetica"></nav>
+      </section>
+    </main>
+  </div>
+</div>
+
+<div class="player" id="player" aria-hidden="true">
+  <div class="player-cover" id="playerCover"></div>
+  <div class="player-info">
+    <strong id="playerTitle">Nessun media in riproduzione</strong>
+    <span id="playerSub">Seleziona un tema dalla griglia</span>
+  </div>
+  <div class="player-controls">
+    <button class="player-skip" data-act="player-skip" data-delta="-10" title="Indietro 10s"><svg class="ic sm"><use href="#i-chevron-right" style="transform:rotate(180deg);transform-origin:center"/></svg></button>
+    <button class="player-play" data-act="player-toggle" id="playerToggle" aria-label="Riproduci"><svg class="ic"><use href="#i-play"/></svg></button>
+    <button class="player-skip" data-act="player-skip" data-delta="10" title="Avanti 10s"><svg class="ic sm"><use href="#i-chevron-right"/></svg></button>
+  </div>
+  <div class="player-track">
+    <span class="player-time" id="playerTime">0:00</span>
+    <div class="player-bar" id="playerBar"><div class="player-bar-fill" id="playerFill"></div></div>
+    <span class="player-time" id="playerDuration">0:00</span>
+  </div>
+  <div class="player-volume">
+    <button class="player-skip" data-act="player-mute" id="playerMute" title="Disattiva audio"><svg class="ic sm"><use href="#i-volume"/></svg></button>
+    <input id="volume" type="range" min="0" max="1" step="0.05" value="0.8" aria-label="Volume">
+  </div>
+  <button class="player-close" data-act="player-close" title="Chiudi player"><svg class="ic sm"><use href="#i-x"/></svg></button>
+</div>
+
+<div class="modal-layer" id="editorModal" aria-hidden="true">
+  <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="editorTitle">
+    <div class="modal-head">
+      <div class="head-thumb" id="editorThumb"></div>
+      <div class="head-main"><h2 id="editorTitle">Editor</h2><p id="editorSub"></p></div>
+      <div id="editorStatus" style="display:flex;gap:4px;flex-wrap:wrap"></div>
+      <button class="modal-close" data-act="close-modal" data-target="editorModal" aria-label="Chiudi"><svg class="ic"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="modal-body" id="editorBody"></div>
+  </div>
+</div>
+
+<div class="modal-layer" id="artworkModal" aria-hidden="true">
+  <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="artTitle">
+    <div class="modal-head">
+      <div class="head-thumb" id="artThumb"></div>
+      <div class="head-main"><h2 id="artTitle">Artwork</h2><p id="artSub"></p></div>
+      <div id="artHeadActions" style="display:flex;gap:5px;flex-wrap:wrap"></div>
+      <button class="modal-close" data-act="close-modal" data-target="artworkModal" aria-label="Chiudi"><svg class="ic"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="modal-body" id="artBody"></div>
+  </div>
+</div>
+
+<div class="modal-layer" id="settingsModal" aria-hidden="true">
+  <div class="modal medium" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="modal-head">
+      <h2 id="settingsTitle">Impostazioni</h2>
+      <p style="flex:1;color:var(--muted);font-size:9.5px">Connessioni, metadati e mappatura percorsi</p>
+      <button class="modal-close" data-act="close-modal" data-target="settingsModal" aria-label="Chiudi"><svg class="ic"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="modal-body" style="padding:0" id="settingsBody"></div>
+    <div class="modal-foot">
+      <button class="btn ghost" data-act="close-modal" data-target="settingsModal">Annulla</button>
+      <button class="btn primary" data-act="save-settings"><svg class="ic sm"><use href="#i-save"/></svg>Salva impostazioni</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-layer" id="filterModal" aria-hidden="true">
+  <div class="modal medium" role="dialog" aria-modal="true" aria-labelledby="filterTitle">
+    <div class="modal-head">
+      <div class="head-main"><h2 id="filterTitle">Filtri personalizzati</h2><p>Regole combinate su tema, artwork e trailer.</p></div>
+      <button class="modal-close" data-act="close-modal" data-target="filterModal" aria-label="Chiudi"><svg class="ic"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="modal-body" id="filterBody"></div>
+  </div>
+</div>
+
+<div class="modal-layer palette-layer" id="paletteModal" aria-hidden="true">
+  <div class="palette" role="dialog" aria-modal="true" aria-label="Ricerca globale e comandi">
+    <div class="palette-input">
+      <svg class="ic lg"><use href="#i-search"/></svg>
+      <input id="paletteInput" type="search" placeholder="Cerca titoli, azioni, impostazioni…" autocomplete="off">
+      <kbd>Esc</kbd>
+    </div>
+    <div class="palette-results" id="paletteResults"></div>
+    <div class="palette-foot">
+      <span><kbd>↑</kbd><kbd>↓</kbd> naviga</span><span><kbd>↵</kbd> apri</span><span style="margin-left:auto"><kbd>⌘K</kbd> chiudi</span>
+    </div>
+  </div>
+</div>
+
+<div class="modal-layer" id="videoModal" aria-hidden="true">
+  <div class="modal medium" role="dialog" aria-modal="true" aria-labelledby="videoTitle">
+    <div class="modal-head">
+      <div class="head-main"><h2 id="videoTitle">Anteprima video</h2><p id="videoSub"></p></div>
+      <button class="modal-close" data-act="close-modal" data-target="videoModal" aria-label="Chiudi"><svg class="ic"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="modal-body" id="videoBody"></div>
+  </div>
+</div>
+
+<div class="modal-layer" id="globalSearchModal" aria-hidden="true">
+  <div class="modal medium" role="dialog" aria-modal="true" aria-labelledby="globalTitle">
+    <div class="modal-head">
+      <div class="head-main"><h2 id="globalTitle">Ricerca globale YouTube</h2><p>Cerca un tema o un trailer e assegnalo a un titolo.</p></div>
+      <button class="modal-close" data-act="close-modal" data-target="globalSearchModal" aria-label="Chiudi"><svg class="ic"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="modal-body" id="globalSearchBody"></div>
+  </div>
+</div>
+
+<div class="modal-layer" id="folderModal" aria-hidden="true">
+  <div class="modal small" role="dialog" aria-modal="true" aria-labelledby="folderTitle">
+    <div class="modal-head">
+      <div class="head-main"><h2 id="folderTitle">Cartella locale</h2><p>Sola lettura · nessuna modifica al filesystem</p></div>
+      <button class="modal-close" data-act="close-modal" data-target="folderModal" aria-label="Chiudi"><svg class="ic"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="modal-body" id="folderBody"></div>
+  </div>
+</div>
+
+<div class="modal-layer" id="artPreviewModal" aria-hidden="true">
+  <div class="modal medium" role="dialog" aria-modal="true" aria-labelledby="artPreviewTitle">
+    <div class="modal-head">
+      <div class="head-main"><h2 id="artPreviewTitle">Anteprima artwork</h2><p id="artPreviewSub"></p></div>
+      <button class="modal-close" data-act="close-modal" data-target="artPreviewModal" aria-label="Chiudi"><svg class="ic"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="modal-body" id="artPreviewBody"></div>
+  </div>
+</div>
+
+<div class="modal-layer notes-layer" id="notesModal" aria-hidden="true">
+  <aside class="notes-panel" role="dialog" aria-modal="true" aria-labelledby="notesTitle">
+    <div class="notes-head">
+      <div><h2 id="notesTitle">Note di progetto</h2><p>Direzione, perimetro e piano per la 0.8.32</p></div>
+      <button class="modal-close" data-act="close-modal" data-target="notesModal" aria-label="Chiudi"><svg class="ic"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="notes-block">
+      <h3><svg class="ic xs"><use href="#i-sparkles"/></svg>Direzione</h3>
+      <p>Un’interfaccia editoriale e calma: sidebar operativa, hero compatto con la copertura reale della libreria, toolbar unica e card che mostrano subito cosa manca. Tema scuro caldo, accento tangerine, tipografia serif per i titoli e UI compatta per i dati.</p>
+    </div>
+    <div class="notes-block">
+      <h3><svg class="ic xs"><use href="#i-layers"/></svg>Cosa cambia</h3>
+      <ul>
+        <li>Sidebar con viste rapide, cartelle e stato connessione.</li>
+        <li>Command palette con <code>⌘K</code> per titoli, filtri e azioni.</li>
+        <li>Hero con copertura tema/artwork/trailer e scorciatoia “Completa i mancanti”.</li>
+        <li>Toolbar unificata: filtri, cartella, ordinamento, ricerca, vista.</li>
+        <li>Card con badge qualità, stato per singola risorsa, NEW e avvisi percorso.</li>
+        <li>Vista lista, player dock e modali ridisegnate.</li>
+      </ul>
+    </div>
+    <div class="notes-block">
+      <h3><svg class="ic xs"><use href="#i-check"/></svg>Cosa resta invariato</h3>
+      <ul>
+        <li>Tutte le route API e il modello dati esistente.</li>
+        <li>Store Zustand, persistenza filtri, sort, cartella root e ricerca.</li>
+        <li>Editor Tema / Trailer / NFO, inclusi form e XML.</li>
+        <li>Artwork Locali / Fanart.tv / TMDB, filtri per tipo e cartella locale.</li>
+        <li>Impostazioni, test connessioni, path mapping, filtri custom.</li>
+        <li>Ricerca YouTube globale, player, badge NEW, avvisi mapping/cartella.</li>
+      </ul>
+    </div>
+    <div class="notes-block">
+      <h3><svg class="ic xs"><use href="#i-chart"/></svg>Piano 0.8.32</h3>
+      <ul>
+        <li><b>1.</b> Design tokens, shell, sidebar e topbar.</li>
+        <li><b>2.</b> Hero copertura, toolbar e logica filtri/sort.</li>
+        <li><b>3.</b> Card, lista, badge e azioni rapide.</li>
+        <li><b>4.</b> Editor, artwork, settings, filtri e palette.</li>
+        <li><b>5.</b> Player, responsive e accessibilità.</li>
+        <li><b>6.</b> QA regressioni, lint, typecheck e build.</li>
+      </ul>
+    </div>
+    <div class="notes-block">
+      <h3><svg class="ic xs"><use href="#i-alert"/></svg>Non-regressione</h3>
+      <p>Nessuna modifica alle API. I modali manterranno gli stessi handler e la stessa sequenza di salvataggio. Ogni funzione esistente avrà un test manuale dedicato: filtri, sort, ricerca, root folder, editor, artwork, NFO, settings, player, badge, avvisi e persistenza. In più: <code>npm run lint</code>, <code>tsc</code> e build di produzione prima del rilascio.</p>
+    </div>
+    <div class="notes-cta">
+      <button class="btn primary sm" data-act="close-modal" data-target="notesModal">Torna al mockup</button>
+      <button class="btn sm" data-act="open-settings">Apri impostazioni</button>
+    </div>
+  </aside>
+</div>
+
+<div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+<script>(() => {
+  'use strict';
+
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+  const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+  const icon = (name, cls = '') => `<svg class="ic ${cls}"><use href="#i-${name}"/></svg>`;
+
+  const PALETTES = [
+    ['#ff9d5c', '#2a130c'], ['#8fd6ff', '#0b1d2a'], ['#d7ff74', '#16210a'],
+    ['#ff7a9c', '#2a0d18'], ['#c3a7ff', '#1b1230'], ['#ffd166', '#2a1f08'],
+    ['#7ce7c4', '#0a231c'], ['#ff8f6b', '#2a110b'], ['#9ab8ff', '#101a33'],
+    ['#e6c5a1', '#2b1d12'], ['#b6e2ff', '#0d1c26'], ['#f4a4ff', '#24102a'],
+    ['#9ef0a8', '#0d2412'], ['#ffc2a1', '#2a170e'], ['#a8e9ff', '#0a2430'],
+  ];
+  const MOTIFS = ['dunes', 'rings', 'lines', 'grid', 'sun', 'arch', 'wave', 'tunnel', 'orbit', 'blocks', 'flame', 'spiral', 'skyline'];
+  let SEQ = 0;
+
+  function mk(source, title, year, extra) {
+    SEQ += 1;
+    const palette = PALETTES[SEQ % PALETTES.length];
+    const item = {
+      id: (source === 'radarr' ? 'r' : 's') + SEQ,
+      source,
+      title,
+      year,
+      quality: '1080p',
+      codec: 'x265',
+      audio: 'DTS-HD',
+      tmdbId: String(800000 + SEQ * 37),
+      imdbId: 'tt' + (3000000 + SEQ * 89),
+      tvdbId: source === 'sonarr' ? String(400000 + SEQ * 11) : '',
+      rootFolder: source === 'radarr' ? '/media/film' : '/media/serie',
+      added: '2026-10-' + String(2 + (SEQ % 27)).padStart(2, '0'),
+      warning: '',
+      isNew: false,
+      hasTheme: true,
+      hasArt: true,
+      hasTrailer: true,
+      runtime: 96 + (SEQ % 70),
+      genres: source === 'radarr' ? 'Dramma' : 'Dramma · Thriller',
+      overview: '',
+      network: '',
+      seasons: 0,
+      themeName: '',
+      themeDuration: '3:42',
+      trailerDuration: '2:31',
+      folder: (source === 'radarr' ? '/media/film/' : '/media/serie/') + title.replace(/[^a-z0-9]+/gi, '.'),
+      c1: palette[0],
+      c2: palette[1],
+      motif: MOTIFS[SEQ % MOTIFS.length],
+    };
+    Object.assign(item, extra || {});
+    item.res = item.quality === '4K' ? '4K' : item.quality === '1080p' ? 'FHD' : item.quality === '720p' ? 'HD' : 'SD';
+    if (!item.themeName) item.themeName = item.title + ' (Main Theme)';
+    if (!item.trailerName) item.trailerName = item.title + ' — Official Trailer';
+    return item;
+  }
+
+  const RADARR = [
+    mk('radarr', 'Dune: Part Two', 2024, { quality: '4K', codec: 'HEVC', audio: 'ATMOS', genres: 'Fantascienza · Avventura', runtime: 166, hasTheme: false, isNew: true, rootFolder: '/media/film/4K' }),
+    mk('radarr', 'Oppenheimer', 2023, { quality: '4K', codec: 'HEVC', audio: 'DTS-HD', genres: 'Storico · Dramma', runtime: 180, rootFolder: '/media/film/4K' }),
+    mk('radarr', 'The Batman', 2022, { quality: '1080p', codec: 'x265', audio: 'DTS-HD', genres: 'Crime · Thriller', runtime: 176, hasTheme: false, hasTrailer: false, warning: 'Percorso non mappato', rootFolder: '/mnt/nas/cinema' }),
+    mk('radarr', 'Everything Everywhere All at Once', 2022, { quality: '1080p', codec: 'x265', audio: 'DD+', genres: 'Commedia · Fantasy', runtime: 139 }),
+    mk('radarr', 'Past Lives', 2023, { quality: '720p', codec: 'x264', audio: 'AAC', genres: 'Dramma · Romance', runtime: 105, hasTheme: false, isNew: true }),
+    mk('radarr', 'Poor Things', 2023, { quality: '1080p', codec: 'x265', audio: 'DTS-HD', genres: 'Fantasy · Commedia', runtime: 141, hasTrailer: false }),
+    mk('radarr', 'Anatomy of a Fall', 2023, { quality: '1080p', codec: 'x265', audio: 'DTS', genres: 'Dramma · Thriller', runtime: 151 }),
+    mk('radarr', 'The Zone of Interest', 2023, { quality: '720p', codec: 'x264', audio: 'AAC', genres: 'Storico · Dramma', runtime: 105, hasTheme: false, hasArt: false, hasTrailer: false, isNew: true, warning: 'Cartella non accessibile', rootFolder: '/mnt/nas/cinema' }),
+    mk('radarr', 'Killers of the Flower Moon', 2023, { quality: '4K', codec: 'HEVC', audio: 'ATMOS', genres: 'Crime · Dramma', runtime: 206, rootFolder: '/media/film/4K' }),
+    mk('radarr', 'Barbie', 2023, { quality: '1080p', codec: 'x265', audio: 'DD+', genres: 'Commedia · Fantasy', runtime: 114 }),
+    mk('radarr', 'Spider-Man: Across the Spider-Verse', 2023, { quality: '4K', codec: 'HEVC', audio: 'ATMOS', genres: 'Animazione · Azione', runtime: 140, hasTheme: false, isNew: true, rootFolder: '/media/film/4K' }),
+    mk('radarr', 'Godzilla Minus One', 2023, { quality: '1080p', codec: 'x265', audio: 'DTS-HD', genres: 'Azione · Fantascienza', runtime: 125, hasTrailer: false }),
+    mk('radarr', 'The Holdovers', 2023, { quality: '720p', codec: 'x264', audio: 'AAC', genres: 'Commedia · Dramma', runtime: 133 }),
+    mk('radarr', 'American Fiction', 2023, { quality: '1080p', codec: 'x265', audio: 'DTS', genres: 'Commedia · Dramma', runtime: 117, hasArt: false }),
+    mk('radarr', 'Perfect Days', 2023, { quality: '720p', codec: 'x264', audio: 'AAC', genres: 'Dramma', runtime: 124, rootFolder: '/media/film/Classici' }),
+    mk('radarr', 'The Substance', 2024, { quality: '4K', codec: 'HEVC', audio: 'DTS-HD', genres: 'Horror · Dramma', runtime: 141, hasTheme: false, rootFolder: '/media/film/4K' }),
+    mk('radarr', 'Conclave', 2024, { quality: '1080p', codec: 'x265', audio: 'DTS-HD', genres: 'Thriller · Dramma', runtime: 120 }),
+    mk('radarr', 'Anora', 2024, { quality: '1080p', codec: 'x265', audio: 'DD+', genres: 'Dramma · Commedia', runtime: 139, hasTrailer: false, isNew: true }),
+    mk('radarr', 'Nosferatu', 2024, { quality: '4K', codec: 'HEVC', audio: 'ATMOS', genres: 'Horror · Gotico', runtime: 132, hasTheme: false, hasArt: false, rootFolder: '/media/film/4K' }),
+    mk('radarr', 'A Real Pain', 2024, { quality: '720p', codec: 'x264', audio: 'AAC', genres: 'Commedia · Dramma', runtime: 90 }),
+    mk('radarr', 'The Wild Robot', 2024, { quality: '1080p', codec: 'x265', audio: 'DD+', genres: 'Animazione · Avventura', runtime: 102, isNew: true }),
+    mk('radarr', 'Challengers', 2024, { quality: '1080p', codec: 'x265', audio: 'DTS-HD', genres: 'Dramma · Sport', runtime: 131, hasTheme: false }),
+    mk('radarr', 'Civil War', 2024, { quality: '4K', codec: 'HEVC', audio: 'ATMOS', genres: 'Azione · Thriller', runtime: 109, rootFolder: '/media/film/4K' }),
+    mk('radarr', 'Furiosa: A Mad Max Saga', 2024, { quality: '1080p', codec: 'x265', audio: 'ATMOS', genres: 'Azione · Avventura', runtime: 148, hasArt: false, hasTrailer: false }),
+  ];
+
+  const SONARR = [
+    mk('sonarr', 'Shogun', 2024, { quality: '1080p', codec: 'x265', audio: 'DD+', genres: 'Storico · Dramma', runtime: 60, network: 'FX', seasons: 1, isNew: true }),
+    mk('sonarr', 'The Bear', 2022, { quality: '4K', codec: 'HEVC', audio: 'DTS-HD', genres: 'Commedia · Dramma', runtime: 30, network: 'FX', seasons: 3, hasTheme: false, rootFolder: '/media/serie/4K' }),
+    mk('sonarr', 'Severance', 2022, { quality: '4K', codec: 'HEVC', audio: 'ATMOS', genres: 'Thriller · Fantascienza', runtime: 50, network: 'Apple TV+', seasons: 2, isNew: true, rootFolder: '/media/serie/4K' }),
+    mk('sonarr', 'True Detective: Night Country', 2024, { quality: '1080p', codec: 'x265', audio: 'DD+', genres: 'Crime · Thriller', runtime: 60, network: 'HBO', seasons: 1, hasTrailer: false }),
+    mk('sonarr', 'Fallout', 2024, { quality: '4K', codec: 'HEVC', audio: 'ATMOS', genres: 'Fantascienza · Avventura', runtime: 55, network: 'Prime Video', seasons: 1, isNew: true, rootFolder: '/media/serie/4K' }),
+    mk('sonarr', 'House of the Dragon', 2022, { quality: '4K', codec: 'HEVC', audio: 'ATMOS', genres: 'Fantasy · Dramma', runtime: 60, network: 'HBO', seasons: 2, hasTheme: false, hasTrailer: false, rootFolder: '/media/serie/4K' }),
+    mk('sonarr', 'The Last of Us', 2023, { quality: '4K', codec: 'HEVC', audio: 'ATMOS', genres: 'Dramma · Thriller', runtime: 55, network: 'HBO', seasons: 2, rootFolder: '/media/serie/4K' }),
+    mk('sonarr', 'Slow Horses', 2022, { quality: '1080p', codec: 'x265', audio: 'DD+', genres: 'Thriller · Spionaggio', runtime: 50, network: 'Apple TV+', seasons: 4, hasArt: false, rootFolder: '/mnt/nas/serie' }),
+    mk('sonarr', 'Foundation', 2021, { quality: '4K', codec: 'HEVC', audio: 'ATMOS', genres: 'Fantascienza · Dramma', runtime: 55, network: 'Apple TV+', seasons: 2, hasTheme: false, rootFolder: '/media/serie/4K' }),
+    mk('sonarr', 'Ripley', 2024, { quality: '1080p', codec: 'x265', audio: 'DD+', genres: 'Thriller · Dramma', runtime: 55, network: 'Netflix', seasons: 1 }),
+    mk('sonarr', 'Dark Matter', 2024, { quality: '720p', codec: 'x264', audio: 'AAC', genres: 'Fantascienza · Thriller', runtime: 50, network: 'Apple TV+', seasons: 1, hasTrailer: false }),
+    mk('sonarr', 'Silo', 2023, { quality: '1080p', codec: 'x265', audio: 'DD+', genres: 'Fantascienza · Dramma', runtime: 50, network: 'Apple TV+', seasons: 2 }),
+  ];
+
+  const DATA = { radarr: RADARR, sonarr: SONARR };
+
+  const state = {
+    theme: 'dark',
+    source: 'radarr',
+    filter: 'all',
+    activeCustom: null,
+    search: '',
+    sort: 'title',
+    dir: 'asc',
+    root: 'all',
+    view: 'grid',
+    selected: null,
+    editorTab: 'theme',
+    editorQuery: '',
+    editorResults: [],
+    nfoMode: 'form',
+    artSource: 'local',
+    artType: 'poster',
+    settingsTab: 'connections',
+    secrets: {},
+    settings: {
+      radarrUrl: 'http://localhost:7878',
+      radarrKey: 'nxtr_radarr_9f2c41d8',
+      sonarrUrl: 'http://localhost:8989',
+      sonarrKey: 'nxtr_sonarr_7bd0a63e',
+      themeSource: 'fanart',
+      artSource: 'tmdb',
+      language: 'it-IT',
+      youtubeKey: '',
+    },
+    connections: { radarr: 'ok', sonarr: 'ok' },
+    pathMappings: [
+      { remote: '/media/film', local: '/mnt/nas/film' },
+      { remote: '/media/serie', local: '/mnt/nas/serie' },
+    ],
+    customFilters: [
+      { id: 'cf-4k', name: 'Solo 4K', match: 'all', rules: [{ field: 'quality', value: '4K' }] },
+      { id: 'cf-theme', name: 'Senza tema', match: 'all', rules: [{ field: 'theme', value: 'no' }] },
+      { id: 'cf-warn', name: 'Avvisi percorso', match: 'all', rules: [{ field: 'warning', value: 'yes' }] },
+    ],
+    filterDraft: { name: '', match: 'all', rules: [{ field: 'theme', value: 'no' }] },
+    editingFilter: null,
+    paletteIndex: 0,
+    paletteResults: [],
+    player: { id: null, kind: 'theme', open: false, playing: false, progress: 0, duration: 0, volume: 0.8, muted: false },
+    globalQuery: '',
+    globalResults: [],
+    globalKind: 'trailer',
+    synced: 'sync 2 min fa',
+  };
+
+  const sourceItems = () => DATA[state.source] || [];
+  const allItems = () => RADARR.concat(SONARR);
+  const findItem = (id) => allItems().find((item) => item.id === id);
+  const baseName = (path) => String(path).split('/').filter(Boolean).pop() || path;
+  const letterOf = (title) => {
+    const ch = String(title).trim().charAt(0).toUpperCase();
+    return /[A-Z]/.test(ch) ? ch : '#';
+  };
+  const sourceLabel = (source) => (source === 'sonarr' ? 'Serie' : 'Film');
+  const sourceName = (source) => (source === 'sonarr' ? 'Sonarr' : 'Radarr');
+
+  function ruleMatch(item, rule) {
+    switch (rule.field) {
+      case 'theme': return rule.value === 'yes' ? item.hasTheme : !item.hasTheme;
+      case 'art': return rule.value === 'yes' ? item.hasArt : !item.hasArt;
+      case 'trailer': return rule.value === 'yes' ? item.hasTrailer : !item.hasTrailer;
+      case 'quality': return item.quality === rule.value;
+      case 'warning': return rule.value === 'yes' ? Boolean(item.warning) : !item.warning;
+      case 'new': return rule.value === 'yes' ? item.isNew : !item.isNew;
+      default: return true;
+    }
+  }
+
+  function matchesCustom(item, filter) {
+    if (!filter || !filter.rules || !filter.rules.length) return true;
+    const results = filter.rules.map((rule) => ruleMatch(item, rule));
+    return filter.match === 'any' ? results.some(Boolean) : results.every(Boolean);
+  }
+
+  function countFor(filterKey, customId) {
+    return sourceItems().filter((item) => {
+      if (filterKey === 'incomplete') return !item.hasTheme || !item.hasArt || !item.hasTrailer;
+      if (filterKey === 'complete') return item.hasTheme && item.hasArt && item.hasTrailer;
+      if (filterKey === 'missing_theme') return !item.hasTheme;
+      if (filterKey === 'missing_art') return !item.hasArt;
+      if (filterKey === 'missing_trailer') return !item.hasTrailer;
+      if (filterKey === 'custom') {
+        const filter = state.customFilters.find((entry) => entry.id === customId);
+        return matchesCustom(item, filter);
+      }
+      return true;
+    }).length;
+  }
+
+  function visibleItems() {
+    let list = sourceItems().slice();
+    if (state.filter === 'incomplete') list = list.filter((item) => !item.hasTheme || !item.hasArt || !item.hasTrailer);
+    else if (state.filter === 'complete') list = list.filter((item) => item.hasTheme && item.hasArt && item.hasTrailer);
+    else if (state.filter === 'missing_theme') list = list.filter((item) => !item.hasTheme);
+    else if (state.filter === 'missing_art') list = list.filter((item) => !item.hasArt);
+    else if (state.filter === 'missing_trailer') list = list.filter((item) => !item.hasTrailer);
+    else if (state.filter === 'custom') {
+      const custom = state.customFilters.find((entry) => entry.id === state.activeCustom);
+      list = list.filter((item) => matchesCustom(item, custom));
+    }
+    if (state.root !== 'all') list = list.filter((item) => item.rootFolder === state.root);
+    const query = state.search.trim().toLowerCase();
+    if (query) {
+      list = list.filter((item) => [item.title, item.genres, item.rootFolder, String(item.year), item.network, item.quality].join(' ').toLowerCase().includes(query));
+    }
+    const dir = state.dir === 'asc' ? 1 : -1;
+    list.sort((a, b) => {
+      if (state.sort === 'year') return (a.year - b.year) * dir;
+      if (state.sort === 'added') return a.added.localeCompare(b.added) * dir;
+      return a.title.localeCompare(b.title) * dir;
+    });
+    return list;
+  }
+
+  function qualityBadges(item) {
+    return `<span class="q-badge res-${item.res.toLowerCase()}">${esc(item.res === '4K' ? '4K' : item.res)}</span><span class="q-badge">${esc(item.codec)}</span><span class="q-badge">${esc(item.audio)}</span>`;
+  }
+
+  function poster(item, options) {
+    const opts = options || {};
+    const longClass = item.title.length > 24 ? 'is-xlong' : item.title.length > 15 ? 'is-long' : '';
+    return `<div class="poster">
+      <div class="poster-art motif-${esc(item.motif)}" style="--c1:${esc(item.c1)};--c2:${esc(item.c2)}">
+        <span class="poster-shape shape-a"></span><span class="poster-shape shape-b"></span><span class="poster-shape shape-c"></span>
+        <span class="poster-grain"></span>
+      </div>
+      <div class="poster-top">${item.isNew ? '<span class="new-flag"><i></i>NEW</span>' : '<span></span>'}${opts.edit === false ? '' : `<button class="card-edit" data-act="open-editor" data-id="${esc(item.id)}" data-tab="theme" title="Apri editor">${icon('pencil', 'xs')}</button>`}</div>
+      ${item.warning ? `<div class="warning-ribbon">${icon('alert')}<span>${esc(item.warning)}</span></div>` : ''}
+      <div class="poster-title ${longClass}">${esc(item.title)}</div>
+      ${opts.quality === false ? '' : `<div class="quality-row">${qualityBadges(item)}</div>`}
+    </div>`;
+  }
+
+  function statusButtons(item) {
+    return [
+      ['theme', 'music', item.hasTheme, 'Tema', 'open-editor'],
+      ['art', 'image', item.hasArt, 'Artwork', 'open-artwork'],
+      ['trailer', 'clapper', item.hasTrailer, 'Trailer', 'open-editor'],
+    ].map(([tab, ico, ok, label, action]) => `<button class="status-btn ${ok ? 'ok' : 'missing'}" data-act="${action}" data-id="${esc(item.id)}" data-tab="${tab}" title="${label}: ${ok ? 'presente' : 'mancante'}">${icon(ico)}</button>`).join('');
+  }
+
+  function metaLine(item) {
+    if (item.source === 'sonarr') return `${item.year}<span class="middot">·</span>${esc(item.network)}<span class="middot">·</span>${item.seasons} stagioni`;
+    return `${item.year}<span class="middot">·</span>${esc(item.genres)}<span class="middot">·</span>${item.runtime} min`;
+  }
+
+  function cardMarkup(item) {
+    const missing = [!item.hasTheme, !item.hasArt, !item.hasTrailer].filter(Boolean).length;
+    const invalid = item.warning || missing > 1;
+    return `<article class="media-card ${invalid ? 'is-invalid' : ''}" data-act="open-editor" data-id="${esc(item.id)}" data-letter="${letterOf(item.title)}" tabindex="0" aria-label="${esc(item.title)}">
+      ${poster(item)}
+      <div class="card-info">
+        <h3 title="${esc(item.title)}">${esc(item.title)}</h3>
+        <div class="card-meta">${metaLine(item)}</div>
+        <div class="status-row">${statusButtons(item)}${item.warning ? `<span class="warning-txt">${esc(item.warning)}</span>` : `<span class="completion-txt">${3 - missing}/3 risorse</span>`}</div>
+      </div>
+    </article>`;
+  }
+
+  function listRow(item) {
+    const missing = [!item.hasTheme, !item.hasArt, !item.hasTrailer].filter(Boolean).length;
+    return `<div class="list-row ${item.warning || missing > 1 ? 'is-invalid' : ''}" data-act="open-editor" data-id="${esc(item.id)}" data-letter="${letterOf(item.title)}" tabindex="0">
+      <div class="list-poster">${poster(item, { edit: false, quality: false })}</div>
+      <div class="list-main"><h3>${esc(item.title)}</h3><div class="card-meta">${metaLine(item)}</div></div>
+      <div class="list-quality">${qualityBadges(item)}</div>
+      <div class="list-status">${statusButtons(item)}</div>
+      <div class="list-actions">
+        <button class="status-btn ${item.hasTheme ? 'ok' : 'missing'}" data-act="play-theme" data-id="${esc(item.id)}" title="Riproduci tema">${icon('play')}</button>
+        <button class="status-btn" data-act="open-editor" data-id="${esc(item.id)}" data-tab="theme" title="Apri editor">${icon('pencil')}</button>
+      </div>
+    </div>`;
+  }
+
+  function renderAlpha(list) {
+    const nav = $('#alphaNav');
+    if (!nav) return;
+    const letters = Array.from(new Set(list.map((item) => letterOf(item.title)))).sort((a, b) => a === '#' ? 1 : b === '#' ? -1 : a.localeCompare(b));
+    if (letters.length < 4) {
+      nav.innerHTML = '';
+      nav.style.display = 'none';
+      return;
+    }
+    nav.style.display = '';
+    nav.innerHTML = letters.map((letter) => `<button data-act="alpha" data-letter="${esc(letter)}" title="Vai a ${esc(letter)}">${esc(letter)}</button>`).join('');
+  }
+
+  function renderLibrary() {
+    const list = visibleItems();
+    const body = $('#libraryBody');
+    if (!body) return;
+    if (!list.length) {
+      body.innerHTML = `<div class="empty-state"><div class="empty-icon">${icon('search', 'lg')}</div><h3>Nessun titolo trovato</h3><p>Prova a cambiare filtro, cartella o termine di ricerca. I filtri personalizzati restano salvati nel mockup.</p><button class="btn primary sm" data-act="clear-filters">Azzera filtri</button></div>`;
+    } else if (state.view === 'list') {
+      body.innerHTML = `<div class="media-list">${list.map(listRow).join('')}</div>`;
+    } else {
+      body.innerHTML = `<div class="library-grid">${list.map(cardMarkup).join('')}</div>`;
+    }
+    const count = $('#libraryCount');
+    if (count) count.textContent = String(list.length);
+    const breadcrumb = $('#breadcrumbCount');
+    if (breadcrumb) breadcrumb.textContent = `${list.length} titoli`;
+    const summary = $('#visibleSummary');
+    if (summary) {
+      const sortLabels = { title: 'titolo', year: 'anno', added: 'data aggiunta' };
+      const bits = [`${list.length} titoli visibili`, `ordina per ${sortLabels[state.sort]}`];
+      if (state.search.trim()) bits.push(`ricerca “${state.search.trim()}”`);
+      if (state.root !== 'all') bits.push(baseName(state.root));
+      summary.textContent = bits.join(' · ');
+    }
+    renderAlpha(list);
+  }
+
+  function renderChips() {
+    const chips = [
+      { key: 'all', label: 'Tutti' },
+      { key: 'incomplete', label: 'Da completare' },
+      { key: 'complete', label: 'Completi' },
+      { key: 'missing_theme', label: 'Senza tema' },
+      { key: 'missing_art', label: 'Senza artwork' },
+      { key: 'missing_trailer', label: 'Senza trailer' },
+    ];
+    let html = chips.map((chip) => `<button class="chip ${state.filter === chip.key ? 'active' : ''}" data-act="filter" data-filter="${chip.key}">${chip.label}<span class="n">${countFor(chip.key)}</span></button>`).join('');
+    html += state.customFilters.map((filter) => `<button class="chip custom ${state.filter === 'custom' && state.activeCustom === filter.id ? 'active' : ''}" data-act="filter" data-filter="custom" data-custom="${esc(filter.id)}"><svg class="ic xs"><use href="#i-sliders"/></svg><span>${esc(filter.name)}</span><span class="n">${countFor('custom', filter.id)}</span><span class="x" data-act="delete-custom" data-id="${esc(filter.id)}" title="Elimina filtro">${icon('x', 'xs')}</span></button>`).join('');
+    html += `<button class="chip" data-act="open-filter" title="Nuovo filtro personalizzato">${icon('plus', 'xs')} Filtro</button>`;
+    const chipsEl = $('#filterChips');
+    if (chipsEl) chipsEl.innerHTML = html;
+  }
+
+  function renderFolders() {
+    const roots = Array.from(new Set(sourceItems().map((item) => item.rootFolder)));
+    const folderEl = $('#folderList');
+    if (folderEl) {
+      folderEl.innerHTML = `<button class="nav-item ${state.root === 'all' ? 'active' : ''}" data-act="root" data-root="all">${icon('layers')}Tutte<span class="nav-count">${sourceItems().length}</span></button>` + roots.map((root) => {
+        const n = sourceItems().filter((item) => item.rootFolder === root).length;
+        return `<button class="nav-item ${state.root === root ? 'active' : ''}" data-act="root" data-root="${esc(root)}" title="${esc(root)}">${icon('folder')}<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(baseName(root))}</span><span class="nav-count">${n}</span></button>`;
+      }).join('');
+    }
+    const select = $('#rootSelect');
+    if (select) {
+      const current = state.root;
+      select.innerHTML = `<option value="all">Tutte le cartelle</option>` + roots.map((root) => `<option value="${esc(root)}">${esc(baseName(root))} (${sourceItems().filter((item) => item.rootFolder === root).length})</option>`).join('');
+      select.value = roots.includes(current) ? current : 'all';
+      if (!roots.includes(current)) state.root = 'all';
+    }
+  }
+
+  function updateThemeUI() {
+    const dark = state.theme === 'dark';
+    ['#appThemeIcon', '#labThemeIcon'].forEach((sel) => {
+      const use = $(sel + ' use');
+      if (use) use.setAttribute('href', dark ? '#i-sun' : '#i-moon');
+    });
+    const lab = $('#labThemeTxt');
+    if (lab) lab.textContent = dark ? 'Tema chiaro' : 'Tema scuro';
+    const appBtn = $('#appThemeBtn');
+    if (appBtn) appBtn.setAttribute('aria-label', dark ? 'Passa al tema chiaro' : 'Passa al tema scuro');
+    document.documentElement.setAttribute('data-theme', state.theme);
+  }
+
+  function renderChrome() {
+    updateThemeUI();
+    $$('[data-act="source"]').forEach((btn) => btn.classList.toggle('active', btn.dataset.source === state.source));
+    const items = sourceItems();
+    const incomplete = items.filter((item) => !item.hasTheme || !item.hasArt || !item.hasTrailer).length;
+    const complete = items.filter((item) => item.hasTheme && item.hasArt && item.hasTrailer).length;
+    const warnings = items.filter((item) => item.warning).length;
+    const news = items.filter((item) => item.isNew).length;
+    const themeN = items.filter((item) => item.hasTheme).length;
+    const artN = items.filter((item) => item.hasArt).length;
+    const trailerN = items.filter((item) => item.hasTrailer).length;
+    const pct = Math.round(((themeN + artN + trailerN) / Math.max(1, items.length * 3)) * 100);
+
+    const setText = (sel, text) => { const el = $(sel); if (el) el.textContent = text; };
+    setText('#navAllCount', String(items.length));
+    setText('#navIncompleteCount', String(incomplete));
+    setText('#navCompleteCount', String(complete));
+    setText('#connectionName', sourceName(state.source));
+    setText('#connectionDetail', `Connesso · ${items.length} titoli`);
+    setText('#breadcrumbType', sourceLabel(state.source));
+    setText('#heroSource', sourceName(state.source));
+    setText('#heroSync', state.synced);
+    setText('#heroMissing', String(incomplete));
+    setText('#heroValid', `${complete} titoli validi`);
+    setText('#heroWarnings', `${warnings} avvisi`);
+    setText('#heroNew', `${news} nuovi`);
+    setText('#coveragePct', `${pct}%`);
+    setText('#coverageRingPct', `${pct}%`);
+    setText('#coverageTrend', pct >= 80 ? '+4%' : '+2%');
+    setText('#covThemeN', `${themeN}/${items.length}`);
+    setText('#covArtN', `${artN}/${items.length}`);
+    setText('#covTrailerN', `${trailerN}/${items.length}`);
+    setText('#coverageFoot', warnings ? `${warnings} titoli con avvisi di percorso` : 'Nessun avviso di percorso.');
+    const subtitle = $('#heroSubtitle');
+    if (subtitle) subtitle.textContent = `${items.length} titoli in libreria. ${incomplete} ancora da completare tra tema, artwork e trailer.`;
+    const ring = $('#coverageRing');
+    if (ring) ring.style.setProperty('--p', String(pct));
+    const bar = (sel, value) => { const el = $(sel); if (el) el.style.width = `${Math.round((value / Math.max(1, items.length)) * 100)}%`; };
+    bar('#covThemeBar', themeN);
+    bar('#covArtBar', artN);
+    bar('#covTrailerBar', trailerN);
+
+    $$('[data-act="filter"]').forEach((btn) => {
+      if (!btn.closest('#filterChips')) {
+        btn.classList.toggle('active', btn.dataset.filter === state.filter);
+      }
+    });
+    renderFolders();
+    renderChips();
+
+    const sortSelect = $('#sortSelect');
+    if (sortSelect) sortSelect.value = state.sort;
+    const dirIcon = $('#dirIcon use');
+    if (dirIcon) dirIcon.setAttribute('href', state.dir === 'asc' ? '#i-arrow-up' : '#i-arrow-down');
+    $$('[data-act="view"]').forEach((btn) => btn.classList.toggle('active', btn.dataset.view === state.view));
+    const searchInput = $('#localSearch');
+    if (searchInput && document.activeElement !== searchInput) searchInput.value = state.search;
+    renderLibrary();
+  }
+
+  function setFilter(filter, customId) {
+    state.filter = filter || 'all';
+    state.activeCustom = filter === 'custom' ? (customId || state.activeCustom) : null;
+    renderChrome();
+    closeRail();
+  }
+
+  function setSource(source) {
+    if (!DATA[source] || source === state.source) return;
+    state.source = source;
+    state.root = 'all';
+    state.search = '';
+    state.filter = 'all';
+    state.activeCustom = null;
+    renderChrome();
+    closeRail();
+  }
+
+  function clearFilters() {
+    state.filter = 'all';
+    state.activeCustom = null;
+    state.search = '';
+    state.root = 'all';
+    renderChrome();
+    toast('Filtri azzerati', 'info');
+  }
+
+  function openModal(id) {
+    $$('.modal-layer.is-open').forEach((layer) => { layer.classList.remove('is-open'); layer.setAttribute('aria-hidden', 'true'); });
+    const layer = $('#' + id);
+    if (!layer) return;
+    layer.classList.add('is-open');
+    layer.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    if (id === 'paletteModal') setTimeout(() => $('#paletteInput')?.focus(), 30);
+  }
+
+  function closeModal(id) {
+    const layer = id ? $('#' + id) : $('.modal-layer.is-open');
+    if (layer) {
+      layer.classList.remove('is-open');
+      layer.setAttribute('aria-hidden', 'true');
+    }
+    if (!$('.modal-layer.is-open')) document.body.style.overflow = '';
+  }
+
+  function closeAllModals() {
+    $$('.modal-layer.is-open').forEach((layer) => { layer.classList.remove('is-open'); layer.setAttribute('aria-hidden', 'true'); });
+    document.body.style.overflow = '';
+  }
+
+  function toast(message, type) {
+    const stack = $('#toastStack');
+    if (!stack) return;
+    const kind = type || 'ok';
+    const map = { ok: 'check', warn: 'alert', info: 'info', err: 'x' };
+    const el = document.createElement('div');
+    el.className = `toast ${kind}`;
+    el.innerHTML = `${icon(map[kind] || 'check', 'sm')}<span>${esc(message)}</span>`;
+    stack.appendChild(el);
+    setTimeout(() => {
+      el.classList.add('out');
+      setTimeout(() => el.remove(), 220);
+    }, 2800);
+  }
+
+  function openRail() {
+    $('#rail')?.classList.add('open');
+    $('#railBackdrop')?.classList.add('open');
+  }
+  function closeRail() {
+    $('#rail')?.classList.remove('open');
+    $('#railBackdrop')?.classList.remove('open');
+  }
+
+  function makeMediaResults(item, kind, query) {
+    const suffixes = kind === 'theme'
+      ? ['Main Theme', 'Official Soundtrack', 'Piano Suite', 'Extended Version']
+      : ['Official Trailer', 'Teaser Trailer', 'Final Trailer', 'Featurette'];
+    const channels = kind === 'theme' ? ['Lakeshore Records', 'Soundtrack Universe', 'Cinematic Piano', 'Score Extended'] : ['Movie Trailers', 'FilmSelect', 'Warner Bros.', 'Entertainment Weekly'];
+    const durations = kind === 'theme' ? ['3:42', '4:18', '2:56', '6:11'] : ['2:31', '1:44', '2:18', '3:02'];
+    return suffixes.map((suffix, index) => ({
+      vid: `${kind}-${item.id}-${index}`,
+      title: `${query || item.title} — ${suffix}`,
+      channel: channels[index],
+      duration: durations[index],
+      kind,
+    }));
+  }
+
+  function openEditor(id, tab) {
+    const item = findItem(id);
+    if (!item) return;
+    state.selected = id;
+    state.editorTab = tab || 'theme';
+    if (state.editorTab === 'nfo') state.nfoMode = 'form';
+    state.editorQuery = item.title;
+    state.editorResults = state.editorTab === 'nfo' ? [] : makeMediaResults(item, state.editorTab, item.title);
+    renderEditor();
+    openModal('editorModal');
+  }
+
+  function renderEditor() {
+    const item = findItem(state.selected);
+    if (!item) return;
+    $('#editorTitle').textContent = item.title;
+    $('#editorSub').textContent = `${item.year} · ${item.quality} · ${sourceName(item.source)} · ${item.rootFolder}`;
+    $('#editorThumb').innerHTML = poster(item, { edit: false, quality: false });
+    $('#editorStatus').innerHTML = `<span class="tag ${item.hasTheme ? 'ok' : 'no'}">${icon('music', 'xs')}Tema</span><span class="tag ${item.hasArt ? 'ok' : 'no'}">${icon('image', 'xs')}Artwork</span><span class="tag ${item.hasTrailer ? 'ok' : 'no'}">${icon('clapper', 'xs')}Trailer</span>`;
+    const tab = state.editorTab;
+    const tabs = `<div class="tabs"><button class="tab ${tab === 'theme' ? 'active' : ''}" data-act="editor-tab" data-tab="theme">${icon('music', 'xs')}Tema</button><button class="tab ${tab === 'trailer' ? 'active' : ''}" data-act="editor-tab" data-tab="trailer">${icon('clapper', 'xs')}Trailer</button><button class="tab ${tab === 'nfo' ? 'active' : ''}" data-act="editor-tab" data-tab="nfo">${icon('file', 'xs')}NFO</button></div>`;
+    $('#editorBody').innerHTML = tabs + '<div class="divider"></div>' + (tab === 'nfo' ? nfoPanel(item) : mediaEditorPanel(item, tab));
+  }
+
+  function mediaEditorPanel(item, kind) {
+    const isTheme = kind === 'theme';
+    const has = isTheme ? item.hasTheme : item.hasTrailer;
+    const fileName = isTheme ? item.themeName : item.trailerName;
+    const label = isTheme ? 'Tema' : 'Trailer';
+    const current = has
+      ? `<div class="current-media"><div class="mini">${poster(item, { edit: false, quality: false })}</div><div class="copy"><strong>${esc(fileName)}</strong><span>${esc(fileName)}.mp4 · ${isTheme ? '18.4 MB' : '42.1 MB'} · ${isTheme ? item.themeDuration : item.trailerDuration}</span></div><span class="tag ok">${icon('check', 'xs')}Presente</span></div>`
+      : `<div class="current-media"><div class="mini">${poster(item, { edit: false, quality: false })}</div><div class="copy"><strong>Nessun ${label.toLowerCase()} assegnato</strong><span>Cerca un video YouTube o scegli un file locale.</span></div><span class="tag no">${icon('alert', 'xs')}Mancante</span></div>`;
+    const results = state.editorResults.map((result, index) => `<div class="result ${index === 0 ? 'selected' : ''}">
+      <div class="result-thumb" style="--c1:${esc(item.c1)};--c2:${esc(item.c2)}">${icon('play', 'lg')}</div>
+      <div class="result-copy"><strong>${esc(result.title)}</strong><span>${esc(result.channel)} · ${esc(result.duration)} · YouTube</span></div>
+      <div class="result-actions"><button class="btn xs" data-act="preview-video" data-id="${esc(item.id)}" data-kind="${kind}" data-vid="${esc(result.vid)}" title="Anteprima">${icon('eye', 'xs')}</button><button class="btn xs" data-act="apply-media" data-id="${esc(item.id)}" data-kind="${kind}" data-vid="${esc(result.vid)}" title="Applica">${icon('check', 'xs')}</button></div>
+    </div>`).join('');
+    return `<div class="editor-grid">
+      <section class="panel">
+        <div class="panel-head">${icon(isTheme ? 'music' : 'clapper')}${label} · ricerca YouTube</div>
+        <div class="panel-body">
+          ${current}
+          <label class="label">Cerca su YouTube</label>
+          <div class="search-row"><input class="input" id="editorSearchInput" type="search" placeholder="Titolo, artista, colonna sonora…" value="${esc(state.editorQuery)}" autocomplete="off"><button class="btn" data-act="editor-search">${icon('search', 'sm')}Cerca</button></div>
+          <div class="result-list">${results || `<div class="art-empty"><strong>Nessun risultato</strong><span>Prova con un altro termine di ricerca.</span></div>`}</div>
+          <div class="nfo-actions"><button class="btn ghost xs" data-act="open-global-search" data-kind="${kind}">${icon('globe', 'xs')}Ricerca globale</button><button class="btn ghost xs" data-act="open-artwork" data-id="${esc(item.id)}">${icon('image', 'xs')}Artwork</button><button class="btn ghost xs" data-act="open-folder" data-path="${esc(item.folder)}">${icon('folder', 'xs')}Cartella locale</button></div>
+        </div>
+      </section>
+      <section class="panel">
+        <div class="panel-head">${icon('monitor')}Anteprima</div>
+        <div class="panel-body preview-pane">
+          <div class="preview-video motif-${esc(item.motif)}" style="--c1:${esc(item.c1)};--c2:${esc(item.c2)}">
+            <button class="play-fab" data-act="preview-video" data-id="${esc(item.id)}" data-kind="${kind}" data-vid="${esc((state.editorResults[0] || {}).vid || '')}">${icon('play', 'lg')}</button>
+          </div>
+          <div class="preview-copy"><strong>${esc(item.title)} — ${label}</strong><span>${esc((state.editorResults[0] || {}).channel || 'Anteprima YouTube')} · ${esc((state.editorResults[0] || {}).duration || '')}</span></div>
+          <div class="hint">${has ? 'La risorsa è già presente. Puoi sostituirla senza toccare il file originale.' : 'Applica un video per coprire la mancanza. L’operazione è simulata in questo mockup.'}</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn primary xs" data-act="apply-media" data-id="${esc(item.id)}" data-kind="${kind}" data-vid="${esc((state.editorResults[0] || {}).vid || '')}">${icon('check', 'xs')}Applica ${label.toLowerCase()}</button>
+            <button class="btn xs" data-act="player-open" data-id="${esc(item.id)}" data-kind="${kind}">${icon('play', 'xs')}Riproduci</button>
+          </div>
+          <button class="btn ghost xs" style="justify-content:flex-start" data-act="open-folder" data-path="${esc(item.folder)}">${icon('file', 'xs')}${esc(fileName)}</button>
+        </div>
+      </section>
+    </div>`;
+  }
+
+  function nfoXml(item) {
+    return `<movie>
+  <title>${esc(item.title)}</title>
+  <originaltitle>${esc(item.title)}</originaltitle>
+  <year>${item.year}</year>
+  <plot>${esc(item.overview || 'Trama non ancora disponibile. Modifica il campo nel form per aggiornare il file NFO.')}</plot>
+  <genre>${esc(item.genres)}</genre>
+  <runtime>${item.runtime}</runtime>
+  <uniqueid type="tmdb" default="true">${esc(item.tmdbId)}</uniqueid>
+  <uniqueid type="imdb">${esc(item.imdbId)}</uniqueid>
+  <fileinfo><streamdetails><video><codec>${esc(item.codec)}</codec></video><audio><codec>${esc(item.audio)}</codec></audio></streamdetails></fileinfo>
+</movie>`;
+  }
+
+  function nfoPanel(item) {
+    const mode = state.nfoMode;
+    return `<div class="tabs" style="margin-bottom:11px"><button class="tab ${mode === 'form' ? 'active' : ''}" data-act="nfo-mode" data-mode="form">${icon('list', 'xs')}Modulo</button><button class="tab ${mode === 'xml' ? 'active' : ''}" data-act="nfo-mode" data-mode="xml">${icon('file', 'xs')}XML</button></div>
+      ${mode === 'form' ? `<div class="form-grid">
+        <div><label class="label">Titolo</label><input class="input" data-nfo-field="title" value="${esc(item.title)}"></div>
+        <div><label class="label">Anno</label><input class="input" data-nfo-field="year" type="number" value="${esc(item.year)}"></div>
+        <div><label class="label">Generi</label><input class="input" data-nfo-field="genres" value="${esc(item.genres)}"></div>
+        <div><label class="label">Durata (min)</label><input class="input" data-nfo-field="runtime" type="number" value="${esc(item.runtime)}"></div>
+        <div class="full"><label class="label">Trama</label><textarea class="textarea" data-nfo-field="overview" placeholder="Inserisci la trama…">${esc(item.overview || '')}</textarea></div>
+        <div><label class="label">TMDB ID</label><input class="input" data-nfo-field="tmdbId" value="${esc(item.tmdbId)}"></div>
+        <div><label class="label">IMDB ID</label><input class="input" data-nfo-field="imdbId" value="${esc(item.imdbId)}"></div>
+      </div>` : `<div class="hint" style="margin-bottom:6px">XML generato dal file NFO corrente. Modificabile nel mockup.</div><textarea class="xml-box" id="nfoRaw" spellcheck="false" style="width:100%;min-height:360px;resize:vertical">${esc(nfoXml(item))}</textarea>`}
+      <div class="nfo-actions"><button class="btn primary sm" data-act="nfo-save">${icon('save', 'sm')}Salva NFO</button><button class="btn sm" data-act="nfo-reload">${icon('rotate', 'sm')}Ricarica</button><button class="btn ghost sm" data-act="open-folder" data-path="${esc(item.folder)}">${icon('folder', 'sm')}Apri cartella</button><span class="hint" style="margin-left:auto">${esc(item.folder)}/movie.nfo</span></div>`;
+  }
+
+  function doEditorSearch() {
+    const item = findItem(state.selected);
+    if (!item) return;
+    const input = $('#editorSearchInput');
+    state.editorQuery = (input ? input.value : state.editorQuery).trim() || item.title;
+    state.editorResults = makeMediaResults(item, state.editorTab, state.editorQuery);
+    renderEditor();
+    toast(`Trovati ${state.editorResults.length} video per “${state.editorQuery}”`, 'info');
+  }
+
+  function applyMedia(id, kind) {
+    const item = findItem(id);
+    if (!item) return;
+    if (kind === 'trailer') item.hasTrailer = true; else item.hasTheme = true;
+    toast(kind === 'trailer' ? 'Trailer applicato' : 'Tema applicato', 'ok');
+    renderEditor();
+    renderChrome();
+  }
+
+  function openVideo(id, kind) {
+    const item = findItem(id);
+    if (!item) return;
+    const result = state.editorResults[0] || { title: `${item.title} — ${kind === 'theme' ? 'Main Theme' : 'Official Trailer'}`, channel: 'YouTube', duration: kind === 'theme' ? item.themeDuration : item.trailerDuration };
+    $('#videoTitle').textContent = result.title;
+    $('#videoSub').textContent = `${result.channel} · ${result.duration} · ${kind === 'theme' ? 'Tema' : 'Trailer'}`;
+    $('#videoBody').innerHTML = `<div class="video-shell">
+      <div class="video-frame motif-${esc(item.motif)}" style="--c1:${esc(item.c1)};--c2:${esc(item.c2)}"><span class="video-live"><i></i>ANTEPRIMA</span><button class="video-play" data-act="video-play">${icon('play', 'lg')}</button></div>
+      <div class="video-copy"><div class="video-meta"><span class="tag accent">${kind === 'theme' ? 'Tema' : 'Trailer'}</span><span class="tag">${esc(result.duration)}</span><span class="tag">YouTube</span></div><h3>${esc(item.title)}</h3><p>${esc(result.title)}</p><div class="video-actions"><button class="btn primary sm" data-act="apply-media" data-id="${esc(item.id)}" data-kind="${kind}" data-vid="${esc(result.vid || '')}">${icon('check', 'sm')}Applica</button><button class="btn sm" data-act="open-folder" data-path="${esc(item.folder)}">${icon('folder', 'sm')}File locale</button><button class="btn ghost sm" data-act="toast" data-message="Link YouTube copiato (simulazione)">${icon('link', 'sm')}Copia link</button></div></div>
+    </div>`;
+    openModal('videoModal');
+  }
+
+  const ART_TYPES = [
+    { key: 'poster', label: 'Poster' },
+    { key: 'background', label: 'Sfondi' },
+    { key: 'logo', label: 'Loghi' },
+    { key: 'disc', label: 'Dischi' },
+  ];
+  const ART_SOURCES = [
+    { key: 'local', label: 'Locali', counts: { poster: 3, background: 2, logo: 1, disc: 1 } },
+    { key: 'fanart', label: 'Fanart.tv', counts: { poster: 4, background: 4, logo: 2, disc: 0 } },
+    { key: 'tmdb', label: 'TMDB', counts: { poster: 5, background: 3, logo: 2, disc: 1 } },
+  ];
+
+  function openArtwork(id) {
+    state.selected = id;
+    state.artSource = 'local';
+    state.artType = 'poster';
+    renderArtwork();
+    openModal('artworkModal');
+  }
+
+  function artVisual(item, type, source, index) {
+    if (type === 'logo') {
+      return `<div class="art-visual logo" style="--c1:${esc(item.c1)};--c2:${esc(item.c2)}"><span class="art-name">${esc(item.title)}</span></div>`;
+    }
+    if (type === 'disc') {
+      return `<div class="art-visual disc" style="--c1:${esc(item.c1)};--c2:${esc(item.c2)}"><span class="disc-ring"></span><span class="art-name">${esc(item.title)}</span></div>`;
+    }
+    const motif = source === 'local' ? item.motif : MOTIFS[(index + source.length) % MOTIFS.length];
+    return `<div class="art-visual motif-${esc(motif)}" style="--c1:${esc(item.c1)};--c2:${esc(item.c2)}"><span class="poster-shape shape-a"></span><span class="poster-shape shape-b"></span><span class="art-name">${esc(item.title)}</span></div>`;
+  }
+
+  function artCount(source, type) {
+    const entry = ART_SOURCES.find((item) => item.key === source);
+    return entry ? entry.counts[type] : 0;
+  }
+
+  function renderArtwork() {
+    const item = findItem(state.selected);
+    if (!item) return;
+    const source = ART_SOURCES.find((entry) => entry.key === state.artSource) || ART_SOURCES[0];
+    $('#artTitle').textContent = `Artwork — ${item.title}`;
+    $('#artSub').textContent = `${item.year} · ${source.label} · ${ART_TYPES.find((type) => type.key === state.artType)?.label || ''}`;
+    $('#artThumb').innerHTML = poster(item, { edit: false, quality: false });
+    $('#artHeadActions').innerHTML = `<span class="tag ${item.hasArt ? 'ok' : 'no'}">${icon('image', 'xs')}${item.hasArt ? 'Artwork presente' : 'Artwork mancante'}</span>`;
+    const count = artCount(state.artSource, state.artType);
+    const tiles = Array.from({ length: count }).map((_, index) => `<div class="art-tile">
+      ${artVisual(item, state.artType, state.artSource, index)}
+      <span class="art-badge">${esc(source.key)} · ${esc(state.artType)}${index > 0 ? ` · ${index + 1}` : ''}</span>
+      <div class="art-hover"><button data-act="preview-art" data-id="${esc(item.id)}" data-source="${esc(state.artSource)}" data-type="${esc(state.artType)}" data-index="${index}" title="Anteprima">${icon('eye', 'xs')}</button><button data-act="apply-art" data-id="${esc(item.id)}" data-source="${esc(state.artSource)}" data-type="${esc(state.artType)}" data-index="${index}" title="Applica">${icon('check', 'xs')}</button></div>
+    </div>`).join('');
+    $('#artBody').innerHTML = `<div class="art-layout">
+      <div class="art-toolbar">
+        <div class="tabs">${ART_SOURCES.map((entry) => `<button class="tab ${state.artSource === entry.key ? 'active' : ''}" data-act="art-source" data-source="${entry.key}">${entry.key === 'local' ? icon('hard-drive', 'xs') : entry.key === 'fanart' ? icon('heart', 'xs') : icon('globe', 'xs')}${entry.label}<span class="n" style="font-family:var(--font-mono);font-size:8px;opacity:.65">${Object.values(entry.counts).reduce((sum, value) => sum + value, 0)}</span></button>`).join('')}</div>
+        <div class="art-filters">${ART_TYPES.map((type) => `<button class="art-filter ${state.artType === type.key ? 'active' : ''}" data-act="art-type" data-type="${type.key}">${type.label}<span class="n">${artCount(state.artSource, type.key)}</span></button>`).join('')}</div>
+      </div>
+      ${count ? `<div class="art-grid">${tiles}</div>` : `<div class="art-empty">${icon('image', 'lg')}<strong>Nessun ${ART_TYPES.find((type) => type.key === state.artType)?.label.toLowerCase()} disponibile</strong><span>Prova un’altra sorgente o un altro tipo di artwork.</span></div>`}
+      <div class="hint">Sorgenti: file locali, Fanart.tv e TMDB. Le immagini sono generate nel mockup; applicazione e download sono simulati.</div>
+    </div>`;
+  }
+
+  function openArtPreview(id, sourceKey, type, index) {
+    const item = findItem(id);
+    if (!item) return;
+    const source = ART_SOURCES.find((entry) => entry.key === sourceKey) || ART_SOURCES[0];
+    $('#artPreviewTitle').textContent = `${ART_TYPES.find((entry) => entry.key === type)?.label || 'Artwork'} — ${item.title}`;
+    $('#artPreviewSub').textContent = `${source.label} · ${type} · variante ${Number(index) + 1}`;
+    const visual = type === 'logo'
+      ? `<div class="art-preview-visual" style="--c1:${esc(item.c1)};--c2:${esc(item.c2)};background:repeating-conic-gradient(${esc(item.c2)} 0 25%,${esc(item.c1)} 0 50%) 50%/22px 22px"><span class="art-name" style="color:${esc(item.c1)}">${esc(item.title)}</span></div>`
+      : `<div class="art-preview-visual motif-${esc(item.motif)}" style="--c1:${esc(item.c1)};--c2:${esc(item.c2)}"><span class="poster-shape shape-a"></span><span class="poster-shape shape-b"></span><span class="poster-shape shape-c"></span><span class="art-name">${esc(item.title)}</span></div>`;
+    $('#artPreviewBody').innerHTML = `<div class="art-preview">${visual}<div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap"><span class="tag">${esc(source.label)}</span><span class="tag">${esc(type)}</span><span class="tag">${1920 + Number(index) * 80} × ${1080 + Number(index) * 45}</span><span class="tag">${(1.2 + Number(index) * 0.3).toFixed(1)} MB</span><span class="tag ok">${icon('check', 'xs')}Verificata</span><div style="margin-left:auto;display:flex;gap:5px"><button class="btn primary sm" data-act="apply-art" data-id="${esc(item.id)}" data-source="${esc(sourceKey)}" data-type="${esc(type)}" data-index="${index}">${icon('check', 'sm')}Applica</button><button class="btn sm" data-act="toast" data-message="Download artwork avviato (simulazione)">${icon('download', 'sm')}Scarica</button></div></div></div>`;
+    openModal('artPreviewModal');
+  }
+
+  function renderSettings() {
+    const tabs = [
+      { key: 'connections', label: 'Connessioni', icon: 'plug' },
+      { key: 'paths', label: 'Percorsi', icon: 'folder' },
+      { key: 'metadata', label: 'Metadati', icon: 'database' },
+      { key: 'about', label: 'Informazioni', icon: 'info' },
+    ];
+    let panel = '';
+    if (state.settingsTab === 'connections') panel = connectionsPanel();
+    else if (state.settingsTab === 'paths') panel = pathsPanel();
+    else if (state.settingsTab === 'metadata') panel = metadataPanel();
+    else panel = aboutPanel();
+    $('#settingsBody').innerHTML = `<div class="settings-layout"><nav class="settings-nav">${tabs.map((tab) => `<button class="${state.settingsTab === tab.key ? 'active' : ''}" data-act="settings-tab" data-tab="${tab.key}">${icon(tab.icon, 'sm')}${tab.label}</button>`).join('')}</nav><div class="settings-panel">${panel}</div></div>`;
+  }
+
+  function connectionCard(source) {
+    const isRadarr = source === 'radarr';
+    const status = state.connections[source];
+    const statusLabel = status === 'ok' ? 'Connesso' : status === 'testing' ? 'Test…' : 'Errore';
+    const urlKey = isRadarr ? 'radarrUrl' : 'sonarrUrl';
+    const keyKey = isRadarr ? 'radarrKey' : 'sonarrKey';
+    return `<div class="connection-card">
+      <div class="connection-top"><div class="connection-icon">${icon(isRadarr ? 'film' : 'tv')}</div><div><strong>${sourceName(source)}</strong><span>${isRadarr ? 'Film · Radarr v5' : 'Serie · Sonarr v4'}</span></div><span class="status-pill ${status}">${statusLabel}</span></div>
+      <div class="form-row"><div><label class="label">URL</label><input class="input" data-setting="${urlKey}" value="${esc(state.settings[urlKey])}" spellcheck="false"></div><div><label class="label">API key</label><div class="secret-wrap"><input class="input" type="${state.secrets[keyKey] ? 'text' : 'password'}" data-setting="${keyKey}" value="${esc(state.settings[keyKey])}" spellcheck="false"><button class="secret-toggle" data-act="secret-toggle" data-key="${keyKey}" title="Mostra/nascondi">${icon('eye', 'sm')}</button></div></div></div>
+      <div style="display:flex;align-items:center;gap:6px"><button class="btn sm" data-act="test-connection" data-source="${source}">${icon('link', 'sm')}Test connessione</button><span class="hint">Ultimo test: oggi, 09:42</span></div>
+    </div>`;
+  }
+
+  function connectionsPanel() {
+    return `<h3>Connessioni</h3><p>Configura le istanze Radarr e Sonarr. Le chiavi restano nel browser e non vengono inviate altrove.</p>${connectionCard('radarr')}${connectionCard('sonarr')}<div class="settings-foot-note">${icon('info', 'sm')}Le richieste vengono validate lato server prima di salvare.</div>`;
+  }
+
+  function pathsPanel() {
+    return `<h3>Mappatura percorsi</h3><p>Traduci i percorsi delle istanze remote nei percorsi locali usati da nEXTrarr.</p>${state.pathMappings.map((map, index) => `<div class="path-row"><div><label class="label">Percorso remoto</label><input class="input" data-map-index="${index}" data-map-field="remote" value="${esc(map.remote)}" spellcheck="false"></div><div><label class="label">Percorso locale</label><input class="input" data-map-index="${index}" data-map-field="local" value="${esc(map.local)}" spellcheck="false"></div><div class="path-actions"><button class="btn sm" data-act="open-folder" data-path="${esc(map.local)}" title="Sfoglia">${icon('folder', 'sm')}</button><button class="btn sm danger" data-act="path-remove" data-index="${index}" title="Rimuovi">${icon('trash', 'sm')}</button></div></div>`).join('')}<button class="btn sm" data-act="path-add">${icon('plus', 'sm')}Aggiungi mappatura</button><div class="settings-foot-note">${icon('info', 'sm')}Gli avvisi “percorso non mappato” dipendono da queste regole.</div>`;
+  }
+
+  function metadataPanel() {
+    return `<h3>Metadati e risorse</h3><p>Scegli le fonti predefinite per tema, artwork e trailer.</p><div class="form-grid">
+      <div><label class="label">Sorgente tema</label><select class="select" data-setting="themeSource"><option value="fanart" ${state.settings.themeSource === 'fanart' ? 'selected' : ''}>Fanart.tv</option><option value="local" ${state.settings.themeSource === 'local' ? 'selected' : ''}>Solo file locali</option><option value="youtube" ${state.settings.themeSource === 'youtube' ? 'selected' : ''}>YouTube</option></select></div>
+      <div><label class="label">Sorgente artwork</label><select class="select" data-setting="artSource"><option value="tmdb" ${state.settings.artSource === 'tmdb' ? 'selected' : ''}>TMDB</option><option value="fanart" ${state.settings.artSource === 'fanart' ? 'selected' : ''}>Fanart.tv</option><option value="local" ${state.settings.artSource === 'local' ? 'selected' : ''}>Solo file locali</option></select></div>
+      <div><label class="label">Lingua</label><select class="select" data-setting="language"><option value="it-IT" ${state.settings.language === 'it-IT' ? 'selected' : ''}>Italiano (IT)</option><option value="en-US" ${state.settings.language === 'en-US' ? 'selected' : ''}>English (US)</option></select></div>
+      <div><label class="label">YouTube API key</label><div class="secret-wrap"><input class="input" type="${state.secrets.youtubeKey ? 'text' : 'password'}" data-setting="youtubeKey" placeholder="Opzionale" value="${esc(state.settings.youtubeKey)}"><button class="secret-toggle" data-act="secret-toggle" data-key="youtubeKey">${icon('eye', 'sm')}</button></div></div>
+      <div class="full"><label style="display:flex;align-items:center;gap:8px;padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);font-size:10.5px"><input type="checkbox" checked> Genera automaticamente le immagini mancanti</label></div>
+      <div class="full"><label style="display:flex;align-items:center;gap:8px;padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);font-size:10.5px"><input type="checkbox" checked> Controlla i percorsi dopo ogni sync</label></div>
+    </div><div class="settings-foot-note">${icon('info', 'sm')}Le modifiche ai metadati vengono applicate al prossimo aggiornamento della libreria.</div>`;
+  }
+
+  function aboutPanel() {
+    return `<h3>nEXTrarr 0.8.32</h3><p>Mockup di redesign dell’interfaccia. La base funzionale resta la 0.8.3: nessuna route API modificata.</p><div class="form-grid"><div class="panel"><div class="panel-body"><span class="label">Versione</span><strong style="font-family:var(--font-mono);font-size:15px">0.8.32</strong><div class="hint" style="margin-top:3px">build mockup · 29 ottobre 2026</div></div></div><div class="panel"><div class="panel-body"><span class="label">Stack</span><strong style="font-size:11px">Next.js · Tailwind · Radix</strong><div class="hint" style="margin-top:3px">Zustand · React Query · Prisma</div></div></div></div><div class="divider"></div><div style="display:flex;gap:5px;flex-wrap:wrap"><span class="tag ok">${icon('check', 'xs')}Filtri</span><span class="tag ok">${icon('check', 'xs')}Sort</span><span class="tag ok">${icon('check', 'xs')}Ricerca</span><span class="tag ok">${icon('check', 'xs')}Root folder</span><span class="tag ok">${icon('check', 'xs')}Editor</span><span class="tag ok">${icon('check', 'xs')}Artwork</span><span class="tag ok">${icon('check', 'xs')}NFO</span><span class="tag ok">${icon('check', 'xs')}Settings</span><span class="tag ok">${icon('check', 'xs')}Player</span></div><div class="settings-foot-note">${icon('info', 'sm')}Il mockup è standalone: apri il file HTML nel browser per provarlo.</div>`;
+  }
+
+  function openSettings(tab) {
+    state.settingsTab = tab || 'connections';
+    renderSettings();
+    openModal('settingsModal');
+  }
+
+  function testConnection(source) {
+    state.connections[source] = 'testing';
+    renderSettings();
+    setTimeout(() => {
+      state.connections[source] = 'ok';
+      renderSettings();
+      toast(`${sourceName(source)} connesso correttamente`, 'ok');
+    }, 850);
+  }
+
+  function openFolder(path, title) {
+    const folder = path || '/media/film';
+    const rows = folder.includes('serie')
+      ? [['Season 01', '—'], ['S01E01.mkv', '4.8 GB'], ['S01E02.mkv', '4.4 GB'], ['tvshow.nfo', '2 KB'], ['theme.mp3', '4.1 MB']]
+      : [['Dune.Part.Two.2024.2160p.mkv', '24.8 GB'], ['Dune.Part.Two.2024.it.srt', '84 KB'], ['movie.nfo', '3 KB'], ['poster.jpg', '1.8 MB'], ['theme.mp3', '4.6 MB']];
+    $('#folderTitle').textContent = title || 'Cartella locale';
+    $('#folderBody').innerHTML = `<div class="folder-path">${icon('folder', 'sm')}<span>${esc(folder)}</span></div><div class="folder-list-modal">${rows.map(([name, size]) => `<div class="folder-row">${icon(name.includes('.') ? 'file' : 'folder', 'sm')}<span>${esc(name)}</span><span class="size">${esc(size)}</span></div>`).join('')}</div><div class="readonly-note">${icon('info', 'sm')}Vista di sola lettura. Nel mockup nessun file viene modificato.</div>`;
+    openModal('folderModal');
+  }
+
+  function renderFilter() {
+    const draft = state.filterDraft;
+    const saved = state.customFilters.map((filter) => `<div class="saved-filter"><div class="copy"><strong>${esc(filter.name)}</strong><span>${filter.rules.length} regola${filter.rules.length === 1 ? '' : 'e'} · ${filter.match === 'all' ? 'tutte' : 'almeno una'}</span></div><div class="acts"><button class="btn xs" data-act="load-filter" data-id="${esc(filter.id)}">${icon('pencil', 'xs')}</button><button class="btn xs danger" data-act="delete-filter" data-id="${esc(filter.id)}">${icon('trash', 'xs')}</button></div></div>`).join('');
+    const rules = draft.rules.map((rule, index) => `<div class="rule-row"><select class="select" data-rule-index="${index}" data-rule-field="true"><option value="theme" ${rule.field === 'theme' ? 'selected' : ''}>Tema</option><option value="art" ${rule.field === 'art' ? 'selected' : ''}>Artwork</option><option value="trailer" ${rule.field === 'trailer' ? 'selected' : ''}>Trailer</option><option value="quality" ${rule.field === 'quality' ? 'selected' : ''}>Qualità</option><option value="warning" ${rule.field === 'warning' ? 'selected' : ''}>Avviso percorso</option><option value="new" ${rule.field === 'new' ? 'selected' : ''}>Nuovo</option></select><span class="rule-op">${draft.match === 'all' ? 'e' : 'o'}</span><select class="select" data-rule-index="${index}" data-rule-value="true">${(rule.field === 'quality' ? [['4K', '4K'], ['1080p', '1080p'], ['720p', '720p']] : rule.field === 'warning' || rule.field === 'new' ? [['yes', 'Sì'], ['no', 'No']] : [['yes', 'Presente'], ['no', 'Mancante']]).map(([key, label]) => `<option value="${key}" ${rule.value === key ? 'selected' : ''}>${label}</option>`).join('')}</select><button class="btn xs danger" data-act="remove-rule" data-index="${index}" ${draft.rules.length === 1 ? 'disabled' : ''}>${icon('x', 'xs')}</button></div>`).join('');
+    const preview = sourceItems().filter((item) => matchesCustom(item, draft)).length;
+    $('#filterBody').innerHTML = `<div class="filter-layout"><div><label class="label">Filtri salvati</label><div class="saved-filters">${saved || '<div class="hint">Nessun filtro salvato.</div>'}</div><button class="btn sm" style="margin-top:8px" data-act="new-filter">${icon('plus', 'sm')}Nuovo filtro</button></div><div><label class="label">Nome filtro</label><input class="input" id="filterName" placeholder="Es. Mancano tema e artwork" value="${esc(draft.name)}"><div class="form-row" style="margin-top:9px"><div><label class="label">Combinazione</label><select class="select" id="filterMatch"><option value="all" ${draft.match === 'all' ? 'selected' : ''}>Tutte le regole</option><option value="any" ${draft.match === 'any' ? 'selected' : ''}>Almeno una regola</option></select></div><div><label class="label">Ambito</label><input class="input" value="${sourceLabel(state.source)} · ${sourceItems().length} titoli" disabled></div></div><label class="label">Regole</label>${rules}<button class="btn sm" data-act="add-rule">${icon('plus', 'sm')}Aggiungi regola</button><div class="filter-preview">${icon('filter', 'sm')}<span>Anteprima:</span><b>${preview} titoli</b><span>nel mockup</span></div><div class="nfo-actions"><button class="btn primary sm" data-act="save-filter">${icon('save', 'sm')}Salva filtro</button><button class="btn sm" data-act="apply-filter">${icon('check', 'sm')}Applica</button></div></div></div>`;
+  }
+
+  function openFilter() {
+    state.filterDraft = { name: '', match: 'all', rules: [{ field: 'theme', value: 'no' }] };
+    state.editingFilter = null;
+    renderFilter();
+    openModal('filterModal');
+  }
+
+  function readFilterDraft() {
+    const nameInput = $('#filterName');
+    const matchInput = $('#filterMatch');
+    state.filterDraft.name = (nameInput?.value || state.filterDraft.name || '').trim();
+    state.filterDraft.match = matchInput?.value || state.filterDraft.match;
+    state.filterDraft.rules = state.filterDraft.rules.map((rule) => ({ ...rule }));
+    return state.filterDraft;
+  }
+
+  function saveFilter(apply) {
+    const draft = readFilterDraft();
+    if (!draft.name) { toast('Dai un nome al filtro', 'warn'); return; }
+    if (state.editingFilter) {
+      const existing = state.customFilters.find((entry) => entry.id === state.editingFilter);
+      if (existing) Object.assign(existing, { name: draft.name, match: draft.match, rules: draft.rules.map((rule) => ({ ...rule })) });
+      state.activeCustom = state.editingFilter;
+    } else {
+      const id = 'cf-' + Date.now();
+      state.customFilters.push({ id, name: draft.name, match: draft.match, rules: draft.rules.map((rule) => ({ ...rule })) });
+      state.activeCustom = id;
+    }
+    state.editingFilter = null;
+    if (apply) {
+      state.filter = 'custom';
+      closeModal('filterModal');
+    }
+    renderChrome();
+    renderFilter();
+    toast(apply ? 'Filtro applicato' : 'Filtro salvato', 'ok');
+  }
+
+  function deleteFilter(id) {
+    state.customFilters = state.customFilters.filter((filter) => filter.id !== id);
+    if (state.activeCustom === id) {
+      state.activeCustom = null;
+      if (state.filter === 'custom') state.filter = 'all';
+    }
+    renderChrome();
+    if ($('#filterModal')?.classList.contains('is-open')) renderFilter();
+    toast('Filtro eliminato', 'info');
+  }
+
+  function paletteCommands() {
+    return [
+      { id: 'all', title: 'Mostra tutti i titoli', hint: 'Azzera i filtri principali', icon: 'grid', group: 'Filtri' },
+      { id: 'incomplete', title: 'Da completare', hint: 'Tema, artwork o trailer mancante', icon: 'sparkles', group: 'Filtri' },
+      { id: 'complete', title: 'Titoli completi', hint: 'Tutte e tre le risorse presenti', icon: 'check', group: 'Filtri' },
+      { id: 'missing_theme', title: 'Senza tema', hint: 'Solo titoli con tema mancante', icon: 'music', group: 'Filtri' },
+      { id: 'missing_art', title: 'Senza artwork', hint: 'Solo titoli con artwork mancante', icon: 'image', group: 'Filtri' },
+      { id: 'missing_trailer', title: 'Senza trailer', hint: 'Solo titoli con trailer mancante', icon: 'clapper', group: 'Filtri' },
+      { id: 'view-grid', title: 'Vista griglia', hint: 'Poster e badge qualità', icon: 'grid', group: 'Vista' },
+      { id: 'view-list', title: 'Vista lista', hint: 'Righe compatte con stato risorse', icon: 'list', group: 'Vista' },
+      { id: 'filter', title: 'Nuovo filtro personalizzato', hint: 'Combina regole su tema, artwork e trailer', icon: 'sliders', group: 'Azioni' },
+      { id: 'settings', title: 'Apri impostazioni', hint: 'Connessioni, percorsi e metadati', icon: 'settings', group: 'Azioni' },
+      { id: 'refresh', title: 'Aggiorna libreria', hint: 'Sincronizza Radarr e Sonarr', icon: 'refresh', group: 'Azioni' },
+      { id: 'theme', title: 'Cambia tema', hint: 'Alterna chiaro e scuro', icon: 'sun', group: 'Azioni' },
+      { id: 'notes', title: 'Note di progetto', hint: 'Direzione, perimetro e piano 0.8.32', icon: 'info', group: 'Azioni' },
+      { id: 'source-radarr', title: 'Passa a Film', hint: 'Libreria Radarr', icon: 'film', group: 'Sorgenti' },
+      { id: 'source-sonarr', title: 'Passa a Serie', hint: 'Libreria Sonarr', icon: 'tv', group: 'Sorgenti' },
+    ];
+  }
+
+  function paletteItems(query) {
+    const q = query.trim().toLowerCase();
+    if (!q) return visibleItems().slice(0, 5);
+    return allItems().filter((item) => (item.title + ' ' + item.year + ' ' + item.genres).toLowerCase().includes(q)).slice(0, 8);
+  }
+
+  function renderPalette() {
+    const input = $('#paletteInput');
+    const query = input ? input.value : '';
+    const commands = paletteCommands().filter((command) => !query.trim() || (command.title + ' ' + command.hint).toLowerCase().includes(query.trim().toLowerCase()));
+    const items = paletteItems(query);
+    state.paletteResults = [];
+    let html = '';
+    if (commands.length) {
+      html += '<div class="palette-group">Azioni</div>';
+      commands.forEach((command, index) => {
+        state.paletteResults.push({ type: 'command', command: command.id });
+        html += `<button class="palette-item ${state.paletteIndex === state.paletteResults.length - 1 ? 'active' : ''}" data-act="palette-command" data-command="${esc(command.id)}"><svg class="ic sm"><use href="#i-${command.icon}"/></svg><span class="p-copy"><strong>${esc(command.title)}</strong><span>${esc(command.hint)}</span></span></button>`;
+      });
+    }
+    if (items.length) {
+      html += '<div class="palette-group">Titoli</div>';
+      items.forEach((item) => {
+        state.paletteResults.push({ type: 'item', id: item.id });
+        html += `<button class="palette-item ${state.paletteIndex === state.paletteResults.length - 1 ? 'active' : ''}" data-act="palette-item" data-id="${esc(item.id)}"><span style="width:24px;height:32px;border-radius:4px;overflow:hidden;flex:0 0 auto;display:block">${poster(item, { edit: false, quality: false })}</span><span class="p-copy"><strong>${esc(item.title)}</strong><span>${item.year} · ${sourceName(item.source)} · ${item.quality}</span></span><span class="tag">${item.hasTheme && item.hasArt && item.hasTrailer ? 'Completo' : 'Da completare'}</span></button>`;
+      });
+    }
+    if (!state.paletteResults.length) html = `<div class="art-empty">${icon('search', 'lg')}<strong>Nessun risultato</strong><span>Prova con un titolo o un comando diverso.</span></div>`;
+    const results = $('#paletteResults');
+    if (results) results.innerHTML = html;
+    if (state.paletteIndex >= state.paletteResults.length) state.paletteIndex = Math.max(0, state.paletteResults.length - 1);
+    highlightPalette();
+  }
+
+  function highlightPalette() {
+    $$('#paletteResults .palette-item').forEach((el, index) => el.classList.toggle('active', index === state.paletteIndex));
+    const active = $$('#paletteResults .palette-item')[state.paletteIndex];
+    if (active) active.scrollIntoView({ block: 'nearest' });
+  }
+
+  function openPalette() {
+    state.paletteIndex = 0;
+    const input = $('#paletteInput');
+    if (input) input.value = '';
+    renderPalette();
+    openModal('paletteModal');
+  }
+
+  function runCommand(command) {
+    closeModal('paletteModal');
+    if (['all', 'incomplete', 'complete', 'missing_theme', 'missing_art', 'missing_trailer'].includes(command)) setFilter(command);
+    else if (command === 'view-grid') { state.view = 'grid'; renderChrome(); }
+    else if (command === 'view-list') { state.view = 'list'; renderChrome(); }
+    else if (command === 'filter') openFilter();
+    else if (command === 'settings') openSettings();
+    else if (command === 'refresh') refreshLibrary();
+    else if (command === 'theme') toggleTheme();
+    else if (command === 'notes') openModal('notesModal');
+    else if (command === 'source-radarr') setSource('radarr');
+    else if (command === 'source-sonarr') setSource('sonarr');
+  }
+
+  function executePalette(index) {
+    const result = state.paletteResults[index];
+    if (!result) return;
+    if (result.type === 'command') runCommand(result.command);
+    else {
+      closeModal('paletteModal');
+      openEditor(result.id, 'theme');
+    }
+  }
+
+  function renderGlobalSearch() {
+    const item = findItem(state.selected);
+    const q = state.globalQuery || (item ? item.title : '');
+    if (!state.globalResults.length) state.globalResults = makeMediaResults(item || RADARR[0], state.globalKind, q);
+    $('#globalSearchBody').innerHTML = `<div class="search-row"><input class="input" id="globalSearchInput" placeholder="Cerca su YouTube…" value="${esc(state.globalQuery)}" autocomplete="off"><button class="btn" data-act="global-search">${icon('search', 'sm')}Cerca</button></div><div class="tabs" style="margin-bottom:9px"><button class="tab ${state.globalKind === 'theme' ? 'active' : ''}" data-act="global-kind" data-kind="theme">${icon('music', 'xs')}Tema</button><button class="tab ${state.globalKind === 'trailer' ? 'active' : ''}" data-act="global-kind" data-kind="trailer">${icon('clapper', 'xs')}Trailer</button></div><div class="result-list">${state.globalResults.map((result) => `<div class="result"><div class="result-thumb" style="--c1:${esc((item || RADARR[0]).c1)};--c2:${esc((item || RADARR[0]).c2)}">${icon('play', 'lg')}</div><div class="result-copy"><strong>${esc(result.title)}</strong><span>${esc(result.channel)} · ${esc(result.duration)}</span></div><div class="result-actions"><button class="btn xs" data-act="global-apply" data-kind="${result.kind}" data-vid="${esc(result.vid)}">${icon('check', 'xs')}Assegna</button></div></div>`).join('')}</div>`;
+  }
+
+  function openGlobalSearch(kind) {
+    state.globalKind = kind || 'trailer';
+    state.globalQuery = '';
+    state.globalResults = [];
+    renderGlobalSearch();
+    openModal('globalSearchModal');
+  }
+
+  function updatePlayerUI() {
+    const player = state.player;
+    const fill = $('#playerFill');
+    const time = $('#playerTime');
+    const duration = $('#playerDuration');
+    const toggle = $('#playerToggle use');
+    const pct = player.duration ? (player.progress / player.duration) * 100 : 0;
+    if (fill) fill.style.width = `${Math.min(100, pct)}%`;
+    if (time) time.textContent = formatTime(player.progress);
+    if (duration) duration.textContent = formatTime(player.duration);
+    if (toggle) toggle.setAttribute('href', player.playing ? '#i-pause' : '#i-play');
+  }
+
+  function formatTime(seconds) {
+    const safe = Math.max(0, Math.floor(seconds));
+    return `${Math.floor(safe / 60)}:${String(safe % 60).padStart(2, '0')}`;
+  }
+
+  function parseDuration(text) {
+    const parts = String(text || '3:42').split(':').map(Number);
+    return parts.length === 2 ? parts[0] * 60 + parts[1] : 222;
+  }
+
+  let playerTimer = null;
+  function startPlayerTimer() {
+    if (playerTimer) clearInterval(playerTimer);
+    playerTimer = setInterval(() => {
+      if (!state.player.open || !state.player.playing) return;
+      state.player.progress += 0.5;
+      if (state.player.progress >= state.player.duration) {
+        state.player.progress = state.player.duration;
+        state.player.playing = false;
+        updatePlayerUI();
+        return;
+      }
+      updatePlayerUI();
+    }, 500);
+  }
+
+  function openPlayer(id, kind) {
+    const item = findItem(id);
+    if (!item) return;
+    const resource = kind === 'trailer' ? 'trailer' : 'theme';
+    const has = resource === 'trailer' ? item.hasTrailer : item.hasTheme;
+    if (!has) {
+      toast(`Nessun ${resource === 'trailer' ? 'trailer' : 'tema'} disponibile per questo titolo`, 'warn');
+      openEditor(id, resource);
+      return;
+    }
+    state.player.id = id;
+    state.player.kind = resource;
+    state.player.open = true;
+    state.player.playing = true;
+    state.player.progress = 0;
+    state.player.duration = parseDuration(resource === 'trailer' ? item.trailerDuration : item.themeDuration);
+    $('#playerCover').innerHTML = poster(item, { edit: false, quality: false });
+    $('#playerTitle').textContent = item.title;
+    $('#playerSub').textContent = `${resource === 'trailer' ? 'Trailer' : 'Tema'} · ${resource === 'trailer' ? item.trailerName : item.themeName}`;
+    $('#player').classList.add('is-open');
+    $('#player').setAttribute('aria-hidden', 'false');
+    updatePlayerUI();
+    startPlayerTimer();
+  }
+
+  function closePlayer() {
+    state.player.open = false;
+    state.player.playing = false;
+    if (playerTimer) clearInterval(playerTimer);
+    playerTimer = null;
+    $('#player')?.classList.remove('is-open');
+    $('#player')?.setAttribute('aria-hidden', 'true');
+  }
+
+  function toggleTheme() {
+    state.theme = state.theme === 'dark' ? 'light' : 'dark';
+    try { localStorage.setItem('nextrarr-mock-theme', state.theme); } catch (error) { /* noop */ }
+    updateThemeUI();
+  }
+
+  function refreshLibrary() {
+    const iconEl = $('#refreshIcon');
+    if (iconEl && iconEl.animate) iconEl.animate([{ transform: 'rotate(0)' }, { transform: 'rotate(360deg)' }], { duration: 700, easing: 'ease' });
+    state.synced = 'sync ora';
+    renderChrome();
+    toast('Libreria sincronizzata · 0 errori', 'ok');
+  }
+
+  document.addEventListener('click', (event) => {
+    const layer = event.target.closest('.modal-layer');
+    if (layer && event.target === layer) {
+      closeModal(layer.id);
+      return;
+    }
+    const bar = event.target.closest('#playerBar');
+    if (bar) {
+      const rect = bar.getBoundingClientRect();
+      const ratio = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
+      state.player.progress = state.player.duration * ratio;
+      updatePlayerUI();
+      return;
+    }
+    const el = event.target.closest('[data-act]');
+    if (!el) return;
+    const act = el.dataset.act;
+    if (act !== 'local-search' && el.tagName !== 'INPUT' && el.tagName !== 'SELECT' && el.tagName !== 'TEXTAREA') event.preventDefault();
+
+    switch (act) {
+      case 'source': setSource(el.dataset.source); break;
+      case 'filter': setFilter(el.dataset.filter, el.dataset.custom); break;
+      case 'root': state.root = el.dataset.root; renderChrome(); closeRail(); break;
+      case 'view': state.view = el.dataset.view; renderChrome(); break;
+      case 'toggle-dir': state.dir = state.dir === 'asc' ? 'desc' : 'asc'; renderChrome(); break;
+      case 'refresh': refreshLibrary(); break;
+      case 'theme-toggle': toggleTheme(); break;
+      case 'open-palette': openPalette(); break;
+      case 'open-settings': openSettings(); break;
+      case 'open-filter': openFilter(); break;
+      case 'open-notes': openModal('notesModal'); break;
+      case 'close-modal': closeModal(el.dataset.target); break;
+      case 'open-rail': openRail(); break;
+      case 'close-rail': closeRail(); break;
+      case 'open-editor': openEditor(el.dataset.id, el.dataset.tab); break;
+      case 'open-artwork': openArtwork(el.dataset.id); break;
+      case 'show-incomplete': setFilter('incomplete'); break;
+      case 'clear-filters': clearFilters(); break;
+      case 'alpha': {
+        const target = $(`[data-letter="${el.dataset.letter}"]`, $('#libraryBody'));
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        break;
+      }
+      case 'delete-custom': deleteFilter(el.dataset.id); break;
+      case 'play-theme': openPlayer(el.dataset.id, 'theme'); break;
+      case 'player-open': openPlayer(el.dataset.id, el.dataset.kind); break;
+      case 'player-toggle':
+        if (!state.player.open) { toast('Apri un tema dalla libreria per avviare il player', 'info'); break; }
+        state.player.playing = !state.player.playing;
+        if (state.player.playing) startPlayerTimer();
+        updatePlayerUI();
+        break;
+      case 'player-skip':
+        state.player.progress = Math.min(state.player.duration, Math.max(0, state.player.progress + Number(el.dataset.delta || 0)));
+        updatePlayerUI();
+        break;
+      case 'player-close': closePlayer(); break;
+      case 'player-mute': {
+        state.player.muted = !state.player.muted;
+        const use = $('#playerMute use');
+        if (use) use.setAttribute('href', state.player.muted ? '#i-volume-x' : '#i-volume');
+        toast(state.player.muted ? 'Audio disattivato' : 'Audio riattivato', 'info');
+        break;
+      }
+      case 'editor-tab':
+        state.editorTab = el.dataset.tab;
+        state.editorQuery = (findItem(state.selected) || {}).title || '';
+        state.editorResults = state.editorTab === 'nfo' ? [] : makeMediaResults(findItem(state.selected), state.editorTab, state.editorQuery);
+        renderEditor();
+        break;
+      case 'editor-search': doEditorSearch(); break;
+      case 'apply-media': applyMedia(el.dataset.id, el.dataset.kind); break;
+      case 'preview-video': openVideo(el.dataset.id, el.dataset.kind); break;
+      case 'open-global-search': openGlobalSearch(el.dataset.kind); break;
+      case 'global-kind': state.globalKind = el.dataset.kind; state.globalResults = []; renderGlobalSearch(); break;
+      case 'global-search': {
+        const input = $('#globalSearchInput');
+        state.globalQuery = (input?.value || '').trim();
+        state.globalResults = makeMediaResults(findItem(state.selected) || RADARR[0], state.globalKind, state.globalQuery || (findItem(state.selected) || RADARR[0]).title);
+        renderGlobalSearch();
+        break;
+      }
+      case 'global-apply': {
+        const item = findItem(state.selected);
+        if (item) {
+          if (el.dataset.kind === 'trailer') item.hasTrailer = true; else item.hasTheme = true;
+          toast('Video assegnato al titolo', 'ok');
+          renderChrome();
+          renderEditor();
+          closeModal('globalSearchModal');
+        }
+        break;
+      }
+      case 'nfo-mode': state.nfoMode = el.dataset.mode; renderEditor(); break;
+      case 'nfo-save': {
+        const item = findItem(state.selected);
+        if (!item) break;
+        $$('[data-nfo-field]').forEach((input) => {
+          const field = input.dataset.nfoField;
+          if (field === 'year' || field === 'runtime') item[field] = Number(input.value) || item[field];
+          else item[field] = input.value;
+        });
+        toast('NFO salvato · libreria aggiornata', 'ok');
+        renderChrome();
+        renderEditor();
+        break;
+      }
+      case 'nfo-reload': toast('NFO ricaricato dal file', 'info'); renderEditor(); break;
+      case 'art-source': state.artSource = el.dataset.source; renderArtwork(); break;
+      case 'art-type': state.artType = el.dataset.type; renderArtwork(); break;
+      case 'apply-art': {
+        const item = findItem(el.dataset.id);
+        if (item) {
+          item.hasArt = true;
+          toast('Artwork applicato al titolo', 'ok');
+          renderChrome();
+          if ($('#artworkModal').classList.contains('is-open')) renderArtwork();
+        }
+        break;
+      }
+      case 'preview-art': openArtPreview(el.dataset.id, el.dataset.source, el.dataset.type, el.dataset.index); break;
+      case 'settings-tab': state.settingsTab = el.dataset.tab; renderSettings(); break;
+      case 'secret-toggle':
+        state.secrets[el.dataset.key] = !state.secrets[el.dataset.key];
+        renderSettings();
+        break;
+      case 'test-connection': testConnection(el.dataset.source); break;
+      case 'save-settings':
+        toast('Impostazioni salvate', 'ok');
+        closeModal('settingsModal');
+        break;
+      case 'path-add': state.pathMappings.push({ remote: '/media', local: '/mnt/media' }); renderSettings(); break;
+      case 'path-remove': state.pathMappings.splice(Number(el.dataset.index), 1); renderSettings(); break;
+      case 'open-folder': openFolder(el.dataset.path); break;
+      case 'load-filter': {
+        const filter = state.customFilters.find((entry) => entry.id === el.dataset.id);
+        if (filter) {
+          state.filterDraft = { name: filter.name, match: filter.match, rules: filter.rules.map((rule) => ({ ...rule })) };
+          state.editingFilter = filter.id;
+          renderFilter();
+        }
+        break;
+      }
+      case 'new-filter':
+        state.filterDraft = { name: '', match: 'all', rules: [{ field: 'theme', value: 'no' }] };
+        state.editingFilter = null;
+        renderFilter();
+        break;
+      case 'add-rule':
+        state.filterDraft.rules.push({ field: 'theme', value: 'no' });
+        renderFilter();
+        break;
+      case 'remove-rule':
+        state.filterDraft.rules.splice(Number(el.dataset.index), 1);
+        renderFilter();
+        break;
+      case 'save-filter': saveFilter(false); break;
+      case 'apply-filter': saveFilter(true); break;
+      case 'delete-filter': deleteFilter(el.dataset.id); break;
+      case 'palette-command': runCommand(el.dataset.command); break;
+      case 'palette-item': closeModal('paletteModal'); openEditor(el.dataset.id, 'theme'); break;
+      case 'video-play': toast('Riproduzione video simulata nel mockup', 'info'); break;
+      case 'toast': toast(el.dataset.message || 'Azione eseguita', 'info'); break;
+      default: break;
+    }
+  });
+
+  document.addEventListener('change', (event) => {
+    const el = event.target;
+    if (el.id === 'rootSelect') { state.root = el.value; renderChrome(); }
+    else if (el.id === 'sortSelect') { state.sort = el.value; renderChrome(); }
+    else if (el.id === 'filterMatch') { state.filterDraft.match = el.value; renderFilter(); }
+    else if (el.dataset.ruleIndex !== undefined && (el.dataset.ruleField || el.dataset.ruleValue)) {
+      const index = Number(el.dataset.ruleIndex);
+      if (el.dataset.ruleField) {
+        state.filterDraft.rules[index].field = el.value;
+        state.filterDraft.rules[index].value = el.value === 'quality' ? '4K' : 'no';
+      } else {
+        state.filterDraft.rules[index].value = el.value;
+      }
+      renderFilter();
+    }
+    else if (el.dataset.setting) { state.settings[el.dataset.setting] = el.value; }
+    else if (el.dataset.mapIndex !== undefined && el.dataset.mapField) {
+      state.pathMappings[Number(el.dataset.mapIndex)][el.dataset.mapField] = el.value;
+    }
+  });
+
+  document.addEventListener('input', (event) => {
+    const el = event.target;
+    if (el.id === 'localSearch') { state.search = el.value; renderLibrary(); }
+    else if (el.id === 'paletteInput') { state.paletteIndex = 0; renderPalette(); }
+    else if (el.id === 'editorSearchInput') { state.editorQuery = el.value; }
+    else if (el.id === 'filterName') { state.filterDraft.name = el.value; }
+    else if (el.id === 'volume') { state.player.volume = Number(el.value); }
+    else if (el.dataset.setting) { state.settings[el.dataset.setting] = el.value; }
+    else if (el.dataset.mapIndex !== undefined && el.dataset.mapField) {
+      state.pathMappings[Number(el.dataset.mapIndex)][el.dataset.mapField] = el.value;
+    }
+  });
+
+  document.addEventListener('keydown', (event) => {
+    const paletteOpen = $('#paletteModal')?.classList.contains('is-open');
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+      event.preventDefault();
+      if (paletteOpen) closeModal('paletteModal'); else openPalette();
+      return;
+    }
+    if (paletteOpen) {
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        state.paletteIndex = Math.min(state.paletteResults.length - 1, state.paletteIndex + 1);
+        highlightPalette();
+      } else if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        state.paletteIndex = Math.max(0, state.paletteIndex - 1);
+        highlightPalette();
+      } else if (event.key === 'Enter') {
+        event.preventDefault();
+        executePalette(state.paletteIndex);
+      } else if (event.key === 'Escape') {
+        closeModal('paletteModal');
+      }
+      return;
+    }
+    if (event.key === 'Escape') {
+      const open = $('.modal-layer.is-open');
+      if (open) { closeModal(open.id); return; }
+      if (state.player.open) { closePlayer(); return; }
+      closeRail();
+      return;
+    }
+    if (event.key === 'Enter' && event.target.id === 'editorSearchInput') {
+      event.preventDefault();
+      doEditorSearch();
+      return;
+    }
+    if (event.key === 'Enter' && event.target.id === 'globalSearchInput') {
+      event.preventDefault();
+      $('#globalSearchBody')?.querySelector('[data-act="global-search"]')?.click();
+      return;
+    }
+    const tag = (event.target.tagName || '').toLowerCase();
+    if (event.key === '/' && !['input', 'textarea', 'select'].includes(tag)) {
+      event.preventDefault();
+      state.filter = 'all';
+      renderChrome();
+      const input = $('#localSearch');
+      if (input) input.focus();
+    }
+    if (event.key === '?' && !['input', 'textarea', 'select'].includes(tag)) openModal('notesModal');
+  });
+
+  // initial theme
+  try {
+    const stored = localStorage.getItem('nextrarr-mock-theme');
+    if (stored === 'light' || stored === 'dark') state.theme = stored;
+  } catch (error) { /* noop */ }
+
+  renderChrome();
+  setTimeout(() => toast('Mockup interattivo · prova ⌘K, filtri e modali', 'info'), 700);
+})();
+</script>
+</body>
+</html>

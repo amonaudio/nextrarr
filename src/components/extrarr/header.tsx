@@ -93,7 +93,7 @@ export function Header({ onOpenSettings, onOpenCustomFilters, onGlobalSearch, on
         <div className="flex items-center gap-2">
           <img src="/logo.svg" alt="nEXTrarr" className="h-8 w-8 shrink-0" />
           <h1 className="text-xl font-bold text-primary">nEXTrarr</h1>
-          <Badge variant="outline" className="text-xs ml-1">v0.8.3</Badge>
+          <Badge variant="outline" className="text-xs ml-1">v0.8.32</Badge>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">

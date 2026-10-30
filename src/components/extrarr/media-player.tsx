@@ -125,10 +125,10 @@ export function MediaPlayer() {
   const VolumeIcon = isMuted || volume === 0 ? VolumeX : volume < 0.5 ? Volume1 : Volume2;
   const hasTrack = !!playingUrl;
 
+  if (!hasTrack) return null;
+
   return (
-    <div
-      className="fixed bottom-0 left-0 w-full z-40 border-t border-border/50 backdrop-blur-xl bg-gradient-to-r from-card/95 via-card/90 to-card/95 px-3 sm:px-6 py-3 flex items-center gap-3 sm:gap-4 h-20 box-border shadow-2xl shadow-black/30"
-    >
+    <div className="app-player flex items-center gap-3 sm:gap-4">
       {/* [0.7.10] Hidden native audio element — now using JSX event props
           instead of manual addEventListener. React manages listener
           lifecycle automatically. */}

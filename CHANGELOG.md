@@ -4,6 +4,43 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.32] — 2026-10-29 — Editorial library redesign
+
+### ✨ Added
+- **New editorial shell** based on the approved `mockup-v0.8.32.html`:
+  warm light/dark palette, serif display type, persistent left rail,
+  sticky topbar and responsive mobile drawer.
+- **Library overview hero** with live coverage ring, theme/artwork/trailer
+  bars, valid-title and path-warning counters.
+- **Command palette (`⌘K`)** for local media search, quick filters,
+  Radarr/Sonarr switching, refresh, settings and YouTube search.
+- **Grid/list view toggle**, with a compact list layout, completion counter
+  and per-row quick actions.
+- **“Completa i mancanti”** shortcuts in the hero, rail and command palette.
+
+### 🏗️ Changed
+- Replaced the legacy header with `LibrarySidebar`, `LibraryTopbar`,
+  `LibraryOverview` and `LibraryToolbar`.
+- Restyled media cards with poster overlays, NEW badge, quality chips,
+  warning states and a 0/3 completion footer.
+- Shared filtering/statistics logic in `src/lib/library.ts`; existing
+  filter, sort, folder, search and custom-filter semantics are preserved.
+- The player is now a floating dock that only appears while a track is
+  playing.
+- Bumped version to 0.8.32 in `package.json`, README, Dockerfile,
+  entrypoint and legacy header badge.
+
+### 📋 Verification
+- `tsc --noEmit`: only the two pre-existing errors in
+  `src/lib/security.ts` and `src/lib/settings-store.ts`.
+- ESLint passes on every new/touched component and helper; `page.tsx`
+  still reports the pre-existing hydration-effect warning/error.
+- `npm run build` succeeds with Node 22.14.0; `.next/standalone` is
+  generated and the build script copies `static` and `public` into it.
+- Standalone demo smoke test: `/` → 200, `/api/media/radarr` → 200,
+  `/api/media/sonarr` → 200, `/api/settings` → 200; no runtime errors
+  in the server log. Visual check in a real browser is still recommended.
+
 ## [0.8.3] — 2026-10-26 — Tooltip delay, NEW indicator, artwork filters, folder view & external links
 
 ### ✨ Added

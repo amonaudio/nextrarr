@@ -1,41 +1,18 @@
-/**
- * MediaCard — single card in the grid. Shows poster + status icons.
- * Uses textContent for all dynamic strings to prevent XSS.
- *
- * [0.7.10] Added shadcn Tooltip to all icon overlays for discoverability.
- *
- * [0.7.12] Robust poster fallback chain for titles with special chars
- * (WALL•E, ?, !, accented letters, etc.):
- *   1. Try the assigned `media.poster` (could be a local /api/artwork-image
- *      URL OR a remote Radarr TMDB URL).
- *   2. If that fails to load (onError), instead of immediately showing
- *      the gray "N/A" fallback, try ONE alternate source if we have one.
- *      Specifically: if the assigned poster is a LOCAL /api/artwork-image
- *      URL (because a local poster file was found at scan time, but the
- *      file may have been deleted or has a special-char filename that
- *      triggers a 404 → /api/artwork-image now returns a 1x1 transparent
- *      PNG so the <img> load "succeeds" but the image is blank), we
- *      swap to a data-attr `data-remote-poster` (the Radarr TMDB URL)
- *      on the first error and only fall back to the gray N/A on a second
- *      error.
- *   3. This means a card with title "Ma papà ti manda sola?" whose
- *      local poster file exists but the local serving route fails will
- *      still show the Radarr remote poster, instead of N/A.
- *
- * Implementation: useState for the currently-displayed src + a flag for
- * whether we've already tried the fallback. onError handler:
- *   - if we haven't tried remote yet AND we have a remote URL → switch.
- *   - else → switch to gray N/A fallback.
- */
-
 'use client';
 
-import { useMemo, useState } from 'react';
-import { Settings2, Check, Download, Music, Eye, Film, Image as ImageIcon, AlertTriangle } from 'lucide-react';
-import { Card } from '@/components/ui/card';
+import { useMemo, useState, type SyntheticEvent } from 'react';
+import {
+  AlertTriangle,
+  Check,
+  Download,
+  Eye,
+  Film,
+  Image as ImageIcon,
+  Music,
+  Settings2,
+} from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-// [0.8.0] Badge styling helpers (resolution/codec/audio channels).
 import {
   resolutionBadgeClasses,
   videoCodecBadgeClasses,
@@ -66,33 +43,20 @@ export function MediaCard({
   onShowWarning,
 }: MediaCardProps) {
   const fallbackSrc = useMemo(() => {
-    const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 150 225'><rect width='100%' height='100%' fill='%232b2b2b'/><text x='75' y='120' fill='%23ff8c1f' font-family='sans-serif' font-size='14' text-anchor='middle'>N/A</text></svg>`;
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 150 225'><rect width='100%' height='100%' fill='%232b2b2b'/><text x='75' y='120' fill='%23ff8a4c' font-family='sans-serif' font-size='14' text-anchor='middle'>N/A</text></svg>`;
     return `data:image/svg+xml;utf8,${svg}`;
   }, []);
 
-  // [0.7.12] Detect if media.poster is a LOCAL route (/api/artwork-image/...)
-  // — if so, we have a `remote_poster` fallback we can try when the local
-  // route returns a 1x1 transparent PNG (file missing/fails).
   const isLocalPoster = media.poster.startsWith('/api/artwork-image/');
   const remotePoster = media.remote_poster ?? '';
-  // State machine:
-  //   - 'local'  → currently showing local poster (initial state).
-  //   - 'remote' → tried local, swapped to remote (on 1x1 detection OR onError).
-  //   - 'na'     → both failed, showing gray N/A fallback.
   const defaultPosterState: 'local' | 'remote' | 'na' =
     isLocalPoster ? 'local' : (remotePoster ? 'remote' : 'na');
-  // [0.8.2] Key the fallback state by the assigned poster URL. After
-  // replacing/deleting artwork, /api/media returns a new ?v=<mtime> URL;
-  // the key changes, so stale 'remote'/'na' fallback state is ignored and
-  // the card tries the freshly written local poster immediately — without
-  // a setState-in-effect reset.
   const posterIdentity = `${media.poster}\u0000${remotePoster}`;
   const [posterFailure, setPosterFailure] = useState<{ key: string; state: 'remote' | 'na' } | null>(null);
   const posterState =
     posterFailure?.key === posterIdentity ? posterFailure.state : defaultPosterState;
 
   function handleImgError() {
-    // Real load failure (network error, 4xx, 5xx that returned HTML, etc.)
     const current = posterFailure?.key === posterIdentity ? posterFailure.state : defaultPosterState;
     setPosterFailure({
       key: posterIdentity,
@@ -100,15 +64,10 @@ export function MediaCard({
     });
   }
 
-  function handleImgLoad(e: React.SyntheticEvent<HTMLImageElement>) {
-    // [0.7.12] Detect the 1x1 transparent PNG that /api/artwork-image
-    // returns when a local file is missing/fails (special chars in
-    // filename, file deleted, traversal blocked, etc.).
+  function handleImgLoad(event: SyntheticEvent<HTMLImageElement>) {
     if (posterState !== 'local') return;
-    const img = e.currentTarget;
+    const img = event.currentTarget;
     if (img.naturalWidth <= 1 && img.naturalHeight <= 1) {
-      // The /api/artwork-image route returned its transparent fallback.
-      // Swap to the remote Radarr poster if we have one.
       setPosterFailure({ key: posterIdentity, state: remotePoster ? 'remote' : 'na' });
     }
   }
@@ -116,205 +75,198 @@ export function MediaCard({
   const currentSrc =
     posterState === 'na' ? fallbackSrc :
     posterState === 'remote' ? (remotePoster || fallbackSrc) :
-    (media.poster || fallbackSrc);  // 'local'
+    (media.poster || fallbackSrc);
 
   const warning = !media.is_mapped
-    ? { kind: 'unmapped' as const, msg: `Attenzione: Percorso non mappato! Vai su ⚙️ Impostazioni. Percorso: ${media.local_path}` }
+    ? { kind: 'unmapped' as const, msg: `Attenzione: Percorso non mappato! Vai su Impostazioni. Percorso: ${media.local_path}` }
     : !media.folder_exists
       ? { kind: 'nofolder' as const, msg: `Errore: La cartella non esiste sul disco! Percorso calcolato: ${media.local_path}` }
       : null;
 
-  // [0.8.3] B3 — pulsing dot for recently added titles that still require
-  // an action. Only shown when both conditions are true, so it disappears
-  // once the title is complete even within the 14-day window.
   const showNewBadge = isRecentlyAdded(media.date_added) && needsMediaAction(media);
+  const complete = [media.has_theme, media.has_artwork, media.has_trailer].filter(Boolean).length;
+  const rootName = media.root_folder.split('/').filter(Boolean).pop() ?? media.root_folder;
 
   return (
-    <Card
+    <div
       id={`card-${media.id}`}
       data-title={media.title}
-      className="relative overflow-hidden group hover:scale-105 transition-transform flex flex-col"
+      className={cn('lib-card group', warning && 'is-invalid')}
     >
-      {/* === Poster (with top-row icon overlays only) === */}
-      <div className="relative">
+      <div className="lib-poster">
         <img
           src={currentSrc}
           alt={media.title}
           loading="lazy"
-          className="w-full aspect-[2/3] object-cover"
           onError={handleImgError}
           onLoad={handleImgLoad}
-          // [0.7.12] Tag the img with current poster state — useful for
-          // debugging via DevTools (e.g. "why am I seeing N/A for WALL•E?").
           data-poster-state={posterState}
           data-is-local-poster={isLocalPoster ? 'true' : 'false'}
         />
 
-        {/* Top icons with tooltips */}
-        {warning ? (
-          <div className="absolute top-1 left-1 bg-black/70 rounded p-1">
+        <div className="card-top">
+          {showNewBadge ? (
+            <span className="card-new">
+              <i />
+              NEW
+            </span>
+          ) : (
+            <span />
+          )}
+
+          {warning ? (
             <Tooltip>
               <TooltipTrigger asChild>
-                <AlertTriangle
-                  className="h-4 w-4 text-yellow-500 cursor-pointer"
+                <button
+                  type="button"
+                  className="card-action"
                   onClick={() => onShowWarning(warning.msg)}
-                />
+                  aria-label="Mostra dettagli percorso non valido"
+                >
+                  <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                </button>
               </TooltipTrigger>
               <TooltipContent className="max-w-xs">
-                {warning.kind === 'unmapped' ? 'Percorso non mappato — clicca per dettagli' : 'Cartella inesistente — clicca per dettagli'}
+                {warning.kind === 'unmapped'
+                  ? 'Percorso non mappato — clicca per dettagli'
+                  : 'Cartella inesistente — clicca per dettagli'}
               </TooltipContent>
             </Tooltip>
-          </div>
-        ) : (
-          <>
-            <div className="absolute top-1 left-1 bg-black/70 rounded p-1">
+          ) : (
+            <div className="flex items-center gap-1.5">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Settings2
-                    className="h-4 w-4 text-foreground cursor-pointer"
+                  <button
+                    type="button"
+                    className="card-action"
                     onClick={() => onOpenEditor(media.id)}
-                  />
+                    aria-label="Apri editor"
+                  >
+                    <Settings2 className="h-4 w-4" />
+                  </button>
                 </TooltipTrigger>
                 <TooltipContent>Apri editor (tema, trailer, NFO)</TooltipContent>
               </Tooltip>
-            </div>
-            <div className="absolute top-1 right-1 bg-black/70 rounded p-1">
+
               <Tooltip>
                 <TooltipTrigger asChild>
-                  {media.has_theme ? (
-                    <Check
-                      className="h-4 w-4 text-green-500 cursor-pointer"
-                      onClick={(e) => onQuickDownload(media.id, e.currentTarget as unknown as HTMLButtonElement)}
-                    />
-                  ) : (
-                    <Download
-                      className="h-4 w-4 text-primary cursor-pointer"
-                      onClick={(e) => onQuickDownload(media.id, e.currentTarget as unknown as HTMLButtonElement)}
-                    />
-                  )}
+                  <button
+                    type="button"
+                    className={cn('card-action', media.has_theme ? 'ok' : 'missing')}
+                    onClick={(event) => onQuickDownload(media.id, event.currentTarget)}
+                    aria-label={media.has_theme ? 'Riscarica tema' : 'Scarica tema'}
+                  >
+                    {media.has_theme ? <Check className="h-4 w-4" /> : <Download className="h-4 w-4" />}
+                  </button>
                 </TooltipTrigger>
                 <TooltipContent>
                   {media.has_theme ? 'Tema presente — clicca per riscaricare' : 'Scarica tema musicale'}
                 </TooltipContent>
               </Tooltip>
             </div>
-          </>
-        )}
+          )}
+        </div>
 
-        {/* [0.8.3] Bottom-left so it never collides with the top icon row. */}
-        {showNewBadge && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span
-                tabIndex={0}
-                aria-label="Titolo nuovo con azioni da completare"
-                className="absolute bottom-1.5 left-1.5 z-10 flex h-5 w-5 cursor-help items-center justify-center rounded-full bg-primary shadow-lg shadow-primary/40 ring-2 ring-background/70 focus-visible:outline-none focus-visible:ring-primary"
-              >
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
-                <span className="relative h-2 w-2 rounded-full bg-primary-foreground" />
-              </span>
-            </TooltipTrigger>
-            <TooltipContent>Nuovo — ci sono ancora azioni da completare</TooltipContent>
-          </Tooltip>
+        {warning ? (
+          <button type="button" className="card-warning" onClick={() => onShowWarning(warning.msg)}>
+            <AlertTriangle />
+            <span>{warning.kind === 'unmapped' ? 'Percorso non mappato' : 'Cartella non accessibile'}</span>
+          </button>
+        ) : (
+          <>
+            {(media.resolution || media.video_codec || media.audio_channels) && (
+              <div className="card-quality">
+                {media.resolution && (
+                  <span className={resolutionBadgeClasses(media.resolution)}>{media.resolution}</span>
+                )}
+                {media.video_codec && (
+                  <span className={videoCodecBadgeClasses(media.video_codec)}>{media.video_codec}</span>
+                )}
+                {media.audio_channels && (
+                  <span className={audioChannelsBadgeClasses(media.audio_channels)}>{media.audio_channels}</span>
+                )}
+              </div>
+            )}
+          </>
         )}
       </div>
 
-      {/* [0.8.2] Badge B1 — strip directly below the poster (outside the
-          image), before title/footer. Three colored pills: resolution
-          (4K/FHD/HD/SD), video codec (H264/HEVC/Xvid/...), audio channels
-          (5.1/2.0/7.1). Hidden entirely when all three are null (e.g.
-          Sonarr series — statistics endpoint doesn't include per-file
-          info), so the card layout has no empty strip. */}
-      {(media.resolution || media.video_codec || media.audio_channels) && (
-        <div className="flex flex-wrap gap-1 px-2 py-1.5 bg-muted/40 border-b border-border">
-          {media.resolution && (
-            <span
-              className={cn(
-                'text-[10px] font-bold px-1.5 py-0.5 rounded',
-                resolutionBadgeClasses(media.resolution),
-              )}
-            >
-              {media.resolution}
-            </span>
-          )}
-          {media.video_codec && (
-            <span
-              className={cn(
-                'text-[10px] font-bold px-1.5 py-0.5 rounded',
-                videoCodecBadgeClasses(media.video_codec),
-              )}
-            >
-              {media.video_codec}
-            </span>
-          )}
-          {media.audio_channels && (
-            <span
-              className={cn(
-                'text-[10px] font-bold px-1.5 py-0.5 rounded',
-                audioChannelsBadgeClasses(media.audio_channels),
-              )}
-            >
-              {media.audio_channels}
-            </span>
-          )}
+      <div className="card-footer">
+        <div className="card-title" title={media.title}>{media.title}</div>
+        <div className="card-meta">
+          <span>{media.year}</span>
+          <span className="middot">·</span>
+          <span>{rootName}</span>
         </div>
-      )}
 
-      {/* === Footer: title/year + action icons (NO overlap) === */}
-      <div className="p-2 flex flex-col gap-1 bg-card">
-        <div className="flex items-start justify-between gap-1">
-          <div className="min-w-0 flex-1">
-            <div className="text-sm font-bold truncate leading-tight" title={media.title}>{media.title}</div>
-            <div className="text-xs opacity-70">{media.year}</div>
-          </div>
-        </div>
         {!warning && (
-          <div className="flex items-center justify-between gap-1 pt-1 border-t border-border">
-            <div className="flex items-center gap-1">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Music
-                    className={cn('h-4 w-4 cursor-pointer', media.has_theme ? 'text-primary' : 'text-muted-foreground opacity-40 pointer-events-none')}
-                    onClick={() => onPlayTheme(media.id, media.title)}
-                  />
-                </TooltipTrigger>
-                <TooltipContent>
-                  {media.has_theme ? 'Riproduci tema musicale' : 'Tema non presente'}
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Eye
-                    className="h-4 w-4 text-foreground cursor-pointer"
-                    onClick={() => onViewArtwork(media.id, media.title)}
-                  />
-                </TooltipTrigger>
-                <TooltipContent>Vedi e scarica artwork</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Film
-                    className={cn('h-4 w-4 cursor-pointer', media.has_trailer ? 'text-primary' : 'text-muted-foreground opacity-40 pointer-events-none')}
-                    onClick={() => onPlayTrailer(media.id, media.title)}
-                  />
-                </TooltipTrigger>
-                <TooltipContent>
-                  {media.has_trailer ? 'Riproduci trailer' : 'Trailer non presente'}
-                </TooltipContent>
-              </Tooltip>
-            </div>
+          <div className="card-status-row">
             <Tooltip>
               <TooltipTrigger asChild>
-                <ImageIcon
-                  className="h-4 w-4 text-foreground cursor-pointer hover:text-primary"
-                  onClick={(e) => onDownloadArtwork(media.id, e.currentTarget as unknown as HTMLButtonElement)}
-                />
+                <button
+                  type="button"
+                  className={cn('status-btn', media.has_theme ? 'ok' : 'missing')}
+                  onClick={() => onPlayTheme(media.id, media.title)}
+                  disabled={!media.has_theme}
+                  aria-label="Riproduci tema"
+                >
+                  <Music className="h-3.5 w-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {media.has_theme ? 'Riproduci tema musicale' : 'Tema non presente'}
+              </TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  className={cn('status-btn', media.has_artwork ? 'ok' : 'missing')}
+                  onClick={() => onViewArtwork(media.id, media.title)}
+                  aria-label="Vedi artwork"
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Vedi e scarica artwork</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  className={cn('status-btn', media.has_trailer ? 'ok' : 'missing')}
+                  onClick={() => onPlayTrailer(media.id, media.title)}
+                  disabled={!media.has_trailer}
+                  aria-label="Riproduci trailer"
+                >
+                  <Film className="h-3.5 w-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {media.has_trailer ? 'Riproduci trailer' : 'Trailer non presente'}
+              </TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  className="status-btn"
+                  onClick={(event) => onDownloadArtwork(media.id, event.currentTarget)}
+                  aria-label="Scarica artwork"
+                >
+                  <ImageIcon className="h-3.5 w-3.5" />
+                </button>
               </TooltipTrigger>
               <TooltipContent>Scarica artwork (batch da Fanart.tv)</TooltipContent>
             </Tooltip>
+
+            <span className="completion-txt">{complete}/3</span>
           </div>
         )}
       </div>
-    </Card>
+    </div>
   );
 }

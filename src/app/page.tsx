@@ -12,7 +12,11 @@ import { useCallback, useEffect, useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Header } from '@/components/extrarr/header';
+import { LibrarySidebar } from '@/components/extrarr/library-sidebar';
+import { LibraryTopbar } from '@/components/extrarr/library-topbar';
+import { LibraryOverview } from '@/components/extrarr/library-overview';
+import { LibraryToolbar, type LibraryView } from '@/components/extrarr/library-toolbar';
+import { CommandPalette } from '@/components/extrarr/command-palette';
 import { MediaGrid } from '@/components/extrarr/media-grid';
 import { MediaPlayer } from '@/components/extrarr/media-player';
 import { SettingsModal } from '@/components/extrarr/settings-modal';
@@ -39,6 +43,10 @@ export default function Home() {
   const [rootFolders, setRootFolders] = useState<string[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [paletteMode, setPaletteMode] = useState<'command' | 'youtube'>('command');
+  const [view, setView] = useState<LibraryView>('grid');
 
   // Modal state
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -321,7 +329,18 @@ export default function Home() {
   }
 
   function onOpenCustomFilters() {
+    setSidebarOpen(false);
     setCustomFilterOpen(true);
+  }
+
+  function openSettings() {
+    setSidebarOpen(false);
+    setSettingsOpen(true);
+  }
+
+  function openPalette(mode: 'command' | 'youtube' = 'command') {
+    setPaletteMode(mode);
+    setPaletteOpen(true);
   }
 
   // NOTE: Directory browser is now handled INSIDE SettingsModal (v0.5 fix).
@@ -377,28 +396,49 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground">
-      <Header
-        onOpenSettings={() => setSettingsOpen(true)}
-        onOpenCustomFilters={onOpenCustomFilters}
-        onGlobalSearch={onGlobalSearch}
-        onRefresh={onRefresh}
-        refreshing={refreshing}
-        rootFolders={rootFolders}
-      />
-
-      <main className="flex-1 px-4 sm:px-6 lg:px-10 pb-24 pt-4">
-        <MediaGrid
-          onQuickDownload={onQuickDownload}
-          onDownloadArtwork={onDownloadArtwork}
-          onPlayTheme={onPlayTheme}
-          onViewArtwork={onViewArtwork}
-          onPlayTrailer={onPlayTrailer}
-          onOpenEditor={onOpenEditor}
-          onShowWarning={onShowWarning}
-          activeCustomFilter={activeCustomFilter}
+    <div className="app-root">
+      <div className="app-shell">
+        <LibrarySidebar
+          rootFolders={rootFolders}
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          onOpenSettings={openSettings}
         />
-      </main>
+
+        <div className="app-main">
+          <LibraryTopbar
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            onOpenSettings={openSettings}
+            onOpenMenu={() => setSidebarOpen(true)}
+            onOpenPalette={openPalette}
+          />
+
+          <main className="app-content">
+            <LibraryOverview refreshing={refreshing} onRefresh={onRefresh} />
+
+            <section id="library" className="library-section">
+              <LibraryToolbar
+                rootFolders={rootFolders}
+                onOpenCustomFilters={onOpenCustomFilters}
+                view={view}
+                onViewChange={setView}
+              />
+              <MediaGrid
+                onQuickDownload={onQuickDownload}
+                onDownloadArtwork={onDownloadArtwork}
+                onPlayTheme={onPlayTheme}
+                onViewArtwork={onViewArtwork}
+                onPlayTrailer={onPlayTrailer}
+                onOpenEditor={onOpenEditor}
+                onShowWarning={onShowWarning}
+                activeCustomFilter={activeCustomFilter}
+                view={view}
+              />
+            </section>
+          </main>
+        </div>
+      </div>
 
       <MediaPlayer />
 
@@ -479,6 +519,17 @@ export default function Home() {
           )}
         </DialogContent>
       </Dialog>
+
+      <CommandPalette
+        open={paletteOpen}
+        mode={paletteMode}
+        onOpenChange={setPaletteOpen}
+        onGlobalSearch={onGlobalSearch}
+        onOpenSettings={openSettings}
+        onOpenCustomFilters={onOpenCustomFilters}
+        onOpenEditor={onOpenEditor}
+        onRefresh={onRefresh}
+      />
     </div>
   );
 }
